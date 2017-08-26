@@ -1,0 +1,4 @@
+1) We could cache Points of Interest locally so as to be able to function in the absence of the network
+
+2) Do we really want to keep the database connection open for the life of the app?
+
