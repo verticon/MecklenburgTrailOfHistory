@@ -15,7 +15,7 @@ class PointOfInterest {
     class DatabaseNotifier {
 
         static let instance = DatabaseNotifier()
-
+        static let path = "points-of-interest"
         enum Event {
             case added
             case updated
@@ -38,7 +38,7 @@ class PointOfInterest {
             fileprivate init(listener: @escaping Listener, dispatchQueue: DispatchQueue) {
                 self.listener = listener
                 self.dispatchQueue = dispatchQueue
-                self.reference = FIRDatabase.database().reference(withPath: "pointOfInterest")
+                self.reference = FIRDatabase.database().reference(withPath: path)
 
                 reference.observe(.childAdded,   with: { self.notify(properties: $0.value as! [String: Any], event: .added) })
                 reference.observe(.childChanged, with: { self.notify(properties: $0.value as! [String: Any], event: .updated) })
