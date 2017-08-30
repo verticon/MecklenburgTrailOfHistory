@@ -126,8 +126,8 @@ class DetailView : UIView {
         shadowView.layer.shadowPath = shadowPath.cgPath
         self.insertSubview(shadowView, at: 0)
 
-        info("After")
-        print("\tShadow View: \(shadowView.frame)")
+        //info("After")
+        //print("\tShadow View: \(shadowView.frame)")
     }
 
     func present() {

@@ -12,10 +12,58 @@ import CoreLocation
 
 class PointOfInterest {
 
-    class DatabaseNotifier {
+    let id: String
+    let name: String
+    let description: String
+    let coordinate: CLLocationCoordinate2D
+    
+    fileprivate(set) var image: UIImage!
+    fileprivate let imageUrl: URL
+    
+    private let location: CLLocation
+    private var distanceFromUser: Double? // Units are yards
+    
+    fileprivate init?(properties: Dictionary<String, Any>) {
+        if  let id = properties["uid"], let name = properties["name"], let latitude = properties["latitude"],
+            let longitude = properties["longitude"], let description = properties["description"], let imageUrl = properties["imageUrl"] {
+            
+            self.id = id as! String
+            self.name = name as! String
+            self.description = description as! String
+            
+            self.coordinate = CLLocationCoordinate2D(latitude: latitude as! Double, longitude: longitude as! Double)
+            location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+            
+            let url = URL(string: imageUrl as! String)
+            if url == nil { return nil }
+            self.imageUrl = url!
+            
+            DistanceToUserUpdater.instance.add(self)
+        }
+        else {
+            return nil
+        }
+    }
+    
+    func distanceToUser() -> String {
+        // The Trail class' singleton is using a location manager to update the distances of all of the
+        // Points of Interest. The distances will be nil if location services are unavailable or unauthorized.
+        if let distance = distanceFromUser {
+            return "\(Int(round(distance))) yds"
+        }
+        return "<unknown>"
+    }
 
-        static let instance = DatabaseNotifier()
-        static let path = "points-of-interest"
+    // **********************************************************************************************************************
+
+    private static let path = "points-of-interest"
+    private static let magicPath = ".info/connected"
+    private static let alertTitle = "Trail of History"
+
+    class Database {
+
+        static let instance = Database()
+
         enum Event {
             case added
             case updated
@@ -24,7 +72,7 @@ class PointOfInterest {
         
         typealias Listener = (PointOfInterest, Event) -> Void
         
-        final class Token {
+        final class ListenerToken {
             var token: Any!
             init(token: Any) { self.token = token }
         }
@@ -77,7 +125,10 @@ class PointOfInterest {
                             if response.statusCode == 200 {
                                 if let data = data {
                                     image = UIImage(data: data)
-                                    if image == nil {
+                                    if image != nil {
+                                        UserDefaults.standard.set(data, forKey: poi.id)
+                                    }
+                                    else {
                                         errorText = "image data is corrupt"
                                     }
                                 }
@@ -93,10 +144,16 @@ class PointOfInterest {
                             errorText = "http response is nil"
                         }
                     }
-                    
-                    // If the image could not be obtained then create a "standin" image that will inform the user.
+
                     if image == nil {
-                        image = self.generateImage(from: "Image Error: \(errorText)")
+                        // If the image could not be obtained then lets see if we "stashed" it on a previous connection to the database
+                        if let imageData = UserDefaults.standard.data(forKey: poi.id) {
+                            image = UIImage(data: imageData)
+                        }
+                        // Else let's create a "standin" image that will inform the user.
+                        else {
+                            image = self.generateImage(from: "Image Error: \(errorText)")
+                        }
                     }
                     
                     poi.image = image!
@@ -136,8 +193,6 @@ class PointOfInterest {
 
         private let connectedRef: FIRDatabaseReference
         private var connectionState: ConnectionState = .initialCall
-        private let alertTitle = "Trail of History Database"
-        private let magicPath = ".info/connected"
 
         private init() {
             // At startup time the connection observer will be called twice. The first time with a value of false.
@@ -160,22 +215,24 @@ class PointOfInterest {
                     if isConnected {
                         self.connectionState = .connected
                     } else {
+                        //TODO: It would be nice to only bother the user with an alert if we cannot connect and there is no locally cached data.
+                        // But when I tried to query Firebase under conditions of no connection and no local data my callback did not execute?
                         self.connectionState = .disconnected
-                        alertUser(title: self.alertTitle, body: "We could not connect to the database. Please ensure that your device is connected to the internet.")
+                        alertUser(title: alertTitle, body: "A connection to the internet cannot be established. Trail of History will use the points of interest information that was obtained during the previous, successful internet connection. If you have never used the application while being connected to the internet then there will not be any information.")
                     }
 
                 case .connected:
                     assert(!isConnected, "We are already connected. Why are we being called again with a value of true?")
                     if !isConnected {
                         self.connectionState = .disconnected
-                        alertUser(title: self.alertTitle, body: "The connection to the database has been lost. The app will continue to work with the Points of Interest that have already been downloaded. You will not receive updates (which, anyway, are rare).")
+                        //alertUser(title: self.alertTitle, body: "The connection to the database has been lost. The app will continue to work with the Points of Interest that have already been downloaded. You will not receive updates (which, anyway, are rare).")
                     }
 
                 case .disconnected:
                     assert(isConnected, "We are already disconnected. Why are we being called again with a value of false?")
                     if isConnected {
                         self.connectionState = .connected
-                        alertUser(title: self.alertTitle, body: "The connection to the database has been established.")
+                        //alertUser(title: self.alertTitle, body: "The connection to the database has been established.")
                     }
                 }
             })
@@ -183,25 +240,28 @@ class PointOfInterest {
 //            let timer = Timer(timeInterval: 5, target: self, selector: #selector(databaseConnectionTimer), userInfo: nil, repeats: false)
 //            RunLoop.main.add(timer, forMode: RunLoopMode.commonModes)
         }
-        
+        /*
         @objc func databaseConnectionTimer(_ timer: Timer) {
             if self.connectionState == .neverConnected {
                 alertUser(title: alertTitle, body: "We have been unable to establish a connection to the database. Please ensure that your device is connected to the internet.")
                 self.connectionState = .disconnected // Doing this causes the connection established alert to be presented if/when the connection happens (see the connectedRef observer)
             }
         }
+         */
 
-        func register(listener: @escaping Listener, dispatchQueue: DispatchQueue) -> Token {
-            return Token(token: Registrant(listener: listener, dispatchQueue: dispatchQueue))
+        func registerListener(_ listener: @escaping Listener, dispatchQueue: DispatchQueue) -> ListenerToken {
+            return ListenerToken(token: Registrant(listener: listener, dispatchQueue: dispatchQueue))
         }
         
-        func deregister(token: Token) {
+        func deregisterListener(token: ListenerToken) {
             if let registrant = token.token as? Registrant {
                 registrant.cancel()
                 token.token = nil
             }
         }
     }
+
+    // **********************************************************************************************************************
 
     private class DistanceToUserUpdater : NSObject, CLLocationManagerDelegate {
 
@@ -262,47 +322,5 @@ class PointOfInterest {
         func add(_ poi: PointOfInterest) {
             poiReferences.append(PoiReference(poi: poi))
         }
-    }
-
-    let id: String
-    let name: String
-    let description: String
-    let coordinate: CLLocationCoordinate2D
-
-    fileprivate(set) var image: UIImage!
-    fileprivate let imageUrl: URL
-
-    private let location: CLLocation
-    private var distanceFromUser: Double? // Units are yards
-
-    fileprivate init?(properties: Dictionary<String, Any>) {
-        if  let id = properties["uid"], let name = properties["name"], let latitude = properties["latitude"],
-            let longitude = properties["longitude"], let description = properties["description"], let imageUrl = properties["imageUrl"] {
-            
-            self.id = id as! String
-            self.name = name as! String
-            self.description = description as! String
-            
-            self.coordinate = CLLocationCoordinate2D(latitude: latitude as! Double, longitude: longitude as! Double)
-            location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-            
-            let url = URL(string: imageUrl as! String)
-            if url == nil { return nil }
-            self.imageUrl = url!
-
-            DistanceToUserUpdater.instance.add(self)
-        }
-        else {
-            return nil
-        }
-    }
-
-    func distanceToUser() -> String {
-        // The Trail class' singleton is using a location manager to update the distances of all of the
-        // Points of Interest. The distances will be nil if location services are unavailable or unauthorized.
-        if let distance = distanceFromUser {
-            return "\(Int(round(distance))) yds"
-        }
-        return "<unknown>"
     }
 }

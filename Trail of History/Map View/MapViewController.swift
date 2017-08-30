@@ -60,7 +60,7 @@ class MapViewController: UIViewController {
     @IBOutlet weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
     
-    private var listenerToken: PointOfInterest.DatabaseNotifier.Token!
+    private var listenerToken: PointOfInterest.Database.ListenerToken!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -74,9 +74,13 @@ class MapViewController: UIViewController {
         collectionView.decelerationRate = UIScrollViewDecelerationRateFast
         
         mapView.showsUserLocation = true
-        boundary = mapView.region
+        let span = MKCoordinateSpanMake(0.01, 0.01)
+        let midPoint = CLLocationCoordinate2DMake(35.21687, -80.8327) // Captain Jack
+        boundary = MKCoordinateRegionMake(midPoint, span)
+        mapView.region = boundary
+        mapView.setCenter(midPoint, animated: true)
 
-        listenerToken = PointOfInterest.DatabaseNotifier.instance.register(listener: poiListener, dispatchQueue: DispatchQueue.main)
+        listenerToken = PointOfInterest.Database.instance.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
         
         OptionsViewController.initialize(delegate: self)
     }
@@ -103,7 +107,7 @@ class MapViewController: UIViewController {
         }
     }
 
-    func poiListener(poi: PointOfInterest, event: PointOfInterest.DatabaseNotifier.Event) {
+    func poiListener(poi: PointOfInterest, event: PointOfInterest.Database.Event) {
 
         func updateBoundary() {
             if poiAnnotations.count > 0 {
