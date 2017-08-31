@@ -37,11 +37,16 @@ class DetailView : UIView {
         let textAttributes = [NSStrokeColorAttributeName : UIColor.black,
                               NSForegroundColorAttributeName : UIColor.white,
                               NSStrokeWidthAttributeName : -3.0] as [String : Any]
-        textView.attributedText = NSAttributedString(string: poi.description, attributes: textAttributes)
         */
-        textView.text = poi.description
+        let style = NSMutableParagraphStyle()
+        style.alignment = NSTextAlignment.center
+        let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)", attributes: [
+            NSFontAttributeName : UIFont(name: "Helvetica", size: 18)!,
+            NSParagraphStyleAttributeName : style
+            ])
+        text.addAttributes([NSFontAttributeName : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.characters.count))
+        textView.attributedText = text
         textView.isEditable = false
-        textView.font = UIFont.init(name: "Helvetica", size: 18)
         textView.translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(textView)
