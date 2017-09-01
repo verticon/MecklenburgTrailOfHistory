@@ -10,14 +10,17 @@ import UIKit
 
 class DetailView : UIView {
 
+    private let poiId : String
     private let textView = UITextView()
     private let imageView = UIImageView()
     private let controller = UIViewController()
     private let presenter: UIViewController
-
     private let inset: CGFloat = 16
+    private var listenerToken = PointOfInterest.Database.ListenerToken(token: 1)
 
     public init(poi: PointOfInterest) {
+        poiId = poi.id
+
         let window = UIApplication.shared.delegate!.window!!
         presenter = window.visibleViewController!
 
@@ -26,30 +29,16 @@ class DetailView : UIView {
         backgroundColor = UIColor(white: 1, alpha: 0.5)
         addGestureRecognizer(UITapGestureRecognizer(target:self, action: #selector(dismiss(_:))))
         
-        // AFAIK If no other action is taken then the image view will size itself to the image, even if this results in a size larger than the window.
-        imageView.image = poi.image
-        imageView.contentMode = poi.image.size.width > (window.frame.width - 2*inset) || poi.image.size.height > (window.frame.height - 2*inset) ? .scaleAspectFit : .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(imageView)
 
-        /*
-        let textAttributes = [NSStrokeColorAttributeName : UIColor.black,
-                              NSForegroundColorAttributeName : UIColor.white,
-                              NSStrokeWidthAttributeName : -3.0] as [String : Any]
-        */
-        let style = NSMutableParagraphStyle()
-        style.alignment = NSTextAlignment.center
-        let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)", attributes: [
-            NSFontAttributeName : UIFont(name: "Helvetica", size: 18)!,
-            NSParagraphStyleAttributeName : style
-            ])
-        text.addAttributes([NSFontAttributeName : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.characters.count))
-        textView.attributedText = text
         textView.isEditable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(textView)
+
+        update(using: poi)
 
         // Here we constrain the image view to not exceed the size of its superview; this causes the scaleAspectFit contentMode to "kick in".
         NSLayoutConstraint.activate([
@@ -67,6 +56,27 @@ class DetailView : UIView {
         controller.modalPresentationStyle = .overCurrentContext
         controller.modalTransitionStyle = .crossDissolve
         controller.view = self
+
+        listenerToken = PointOfInterest.Database.instance.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
+    }
+
+    deinit {
+        PointOfInterest.Database.instance.deregisterListener(token: listenerToken)
+    }
+
+    func poiListener(poi: PointOfInterest, event: PointOfInterest.Database.Event) {
+        
+        if poi.id == poiId {
+            switch event {
+            case .updated:
+                update(using: poi)
+                self.setNeedsDisplay()
+            case .removed:
+                controller.dismiss(animated: false, completion: nil)
+            default:
+                break
+            }
+        }
     }
 
     required public init?(coder aDecoder: NSCoder) {
@@ -138,7 +148,29 @@ class DetailView : UIView {
     func present() {
         presenter.present(controller, animated: false, completion: nil)
     }
-    
+
+    private func update(using poi: PointOfInterest) {
+        let window = UIApplication.shared.delegate!.window!!
+
+        // AFAIK If no other action is taken then the image view will size itself to the image, even if this results in a size larger than the window.
+        imageView.image = poi.image
+        imageView.contentMode = poi.image.size.width > (window.frame.width - 2*inset) || poi.image.size.height > (window.frame.height - 2*inset) ? .scaleAspectFit : .scaleAspectFill
+
+        /*
+         let textAttributes = [NSStrokeColorAttributeName : UIColor.black,
+         NSForegroundColorAttributeName : UIColor.white,
+         NSStrokeWidthAttributeName : -3.0] as [String : Any]
+         */
+        let style = NSMutableParagraphStyle()
+        style.alignment = NSTextAlignment.center
+        let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)", attributes: [
+            NSFontAttributeName : UIFont(name: "Helvetica", size: 18)!,
+            NSParagraphStyleAttributeName : style
+            ])
+        text.addAttributes([NSFontAttributeName : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.characters.count))
+        textView.attributedText = text
+    }
+
     private func aspectFitImageSize() -> CGSize {
         let imageSize = imageView.image!.size
         let widthRatio = imageView.bounds.size.width / imageSize.width
