@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import VerticonsToolbox
 
 class DetailView : UIView {
 
@@ -86,7 +87,7 @@ class DetailView : UIView {
     public override func layoutSubviews() {
         super.layoutSubviews()
  
-        let imageSize = aspectFitImageSize()
+        let imageSize = imageView.aspectFitImageSize()
         let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
         let availableVerticalSpace = self.frame.height - (barHeight + 2*inset)
 
@@ -169,16 +170,6 @@ class DetailView : UIView {
             ])
         text.addAttributes([NSFontAttributeName : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.characters.count))
         textView.attributedText = text
-    }
-
-    private func aspectFitImageSize() -> CGSize {
-        let imageSize = imageView.image!.size
-        let widthRatio = imageView.bounds.size.width / imageSize.width
-        let heightRatio = imageView.bounds.size.height / imageSize.height
-        let scale = min(widthRatio, heightRatio)
-        let scaledImageWidth = scale * imageSize.width
-        let scaledImageHeight = scale * imageSize.height
-        return CGSize(width: scaledImageWidth, height: scaledImageHeight)
     }
 
     @objc private func dismiss(_ sender: UITapGestureRecognizer) {

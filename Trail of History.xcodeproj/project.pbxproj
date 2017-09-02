@@ -37,6 +37,8 @@
 		E1C238461D6B6AFD00A718A8 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C238451D6B6AFD00A718A8 /* MapViewController.swift */; };
 		E1C238661D6C9EF900A718A8 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1C238651D6C9EF900A718A8 /* MapKit.framework */; };
 		E1C238681D6CA65700A718A8 /* UIViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C238671D6CA65700A718A8 /* UIViewExtensions.swift */; };
+		E1CB9AEA1F5AB65D00AFA5AE /* VerticonsToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1CB9AE51F5AB15E00AFA5AE /* VerticonsToolbox.framework */; };
+		E1CB9AEB1F5AB65D00AFA5AE /* VerticonsToolbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E1CB9AE51F5AB15E00AFA5AE /* VerticonsToolbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E1D6AA6F1D88D43B002987BA /* UIApplicationExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D6AA6E1D88D43B002987BA /* UIApplicationExtensions.swift */; };
 		E1DFEBB01D7663B9007359F4 /* DIN Condensed Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E1DFEBAF1D7663B9007359F4 /* DIN Condensed Bold.ttf */; };
 		E1F984E31D6F692D00D28411 /* Title.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1F984E21D6F692D00D28411 /* Title.xib */; };
@@ -64,7 +66,35 @@
 			remoteGlobalIDString = E1B762041E5DC68600B01E19;
 			remoteInfo = VerticonsToolbox;
 		};
+		E1CB9AE81F5AB5EE00AFA5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1CB9AE01F5AB15E00AFA5AE /* VerticonsToolbox.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = E1B762031E5DC68600B01E19;
+			remoteInfo = VerticonsToolbox;
+		};
+		E1CB9AEC1F5AB65D00AFA5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1CB9AE01F5AB15E00AFA5AE /* VerticonsToolbox.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = E1B762031E5DC68600B01E19;
+			remoteInfo = VerticonsToolbox;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E1CB9AEE1F5AB65D00AFA5AE /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				E1CB9AEB1F5AB65D00AFA5AE /* VerticonsToolbox.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0C01F5121D63E0D1005C6284 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -120,6 +150,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1CB9AEA1F5AB65D00AFA5AE /* VerticonsToolbox.framework in Frameworks */,
 				E1C238661D6C9EF900A718A8 /* MapKit.framework in Frameworks */,
 				4D68CDFF8772D4729ECF188A /* libPods-Trail of History.a in Frameworks */,
 			);
@@ -313,10 +344,13 @@
 				4D8B76461C97944300A70B71 /* Resources */,
 				0BE145A0735A724939A18E73 /* [CP] Embed Pods Frameworks */,
 				AF57DBF56DC8F390E826E88A /* [CP] Copy Pods Resources */,
+				E1CB9AEE1F5AB65D00AFA5AE /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E1CB9AE91F5AB5EE00AFA5AE /* PBXTargetDependency */,
+				E1CB9AED1F5AB65D00AFA5AE /* PBXTargetDependency */,
 			);
 			name = "Trail of History";
 			productName = "Trail of History";
@@ -654,6 +688,16 @@
 			target = 4D8B76471C97944300A70B71 /* Trail of History */;
 			targetProxy = 4D8B766B1C97944300A70B71 /* PBXContainerItemProxy */;
 		};
+		E1CB9AE91F5AB5EE00AFA5AE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = VerticonsToolbox;
+			targetProxy = E1CB9AE81F5AB5EE00AFA5AE /* PBXContainerItemProxy */;
+		};
+		E1CB9AED1F5AB65D00AFA5AE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = VerticonsToolbox;
+			targetProxy = E1CB9AEC1F5AB65D00AFA5AE /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -749,6 +793,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 6FC7F45E7A9B75300AA3E164 /* Pods-Trail of History.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = UR6MRM7GRB;
@@ -766,6 +811,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F5EAD61089994794A61D00C3 /* Pods-Trail of History.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = UR6MRM7GRB;
