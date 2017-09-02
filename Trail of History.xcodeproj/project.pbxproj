@@ -57,6 +57,13 @@
 			remoteGlobalIDString = 4D8B76471C97944300A70B71;
 			remoteInfo = "Trail of History";
 		};
+		E1CB9AE41F5AB15E00AFA5AE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1CB9AE01F5AB15E00AFA5AE /* VerticonsToolbox.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E1B762041E5DC68600B01E19;
+			remoteInfo = VerticonsToolbox;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -99,6 +106,7 @@
 		E1C238451D6B6AFD00A718A8 /* MapViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MapViewController.swift; path = "Map View/MapViewController.swift"; sourceTree = "<group>"; };
 		E1C238651D6C9EF900A718A8 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		E1C238671D6CA65700A718A8 /* UIViewExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIViewExtensions.swift; path = Common/UI/UIViewExtensions.swift; sourceTree = "<group>"; };
+		E1CB9AE01F5AB15E00AFA5AE /* VerticonsToolbox.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = VerticonsToolbox.xcodeproj; path = VerticonsToolbox/VerticonsToolbox.xcodeproj; sourceTree = "<group>"; };
 		E1D6AA6E1D88D43B002987BA /* UIApplicationExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIApplicationExtensions.swift; path = Common/UI/UIApplicationExtensions.swift; sourceTree = "<group>"; };
 		E1DFEBAF1D7663B9007359F4 /* DIN Condensed Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "DIN Condensed Bold.ttf"; path = "Resources/DIN Condensed Bold.ttf"; sourceTree = "<group>"; };
 		E1F984E21D6F692D00D28411 /* Title.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Title.xib; path = Common/Title.xib; sourceTree = "<group>"; };
@@ -206,6 +214,7 @@
 		4D8B763F1C97944300A70B71 = {
 			isa = PBXGroup;
 			children = (
+				E1CB9AE01F5AB15E00AFA5AE /* VerticonsToolbox.xcodeproj */,
 				4D8B764A1C97944300A70B71 /* Trail of History */,
 				4D8B76621C97944300A70B71 /* Trail of HistoryTests */,
 				4D8B766D1C97944300A70B71 /* Trail of HistoryUITests */,
@@ -281,6 +290,14 @@
 				E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */,
 			);
 			name = "List View";
+			sourceTree = "<group>";
+		};
+		E1CB9AE11F5AB15E00AFA5AE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E1CB9AE51F5AB15E00AFA5AE /* VerticonsToolbox.framework */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -386,6 +403,12 @@
 			mainGroup = 4D8B763F1C97944300A70B71;
 			productRefGroup = 4D8B76491C97944300A70B71 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = E1CB9AE11F5AB15E00AFA5AE /* Products */;
+					ProjectRef = E1CB9AE01F5AB15E00AFA5AE /* VerticonsToolbox.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				4D8B76471C97944300A70B71 /* Trail of History */,
@@ -394,6 +417,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		E1CB9AE51F5AB15E00AFA5AE /* VerticonsToolbox.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = VerticonsToolbox.framework;
+			remoteRef = E1CB9AE41F5AB15E00AFA5AE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		4D8B76461C97944300A70B71 /* Resources */ = {
