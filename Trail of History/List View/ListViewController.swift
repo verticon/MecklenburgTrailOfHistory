@@ -12,7 +12,7 @@ class ListViewController: UICollectionViewController {
 
     fileprivate let poiCellReuseIdentifier = "PointOfInterestCell"
     fileprivate var pointsOfInterest = [PointOfInterest]()
-    private var listenerToken: PointOfInterest.Database.ListenerToken!
+    private var listenerToken: Any!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,7 +24,7 @@ class ListViewController: UICollectionViewController {
         let poiCellNib: UINib? = UINib(nibName: "PointOfInterestCell", bundle: nil)
         collectionView?.register(poiCellNib, forCellWithReuseIdentifier: poiCellReuseIdentifier)
 
-        listenerToken = PointOfInterest.Database.instance.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
+        listenerToken = PointOfInterest.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
 
         let doubleTapRecognizer: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(didDoubleTapCollectionView))
         doubleTapRecognizer.numberOfTapsRequired = 2
@@ -51,7 +51,7 @@ class ListViewController: UICollectionViewController {
         }
     }
 
-    func poiListener(poi: PointOfInterest, event: PointOfInterest.Database.Event) {
+    func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
         
         switch event {
         case .added:
@@ -82,7 +82,7 @@ class ListViewController: UICollectionViewController {
         imageView.contentMode = .scaleAspectFill
         poiCell.backgroundView = imageView
         poiCell.nameLabel.text = poi.name
-        poiCell.distanceLabel.text = poi.distanceToUser()
+        poiCell.distanceLabel.text = poi.distanceToUser
         
         return poiCell
     }

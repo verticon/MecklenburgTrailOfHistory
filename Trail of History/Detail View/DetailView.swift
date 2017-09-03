@@ -17,7 +17,7 @@ class DetailView : UIView {
     private let controller = UIViewController()
     private let presenter: UIViewController
     private let inset: CGFloat = 16
-    private var listenerToken = PointOfInterest.Database.ListenerToken(token: 1)
+    private var listenerToken: Any!
 
     public init(poi: PointOfInterest) {
         poiId = poi.id
@@ -58,14 +58,14 @@ class DetailView : UIView {
         controller.modalTransitionStyle = .crossDissolve
         controller.view = self
 
-        listenerToken = PointOfInterest.Database.instance.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
+        listenerToken = PointOfInterest.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
     }
 
     deinit {
-        PointOfInterest.Database.instance.deregisterListener(token: listenerToken)
+        _ = PointOfInterest.deregisterListener(token: listenerToken)
     }
 
-    func poiListener(poi: PointOfInterest, event: PointOfInterest.Database.Event) {
+    func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
         
         if poi.id == poiId {
             switch event {

@@ -60,7 +60,7 @@ class MapViewController: UIViewController {
     @IBOutlet weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
     
-    private var listenerToken: PointOfInterest.Database.ListenerToken!
+    private var listenerToken: Any!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -80,7 +80,7 @@ class MapViewController: UIViewController {
         mapView.region = boundary
         mapView.setCenter(midPoint, animated: true)
 
-        listenerToken = PointOfInterest.Database.instance.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
+        listenerToken = PointOfInterest.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
         
         OptionsViewController.initialize(delegate: self)
     }
@@ -107,7 +107,7 @@ class MapViewController: UIViewController {
         }
     }
 
-    func poiListener(poi: PointOfInterest, event: PointOfInterest.Database.Event) {
+    func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
 
         func updateBoundary() {
             if poiAnnotations.count > 0 {
@@ -332,7 +332,7 @@ extension MapViewController : UICollectionViewDataSource {
         let poiCell = collectionView.dequeueReusableCell(withReuseIdentifier: poiCardReuseIdentifier, for: indexPath) as! PointOfInterestCard
         poiCell.nameLabel.text = poi.name
         poiCell.imageView.image = isCurrent(annotation) ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
-        poiCell.distanceLabel.text = poi.distanceToUser()
+        poiCell.distanceLabel.text = poi.distanceToUser
         poiCell.layer.shadowOpacity = 0.3
         poiCell.layer.masksToBounds = false
         poiCell.layer.shadowOffset = CGSize(width: 4, height: 4)

@@ -9,75 +9,163 @@
 import UIKit
 import Firebase
 import CoreLocation
+import VerticonsToolbox
 
 class PointOfInterest {
 
-    let id: String
+    enum Event {
+        case added
+        case updated
+        case removed
+    }
+    
+    typealias Token = Any
+
+    typealias Listener = (PointOfInterest, Event) -> Void
+    
+    static func registerListener(_ listener: @escaping Listener, dispatchQueue: DispatchQueue) -> Token {
+        return ListenerToken(observer: Database.Observer(listener: listener, dispatchQueue: dispatchQueue))
+    }
+    
+    static func deregisterListener(token: Token) -> Bool {
+        if let token = token as? ListenerToken {
+            token.observer.cancel()
+            token.observer = nil
+            return true
+        }
+        return false
+    }
+
+    private static let YardsPerMeter = 1.0936
+
+    // **********************************************************************************************************************
+    
     let name: String
     let description: String
     let coordinate: CLLocationCoordinate2D
-    
-    fileprivate(set) var image: UIImage!
-    fileprivate let imageUrl: URL
-    
+    private(set) var image: UIImage!
+    let id: String
+    var distanceToUser: String {
+        if let distance = _distanceToUser {
+            return "\(Int(round(distance))) yds"
+        }
+        return "<unknown>"
+    }
+
+
+    private let imageUrl: URL
     private let location: CLLocation
-    private var distanceFromUser: Double? // Units are yards
+    private weak var observer: Database.Observer?
+    private var _distanceToUser: Double? // Units are yards
+    private var management: ListenerManagement? = nil
+
     
-    fileprivate init?(properties: Dictionary<String, Any>) {
+    private init?(properties: Dictionary<String, Any>, observer: Database.Observer) {
         if  let id = properties["uid"], let name = properties["name"], let latitude = properties["latitude"],
             let longitude = properties["longitude"], let description = properties["description"], let imageUrl = properties["imageUrl"] {
             
             self.id = id as! String
             self.name = name as! String
             self.description = description as! String
-            
-            self.coordinate = CLLocationCoordinate2D(latitude: latitude as! Double, longitude: longitude as! Double)
+
+            coordinate = CLLocationCoordinate2D(latitude: latitude as! Double, longitude: longitude as! Double)
             location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-            
+           
             let url = URL(string: imageUrl as! String)
             if url == nil { return nil }
             self.imageUrl = url!
-            
-            DistanceToUserUpdater.instance.add(self)
+
+            self.observer = observer
+
+            // Broadcasters store their listeners weakly
+            management = UserLocation.instance?.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler)
         }
         else {
             return nil
         }
     }
     
-    func distanceToUser() -> String {
-        // The Trail class' singleton is using a location manager to update the distances of all of the
-        // Points of Interest. The distances will be nil if location services are unavailable or unauthorized.
-        if let distance = distanceFromUser {
-            return "\(Int(round(distance))) yds"
+    private func userLocationEventHandler(event: UserLocationEvent) {
+        if let observer = self.observer {
+            if case .locationUpdate(let userLocation) = event {
+                _distanceToUser = userLocation.distance(from: self.location) * PointOfInterest.YardsPerMeter
+                observer.notify(poi: self, event: .updated)
+            }
         }
-        return "<unknown>"
+        else {
+            management?.removeListener()
+        }
     }
 
     // **********************************************************************************************************************
 
-    private static let path = "points-of-interest"
-    private static let magicPath = ".info/connected"
-    private static let alertTitle = "Trail of History"
+    private class Database {
 
-    class Database {
+        static let connection = Connection()
 
-        static let instance = Database()
-
-        enum Event {
-            case added
-            case updated
-            case removed
+        class Connection {
+            
+            private static let magicPath = ".info/connected"
+            private static let alertTitle = "Trail of History"
+            
+            private enum ConnectionState {
+                case initialCall
+                case neverConnected
+                case connected
+                case disconnected
+            }
+            
+            private let connectedRef: FIRDatabaseReference
+            private var connectionState: ConnectionState = .initialCall
+            
+            init() {
+                // At startup time the connection observer will be called twice. The first time with a value of false.
+                // The second time with a value of true(false) according to whether everything [Device is connected to the
+                // network, Firebase server is up] is(is not) up and running. Thereafter the observer will be called
+                // once whenever the connection state changes.
+                
+                connectedRef = FIRDatabase.database().reference(withPath: Connection.magicPath)
+                connectedRef.observe(.value, with: {
+                    var isConnected = false
+                    if let connected = $0.value as? Bool, connected { isConnected = true }
+                    
+                    switch self.connectionState {
+                        
+                    case .initialCall:
+                        assert(!isConnected, "Our assumption that the observer's initial call will be with a value of false has been violated!")
+                        self.connectionState = .neverConnected
+                        
+                    case .neverConnected:
+                        if isConnected {
+                            self.connectionState = .connected
+                        } else {
+                            //TODO: It would be nice to only bother the user with an alert if we cannot connect and there is no locally cached data.
+                            // But when I tried to query Firebase under conditions of no connection and no local data my callback did not execute?
+                            self.connectionState = .disconnected
+                            alertUser(title: Connection.alertTitle, body: "A connection to the internet cannot be established. Trail of History will use the points of interest information that was obtained during the previous, successful internet connection. If you have never used the application while being connected to the internet then there will not be any information.")
+                        }
+                        
+                    case .connected:
+                        assert(!isConnected, "We are already connected. Why are we being called again with a value of true?")
+                        if !isConnected {
+                            self.connectionState = .disconnected
+                            //alertUser(title: self.alertTitle, body: "The connection to the database has been lost. The app will continue to work with the Points of Interest that have already been downloaded. You will not receive updates (which, anyway, are rare).")
+                        }
+                        
+                    case .disconnected:
+                        assert(isConnected, "We are already disconnected. Why are we being called again with a value of false?")
+                        if isConnected {
+                            self.connectionState = .connected
+                            //alertUser(title: self.alertTitle, body: "The connection to the database has been established.")
+                        }
+                    }
+                })
+            }
         }
         
-        typealias Listener = (PointOfInterest, Event) -> Void
-        
-        final class ListenerToken {
-            var token: Any!
-            init(token: Any) { self.token = token }
-        }
-        
-        private class Registrant {
+        class Observer {
+            
+            private static let path = "points-of-interest"
             
             private var listener: Listener
             private var dispatchQueue: DispatchQueue
@@ -86,11 +174,11 @@ class PointOfInterest {
             fileprivate init(listener: @escaping Listener, dispatchQueue: DispatchQueue) {
                 self.listener = listener
                 self.dispatchQueue = dispatchQueue
-                self.reference = FIRDatabase.database().reference(withPath: path)
-
-                reference.observe(.childAdded,   with: { self.notify(properties: $0.value as! [String: Any], event: .added) })
-                reference.observe(.childChanged, with: { self.notify(properties: $0.value as! [String: Any], event: .updated) })
-                reference.observe(.childRemoved, with: { self.notify(properties: $0.value as! [String: Any], event: .removed) })
+                self.reference = FIRDatabase.database().reference(withPath: Observer.path)
+                
+                reference.observe(.childAdded,   with: { self.create(properties: $0.value as! [String: Any], event: .added) })
+                reference.observe(.childChanged, with: { self.create(properties: $0.value as! [String: Any], event: .updated) })
+                reference.observe(.childRemoved, with: { self.create(properties: $0.value as! [String: Any], event: .removed) })
             }
             
             deinit {
@@ -101,16 +189,24 @@ class PointOfInterest {
                 reference.removeAllObservers()
             }
             
-            private func notify(properties: [String: Any], event: Event) {
-                if let poi = PointOfInterest(properties: properties) {
-                    loadImage(poi: poi, event: event)
+            private func create(properties: [String: Any], event: Event) {
+                if let poi = PointOfInterest(properties: properties, observer: self) {
+                    loadImage(poi: poi) {
+                        self.dispatchQueue.async {
+                            self.listener(poi, event)
+                        }
+                    }
                 }
                 else {
                     print("Invalid POI data: \(properties)")
                 }
             }
             
-            private func loadImage(poi: PointOfInterest, event: Event) {
+            fileprivate func notify(poi: PointOfInterest, event: Event) {
+                dispatchQueue.async { self.listener(poi, event) }
+            }
+            
+            private func loadImage(poi: PointOfInterest, complete: @escaping () -> Void) {
                 let session = URLSession(configuration: .default)
                 let imageDownloadTask = session.dataTask(with: poi.imageUrl) { (data, response, error) in
                     
@@ -144,24 +240,21 @@ class PointOfInterest {
                             errorText = "http response is nil"
                         }
                     }
-
+                    
                     if image == nil {
                         // If the image could not be obtained then lets see if we "stashed" it on a previous connection to the database
                         if let imageData = UserDefaults.standard.data(forKey: poi.id) {
                             image = UIImage(data: imageData)
                         }
-                        // Else let's create a "standin" image that will inform the user.
-                        else {
+                            // Else let's create a "standin" image that will inform the user.
+                        else { // TODO: Change this to a circle with a line through it.
                             image = self.generateImage(from: "Image Error: \(errorText)")
                         }
                     }
                     
                     poi.image = image!
                     
-                    self.dispatchQueue.async {
-                        self.listener(poi, event)
-                    }
-                    
+                    complete()
                 }
                 imageDownloadTask.resume()
             }
@@ -183,144 +276,11 @@ class PointOfInterest {
                 return textImage
             }
         }
+    }
 
-        private enum ConnectionState {
-            case initialCall
-            case neverConnected
-            case connected
-            case disconnected
-        }
-
-        private let connectedRef: FIRDatabaseReference
-        private var connectionState: ConnectionState = .initialCall
-
-        private init() {
-            // At startup time the connection observer will be called twice. The first time with a value of false.
-            // The second time with a value of true(false) according to whether everything [Device is connected to the
-            // network, Firebase server is up] is(is not) up and running. Thereafter the observer will be called
-            // once whenever the connection state changes.
+    private class ListenerToken {
+        var observer: Database.Observer!
+        init(observer: Database.Observer) { self.observer = observer }
+    }
     
-            connectedRef = FIRDatabase.database().reference(withPath: magicPath)
-            connectedRef.observe(.value, with: {
-                var isConnected = false
-                if let connected = $0.value as? Bool, connected { isConnected = true }
-
-                switch self.connectionState {
-
-                case .initialCall:
-                    assert(!isConnected, "Our assumption that the observer's initial call will be with a value of false has been violated!")
-                    self.connectionState = .neverConnected
-
-                case .neverConnected:
-                    if isConnected {
-                        self.connectionState = .connected
-                    } else {
-                        //TODO: It would be nice to only bother the user with an alert if we cannot connect and there is no locally cached data.
-                        // But when I tried to query Firebase under conditions of no connection and no local data my callback did not execute?
-                        self.connectionState = .disconnected
-                        alertUser(title: alertTitle, body: "A connection to the internet cannot be established. Trail of History will use the points of interest information that was obtained during the previous, successful internet connection. If you have never used the application while being connected to the internet then there will not be any information.")
-                    }
-
-                case .connected:
-                    assert(!isConnected, "We are already connected. Why are we being called again with a value of true?")
-                    if !isConnected {
-                        self.connectionState = .disconnected
-                        //alertUser(title: self.alertTitle, body: "The connection to the database has been lost. The app will continue to work with the Points of Interest that have already been downloaded. You will not receive updates (which, anyway, are rare).")
-                    }
-
-                case .disconnected:
-                    assert(isConnected, "We are already disconnected. Why are we being called again with a value of false?")
-                    if isConnected {
-                        self.connectionState = .connected
-                        //alertUser(title: self.alertTitle, body: "The connection to the database has been established.")
-                    }
-                }
-            })
-
-//            let timer = Timer(timeInterval: 5, target: self, selector: #selector(databaseConnectionTimer), userInfo: nil, repeats: false)
-//            RunLoop.main.add(timer, forMode: RunLoopMode.commonModes)
-        }
-        /*
-        @objc func databaseConnectionTimer(_ timer: Timer) {
-            if self.connectionState == .neverConnected {
-                alertUser(title: alertTitle, body: "We have been unable to establish a connection to the database. Please ensure that your device is connected to the internet.")
-                self.connectionState = .disconnected // Doing this causes the connection established alert to be presented if/when the connection happens (see the connectedRef observer)
-            }
-        }
-         */
-
-        func registerListener(_ listener: @escaping Listener, dispatchQueue: DispatchQueue) -> ListenerToken {
-            return ListenerToken(token: Registrant(listener: listener, dispatchQueue: dispatchQueue))
-        }
-        
-        func deregisterListener(token: ListenerToken) {
-            if let registrant = token.token as? Registrant {
-                registrant.cancel()
-                token.token = nil
-            }
-        }
-    }
-
-    // **********************************************************************************************************************
-
-    private class DistanceToUserUpdater : NSObject, CLLocationManagerDelegate {
-
-        static let instance = DistanceToUserUpdater()
-
-        private class PoiReference {
-            weak var poi : PointOfInterest?
-            init (poi : PointOfInterest) {
-                self.poi = poi
-            }
-        }
-
-        private var poiReferences = [PoiReference]()
-        private let locationManager : CLLocationManager?
-        private let YardsPerMeter = 1.0936
-
-        private override init() {
-            locationManager = CLLocationManager.locationServicesEnabled() ? CLLocationManager() : nil
-
-            super.init()
-
-            if let manager = locationManager {
-                //locationManager.desiredAccuracy = 1
-                //locationManager.distanceFilter = 0.5
-                manager.delegate = self
-                manager.startUpdatingLocation()
-            }
-            else {
-                alertUser(title: "Location Services Needed", body: "Please enable location services so that Trail of History can show you where you are on the trail and what the distances to the points of interest are.")
-            }
-        }
-
-        func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-            
-            switch status {
-            case CLAuthorizationStatus.notDetermined:
-                manager.requestWhenInUseAuthorization();
-                
-            case CLAuthorizationStatus.authorizedWhenInUse:
-                manager.startUpdatingLocation()
-                
-            default:
-                alertUser(title: "Location Access Not Authorized", body: "Trail of History will not be able show you the distance to the points of interest. You can change the authorization in Settings")
-                break
-            }
-        }
-        
-        func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-            let userLocation = locations[locations.count - 1]
-            for ref in poiReferences {
-                if let poi = ref.poi {
-                    poi.distanceFromUser = userLocation.distance(from: poi.location) * YardsPerMeter
-                }
-            }
-            poiReferences = poiReferences.filter { nil != $0.poi }
-        }
- 
-        func add(_ poi: PointOfInterest) {
-            poiReferences.append(PoiReference(poi: poi))
-        }
-    }
 }

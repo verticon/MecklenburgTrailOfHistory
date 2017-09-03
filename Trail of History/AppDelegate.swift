@@ -10,6 +10,7 @@ import UIKit
 import CoreData
 import Firebase
 import FirebaseDatabase
+import VerticonsToolbox
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -21,6 +22,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         FIRApp.configure()
         FIRDatabase.database().persistenceEnabled = true
+        
+        UserLocation.enable()
+
         return true
     }
 
