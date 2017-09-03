@@ -36,8 +36,6 @@ class PointOfInterest {
         return false
     }
 
-    private static let YardsPerMeter = 1.0936
-
     // **********************************************************************************************************************
     
     let name: String
@@ -45,12 +43,6 @@ class PointOfInterest {
     let coordinate: CLLocationCoordinate2D
     private(set) var image: UIImage!
     let id: String
-    var distanceToUser: String {
-        if let distance = _distanceToUser {
-            return "\(Int(round(distance))) yds"
-        }
-        return "<unknown>"
-    }
 
 
     private let imageUrl: URL
@@ -75,25 +67,41 @@ class PointOfInterest {
             if url == nil { return nil }
             self.imageUrl = url!
 
-            self.observer = observer
+            if let userLocation = UserLocation.instance?.current {
+                _distanceToUser = distanceToUser(userLocation: userLocation)
+            }
 
-            // Broadcasters store their listeners weakly
-            management = UserLocation.instance?.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler)
+            self.observer = observer // Inform the observer of location updates
+            management = UserLocation.instance?.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler) // Listen to location updates
         }
         else {
             return nil
         }
     }
     
+    var distanceToUser: String {
+        if let distance = _distanceToUser {
+            return "\(Int(round(distance))) yds"
+        }
+        return "<unknown>"
+    }
+
+    private func distanceToUser(userLocation: CLLocation) -> Double {
+        let YardsPerMeter = 1.0936
+        return userLocation.distance(from: self.location) * YardsPerMeter
+    }
+
+    // When updates are received from the database the observers will be sent a new version of a Point of Interest.
+    // If the observer releases the previous version that it had received then the UserLocation will stop sendimg
+    // location events to that previous instance. This is due to the fact that Broadcasters (which the UserLocation
+    // is) store their listener references weakly.
     private func userLocationEventHandler(event: UserLocationEvent) {
-        if let observer = self.observer {
-            if case .locationUpdate(let userLocation) = event {
-                _distanceToUser = userLocation.distance(from: self.location) * PointOfInterest.YardsPerMeter
+        if case .locationUpdate(let userLocation) = event {
+            _distanceToUser = distanceToUser(userLocation: userLocation)
+        
+            if let observer = self.observer {
                 observer.notify(poi: self, event: .updated)
             }
-        }
-        else {
-            management?.removeListener()
         }
     }
 
