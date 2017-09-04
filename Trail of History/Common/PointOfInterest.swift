@@ -13,22 +13,24 @@ import VerticonsToolbox
 
 class PointOfInterest {
 
+    // **********************************************************************************************************************
+    //                                                  API
+    // **********************************************************************************************************************
+
     enum Event {
         case added
         case updated
         case removed
     }
     
-    typealias Token = Any
+    typealias Observer = (PointOfInterest, Event) -> Void
+    typealias ObserverToken = Any
 
-    typealias Listener = (PointOfInterest, Event) -> Void
-    
-    static func registerListener(_ listener: @escaping Listener, dispatchQueue: DispatchQueue) -> Token {
-        return ListenerToken(observer: Database.Observer(listener: listener, dispatchQueue: dispatchQueue))
+    static func addObserver(_ observer: @escaping Observer, dispatchQueue: DispatchQueue) -> ObserverToken {
+        return Database.ObserverToken(observer: Database.Observer(observer: observer, dispatchQueue: dispatchQueue))
     }
-    
-    static func deregisterListener(token: Token) -> Bool {
-        if let token = token as? ListenerToken {
+    static func removeObserver(token: ObserverToken) -> Bool {
+        if let token = token as? Database.ObserverToken {
             token.observer.cancel()
             token.observer = nil
             return true
@@ -36,56 +38,46 @@ class PointOfInterest {
         return false
     }
 
-    // **********************************************************************************************************************
-    
     let name: String
     let description: String
     let coordinate: CLLocationCoordinate2D
-    private(set) var image: UIImage!
+    let image: UIImage
     let id: String
 
-
-    private let imageUrl: URL
-    private let location: CLLocation
-    private weak var observer: Database.Observer?
-    private var _distanceToUser: Double? // Units are yards
-    private var management: ListenerManagement? = nil
-
-    
-    private init?(properties: Dictionary<String, Any>, observer: Database.Observer) {
-        if  let id = properties["uid"], let name = properties["name"], let latitude = properties["latitude"],
-            let longitude = properties["longitude"], let description = properties["description"], let imageUrl = properties["imageUrl"] {
-            
-            self.id = id as! String
-            self.name = name as! String
-            self.description = description as! String
-
-            coordinate = CLLocationCoordinate2D(latitude: latitude as! Double, longitude: longitude as! Double)
-            location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-           
-            let url = URL(string: imageUrl as! String)
-            if url == nil { return nil }
-            self.imageUrl = url!
-
-            if let userLocation = UserLocation.instance?.current {
-                _distanceToUser = distanceToUser(userLocation: userLocation)
-            }
-
-            self.observer = observer // Inform the observer of location updates
-            management = UserLocation.instance?.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler) // Listen to location updates
-        }
-        else {
-            return nil
-        }
-    }
-    
     var distanceToUser: String {
         if let distance = _distanceToUser {
             return "\(Int(round(distance))) yds"
         }
         return "<unknown>"
     }
+    
+    // **********************************************************************************************************************
+    //                                              Internal
+    // **********************************************************************************************************************
 
+    private let location: CLLocation
+    private weak var observer: Database.Observer?
+    private var _distanceToUser: Double? // Units are yards
+    private var management: ListenerManagement? = nil
+
+    
+    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, observer: Database.Observer) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.image = image
+        
+        coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        
+        if let userLocation = UserLocation.instance?.current {
+            _distanceToUser = distanceToUser(userLocation: userLocation)
+        }
+        
+        self.observer = observer // Inform the observer of location updates
+        management = UserLocation.instance?.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler) // Listen to location updates
+    }
+    
     private func distanceToUser(userLocation: CLLocation) -> Double {
         let YardsPerMeter = 1.0936
         return userLocation.distance(from: self.location) * YardsPerMeter
@@ -175,12 +167,12 @@ class PointOfInterest {
             
             private static let path = "points-of-interest"
             
-            private var listener: Listener
+            private var observer: PointOfInterest.Observer
             private var dispatchQueue: DispatchQueue
             private var reference: FIRDatabaseReference
             
-            fileprivate init(listener: @escaping Listener, dispatchQueue: DispatchQueue) {
-                self.listener = listener
+            fileprivate init(observer: @escaping PointOfInterest.Observer, dispatchQueue: DispatchQueue) {
+                self.observer = observer
                 self.dispatchQueue = dispatchQueue
                 self.reference = FIRDatabase.database().reference(withPath: Observer.path)
                 
@@ -198,28 +190,42 @@ class PointOfInterest {
             }
             
             private func create(properties: [String: Any], event: Event) {
-                if let poi = PointOfInterest(properties: properties, observer: self) {
-                    loadImage(poi: poi) {
-                        self.dispatchQueue.async {
-                            self.listener(poi, event)
-                        }
-                    }
-                }
+                guard
+                    let id = properties["uid"] as? String,
+                    let name = properties["name"] as? String,
+                    let latitude = properties["latitude"] as? Double,
+                    let longitude = properties["longitude"] as? Double,
+                    let description = properties["description"] as? String,
+                    let imageUrl = properties["imageUrl"] as? String
                 else {
                     print("Invalid POI data: \(properties)")
+                    return
                 }
+
+                func finish(poiImage: UIImage) {
+                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: poiImage, observer: self)
+                    self.notify(poi: poi, event: event)
+                }
+
+                if let url = URL(string: imageUrl) {
+                    loadImage(from: url, id: id, complete: finish)
+                }
+                else {
+                    finish(poiImage: UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: "Invalid image URL"))
+                }
+
             }
             
             fileprivate func notify(poi: PointOfInterest, event: Event) {
-                dispatchQueue.async { self.listener(poi, event) }
+                dispatchQueue.async { self.observer(poi, event) }
             }
             
-            private func loadImage(poi: PointOfInterest, complete: @escaping () -> Void) {
+            private func loadImage(from: URL, id: String, complete: @escaping (UIImage) -> Void) {
                 let session = URLSession(configuration: .default)
-                let imageDownloadTask = session.dataTask(with: poi.imageUrl) { (data, response, error) in
+                let imageDownloadTask = session.dataTask(with: from) { (data, response, error) in
                     
                     var image: UIImage?
-                    var errorText = ""
+                    var errorText: String? = nil
                     
                     if let error = error {
                         errorText = "Error = \(error)"
@@ -230,65 +236,45 @@ class PointOfInterest {
                                 if let data = data {
                                     image = UIImage(data: data)
                                     if image != nil {
-                                        UserDefaults.standard.set(data, forKey: poi.id)
+                                        UserDefaults.standard.set(data, forKey: id)
                                     }
                                     else {
-                                        errorText = "image data is corrupt"
+                                        errorText = "Image data is corrupt"
                                     }
                                 }
                                 else {
-                                    errorText = "image data is nil"
+                                    errorText = "Image data is nil"
                                 }
                             }
                             else {
-                                errorText = "http response code = \(response.statusCode)"
+                                errorText = "HTTP response code = \(response.statusCode)"
                             }
                         }
                         else {
-                            errorText = "http response is nil"
+                            errorText = "HTTP response is nil"
                         }
                     }
                     
                     if image == nil {
                         // If the image could not be obtained then lets see if we "stashed" it on a previous connection to the database
-                        if let imageData = UserDefaults.standard.data(forKey: poi.id) {
+                        if let imageData = UserDefaults.standard.data(forKey: id) {
                             image = UIImage(data: imageData)
                         }
-                            // Else let's create a "standin" image that will inform the user.
-                        else { // TODO: Change this to a circle with a line through it.
-                            image = self.generateImage(from: "Image Error: \(errorText)")
+                        // Else let's create a "standin" error image that will inform the user.
+                        else {
+                            image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: errorText)
                         }
                     }
-                    
-                    poi.image = image!
-                    
-                    complete()
+
+                    complete(image!)
                 }
                 imageDownloadTask.resume()
             }
-            
-            private func generateImage(from: String) -> UIImage {
-                let label = UILabel(frame: CGRect(x: 0, y: 0, width: 100, height: 25))
-                label.backgroundColor = UIColor.clear
-                label.textAlignment = .center
-                label.textColor = UIColor.red
-                label.font = UIFont.systemFont(ofSize: 4)
-                label.numberOfLines = 0
-                label.text = from
-                
-                UIGraphicsBeginImageContextWithOptions(label.bounds.size, false, 0);
-                label.layer.render(in: UIGraphicsGetCurrentContext()!)
-                let textImage = UIGraphicsGetImageFromCurrentImageContext()!
-                UIGraphicsEndImageContext();
-                
-                return textImage
-            }
+        }
+
+        class ObserverToken {
+            var observer: Database.Observer!
+            init(observer: Database.Observer) { self.observer = observer }
         }
     }
-
-    private class ListenerToken {
-        var observer: Database.Observer!
-        init(observer: Database.Observer) { self.observer = observer }
-    }
-    
 }

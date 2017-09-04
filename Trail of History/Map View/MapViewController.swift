@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import VerticonsToolbox
 
 // The Map View Controller presents a MKMapView and a UICollectionView. Each of these two views present the Trail of History's
 // points of interest. The map view presents a set of annotations. The collection view presents a set of cards. The map view
@@ -60,7 +61,7 @@ class MapViewController: UIViewController {
     @IBOutlet weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
     
-    private var listenerToken: Any!
+    private var observerToken: Any!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -80,7 +81,7 @@ class MapViewController: UIViewController {
         mapView.region = boundary
         mapView.setCenter(midPoint, animated: true)
 
-        listenerToken = PointOfInterest.registerListener(poiListener, dispatchQueue: DispatchQueue.main)
+        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
         
         OptionsViewController.initialize(delegate: self)
     }
@@ -107,7 +108,7 @@ class MapViewController: UIViewController {
         }
     }
 
-    func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
+    func poiObserver(poi: PointOfInterest, event: PointOfInterest.Event) {
 
         func updateBoundary() {
             if poiAnnotations.count > 0 {
@@ -163,7 +164,7 @@ class MapViewController: UIViewController {
                 poiAnnotations[index].update(with: poi)
             }
             else {
-                print("An unrecognized POI was updated: \(poi)")
+                print("An unrecognized POI was updated: \(poi.name)")
             }
 
         case .removed:
@@ -184,6 +185,7 @@ class MapViewController: UIViewController {
 
         updateBoundary()
 
+/*
         if let centermost = findCentermost() {
             if let current = currentPoi {
                 mapView.view(for: current)?.image = #imageLiteral(resourceName: "PoiAnnotationImage")
@@ -197,6 +199,21 @@ class MapViewController: UIViewController {
 
         if let current = currentPoi, let index = poiAnnotations.index(where: { $0.poi.id == current.poi.id }) {
             collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
+        }
+*/
+
+        collectionView.reloadData()
+
+        if currentPoi == nil {
+            if let centermost = findCentermost() {
+                currentPoi = centermost
+                mapView.view(for: centermost)?.image = #imageLiteral(resourceName: "CurrentPoiAnnotationImage")
+                mapView.setCenter(centermost.coordinate, animated: true)
+            }
+
+            if let current = currentPoi, let index = poiAnnotations.index(where: { $0.poi.id == current.poi.id }) {
+                collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
+            }
         }
     }
 }
