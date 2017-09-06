@@ -80,16 +80,20 @@ class MapViewController: UIViewController {
         boundary = MKCoordinateRegionMake(midPoint, span)
         mapView.region = boundary
         mapView.setCenter(midPoint, animated: true)
-
-        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
         
         OptionsViewController.initialize(delegate: self)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         navigationItem.hidesBackButton = true
+        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
     }
-
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        navigationItem.hidesBackButton = true
+        _ = PointOfInterest.removeObserver(token: observerToken)
+    }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         switch segue.identifier {
 
@@ -159,6 +163,14 @@ class MapViewController: UIViewController {
             poiAnnotations.append(annotation)
             mapView.addAnnotation(annotation)
 
+            poiAnnotations = poiAnnotations.sorted { $0.poi.coordinate.longitude < $1.poi.coordinate.longitude } // Westmost first
+
+            if currentPoi == nil {
+                currentPoi = annotation
+            }
+
+            updateBoundary()
+
         case .updated:
             if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
                 poiAnnotations[index].update(with: poi)
@@ -181,39 +193,9 @@ class MapViewController: UIViewController {
             }
         }
 
-        poiAnnotations = poiAnnotations.sorted { $0.poi.coordinate.longitude < $1.poi.coordinate.longitude } // Westmost first
-
-        updateBoundary()
-
-/*
-        if let centermost = findCentermost() {
-            if let current = currentPoi {
-                mapView.view(for: current)?.image = #imageLiteral(resourceName: "PoiAnnotationImage")
-            }
-            currentPoi = centermost
-            mapView.view(for: centermost)?.image = #imageLiteral(resourceName: "CurrentPoiAnnotationImage")
-            mapView.setCenter(centermost.coordinate, animated: true)
-        }
-
         collectionView.reloadData()
-
-        if let current = currentPoi, let index = poiAnnotations.index(where: { $0.poi.id == current.poi.id }) {
+        if let index = poiAnnotations.index(where: { $0.poi.id == currentPoi?.poi.id }) {
             collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
-        }
-*/
-
-        collectionView.reloadData()
-
-        if currentPoi == nil {
-            if let centermost = findCentermost() {
-                currentPoi = centermost
-                mapView.view(for: centermost)?.image = #imageLiteral(resourceName: "CurrentPoiAnnotationImage")
-                mapView.setCenter(centermost.coordinate, animated: true)
-            }
-
-            if let current = currentPoi, let index = poiAnnotations.index(where: { $0.poi.id == current.poi.id }) {
-                collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
-            }
         }
     }
 }
