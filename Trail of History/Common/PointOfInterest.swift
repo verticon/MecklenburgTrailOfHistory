@@ -11,6 +11,7 @@ import Firebase
 import CoreLocation
 import VerticonsToolbox
 
+// TODO: More testing of realtime response to database updates.
 class PointOfInterest {
 
     // **********************************************************************************************************************
@@ -196,79 +197,80 @@ class PointOfInterest {
                     let latitude = properties["latitude"] as? Double,
                     let longitude = properties["longitude"] as? Double,
                     let description = properties["description"] as? String,
-                    let imageUrl = properties["imageUrl"] as? String
+                    let imageUrlString = properties["imageUrl"] as? String,
+                    let imageUrl = URL(string: imageUrlString)
                 else {
                     print("Invalid POI data: \(properties)")
                     return
                 }
 
-                func finish(poiImage: UIImage) {
-                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: poiImage, observer: self)
+
+                let imageUrlKey = "url:" + id
+                let imageDataKey = "image:" + id
+
+                enum ImageRetrievalResult {
+                    case success(Data)
+                    case failure(String)
+                }
+    
+                func finish(result: ImageRetrievalResult) {
+                    var image: UIImage!
+
+                    switch result {
+                    case .success(let imageData):
+                        image = UIImage(data: imageData)
+                        if image == nil {
+                            image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: "The image data is corrupt")
+                        }
+                    case .failure(let errorText):
+                        image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: errorText)
+                    }
+
+                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: image, observer: self)
                     self.notify(poi: poi, event: event)
                 }
 
-                if let url = URL(string: imageUrl) {
-                    loadImage(from: url, id: id, complete: finish)
+
+                // If the image URL has not changed then use the locally stored image. Else download the image from the remote database
+                if let prevImageUrl = UserDefaults.standard.string(forKey: imageUrlKey), prevImageUrl == imageUrlString {
+                    guard let imageData = UserDefaults.standard.data(forKey: imageDataKey) else {
+                        fatalError("User defaults has an image url but no image data???")
+                    }
+
+                    finish(result: ImageRetrievalResult.success(imageData))
                 }
                 else {
-                    finish(poiImage: UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: "Invalid image URL"))
+                    let session = URLSession(configuration: .default)
+                    let imageDownloadTask = session.dataTask(with: imageUrl) { (data, response, error) in
+                        
+                        if let error = error {
+                            finish(result: ImageRetrievalResult.failure("URLSession data task error: \(error)"))
+                        }
+                        else {
+                            if let response = response as? HTTPURLResponse {
+                                if response.statusCode == 200 {
+                                    if let imageData = data {
+                                        finish(result: ImageRetrievalResult.success(imageData))
+                                    }
+                                    else {
+                                        finish(result: ImageRetrievalResult.failure("Image data is nil"))
+                                    }
+                                }
+                                else {
+                                    finish(result: ImageRetrievalResult.failure("HTTP response error: \(response.statusCode)"))
+                                }
+                            }
+                            else {
+                                finish(result: ImageRetrievalResult.failure("Response type is \(type(of: response)); expected HTTPURLResponse"))
+                            }
+                        }
+                    }
+                    imageDownloadTask.resume()
                 }
-
             }
             
             fileprivate func notify(poi: PointOfInterest, event: Event) {
                 dispatchQueue.async { self.observer(poi, event) }
-            }
-            
-            private func loadImage(from: URL, id: String, complete: @escaping (UIImage) -> Void) {
-                let session = URLSession(configuration: .default)
-                let imageDownloadTask = session.dataTask(with: from) { (data, response, error) in
-                    
-                    var image: UIImage?
-                    var errorText: String? = nil
-                    
-                    if let error = error {
-                        errorText = "Error = \(error)"
-                    }
-                    else {
-                        if let response = response as? HTTPURLResponse {
-                            if response.statusCode == 200 {
-                                if let data = data {
-                                    image = UIImage(data: data)
-                                    if image != nil {
-                                        UserDefaults.standard.set(data, forKey: id)
-                                    }
-                                    else {
-                                        errorText = "Image data is corrupt"
-                                    }
-                                }
-                                else {
-                                    errorText = "Image data is nil"
-                                }
-                            }
-                            else {
-                                errorText = "HTTP response code = \(response.statusCode)"
-                            }
-                        }
-                        else {
-                            errorText = "HTTP response is nil"
-                        }
-                    }
-                    
-                    if image == nil {
-                        // If the image could not be obtained then lets see if we "stashed" it on a previous connection to the database
-                        if let imageData = UserDefaults.standard.data(forKey: id) {
-                            image = UIImage(data: imageData)
-                        }
-                        // Else let's create a "standin" error image that will inform the user.
-                        else {
-                            image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: errorText)
-                        }
-                    }
-
-                    complete(image!)
-                }
-                imageDownloadTask.resume()
             }
         }
 
