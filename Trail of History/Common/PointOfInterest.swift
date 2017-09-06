@@ -219,7 +219,11 @@ class PointOfInterest {
                     switch result {
                     case .success(let imageData):
                         image = UIImage(data: imageData)
-                        if image == nil {
+                        if image != nil {
+                            UserDefaults.standard.set(imageUrl, forKey: imageUrlKey)
+                            UserDefaults.standard.set(imageData, forKey: imageDataKey)
+                        }
+                        else {
                             image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: "The image data is corrupt")
                         }
                     case .failure(let errorText):
@@ -232,7 +236,7 @@ class PointOfInterest {
 
 
                 // If the image URL has not changed then use the locally stored image. Else download the image from the remote database
-                if let prevImageUrl = UserDefaults.standard.string(forKey: imageUrlKey), prevImageUrl == imageUrlString {
+                if let prevImageUrl = UserDefaults.standard.url(forKey: imageUrlKey), prevImageUrl == imageUrl {
                     guard let imageData = UserDefaults.standard.data(forKey: imageDataKey) else {
                         fatalError("User defaults has an image url but no image data???")
                     }
