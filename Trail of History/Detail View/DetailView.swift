@@ -61,10 +61,6 @@ class DetailView : UIView {
         observerToken = PointOfInterest.addObserver(poiListener, dispatchQueue: DispatchQueue.main)
     }
 
-    deinit {
-        _ = PointOfInterest.removeObserver(token: observerToken)
-    }
-
     func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
         
         if poi.id == poiId {
@@ -174,6 +170,7 @@ class DetailView : UIView {
 
     @objc private func dismiss(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
+            _ = PointOfInterest.removeObserver(token: observerToken)
             controller.dismiss(animated: false, completion: nil)
         }
     }

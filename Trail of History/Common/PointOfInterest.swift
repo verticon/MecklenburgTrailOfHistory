@@ -170,16 +170,21 @@ class PointOfInterest {
             
             private var observer: PointOfInterest.Observer
             private var dispatchQueue: DispatchQueue
-            private var reference: FIRDatabaseReference
+            private var reference: FIRDatabaseReference?
+            private var childAddedObservationId: UInt = 0
+            private var childChangedObservationId: UInt = 0
+            private var childRemovedObservationId: UInt = 0
             
             fileprivate init(observer: @escaping PointOfInterest.Observer, dispatchQueue: DispatchQueue) {
                 self.observer = observer
                 self.dispatchQueue = dispatchQueue
-                self.reference = FIRDatabase.database().reference(withPath: Observer.path)
                 
-                reference.observe(.childAdded,   with: { self.create(properties: $0.value as! [String: Any], event: .added) })
-                reference.observe(.childChanged, with: { self.create(properties: $0.value as! [String: Any], event: .updated) })
-                reference.observe(.childRemoved, with: { self.create(properties: $0.value as! [String: Any], event: .removed) })
+                // Note: Itried using a single Observer of the event type .value but each event sent all of the poi records???
+                
+                reference = FIRDatabase.database().reference(withPath: Observer.path)
+                childAddedObservationId = reference!.observe(.childAdded,   with: { self.eventHandler(properties: $0.value as! [String: Any], event: .added) })
+                childChangedObservationId = reference!.observe(.childChanged, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .updated) })
+                childRemovedObservationId = reference!.observe(.childRemoved, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .removed) })
             }
             
             deinit {
@@ -187,10 +192,15 @@ class PointOfInterest {
             }
             
             fileprivate func cancel() {
-                reference.removeAllObservers()
+                if let ref = reference {
+                    ref.removeObserver(withHandle: childAddedObservationId)
+                    ref.removeObserver(withHandle: childChangedObservationId)
+                    ref.removeObserver(withHandle: childRemovedObservationId)
+                    reference = nil
+                }
             }
             
-            private func create(properties: [String: Any], event: Event) {
+            private func eventHandler(properties: [String: Any], event: Event) {
                 guard
                     let id = properties["uid"] as? String,
                     let name = properties["name"] as? String,
@@ -203,7 +213,6 @@ class PointOfInterest {
                     print("Invalid POI data: \(properties)")
                     return
                 }
-
 
                 let imageUrlKey = "url:" + id
                 let imageDataKey = "image:" + id
