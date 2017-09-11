@@ -26,7 +26,7 @@ import VerticonsToolbox
 // of the title view). The Options controller allows the user to set various features and to perform various actions.
 
 class MapViewController: UIViewController {
-    
+
     class PoiAnnotation: NSObject, MKAnnotation {
         
         dynamic var title: String?
@@ -52,13 +52,15 @@ class MapViewController: UIViewController {
         }
     }
 
-    @IBOutlet weak var mapView: MKMapView!
+    var pageViewController: PageViewController?
+
+    @IBOutlet fileprivate weak var mapView: MKMapView!
     fileprivate var boundary: MKCoordinateRegion!
     fileprivate var currentPoi: PoiAnnotation?
     fileprivate var poiAnnotations = [PoiAnnotation]()
     fileprivate var _calloutsEnabled = false
 
-    @IBOutlet weak var collectionView : UICollectionView!
+    @IBOutlet fileprivate weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
     
     private var observerToken: Any!
@@ -69,7 +71,7 @@ class MapViewController: UIViewController {
         navigationItem.titleView = UIView.fromNib("Title")
         navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
         navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor() // TODO: We should be able to access the TOH custom colors in the Interface Builder
-         
+
         let poiCardNib = UINib(nibName: "PointOfInterestCard", bundle: nil)
         collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)
         collectionView.decelerationRate = UIScrollViewDecelerationRateFast
@@ -81,19 +83,27 @@ class MapViewController: UIViewController {
         mapView.region = boundary
         mapView.setCenter(midPoint, animated: true)
         
+        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
+
         OptionsViewController.initialize(delegate: self)
     }
 
     override func viewWillAppear(_ animated: Bool) {
         navigationItem.hidesBackButton = true
-        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
+
+        if let pageVC = pageViewController {
+            pageVC.navigationItem.rightBarButtonItems = self.navigationItem.rightBarButtonItems
+        }
     }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        navigationItem.hidesBackButton = true
-        _ = PointOfInterest.removeObserver(token: observerToken)
+
+    override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
+        if identifier == "Unwind Map", let pageVC = pageViewController  {
+            pageVC.switchPages(sender: self)
+            return false
+        }
+        return true
     }
-    
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         switch segue.identifier {
 

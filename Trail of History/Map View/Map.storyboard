@@ -13,7 +13,7 @@
         <!--Map View Controller-->
         <scene sceneID="lp9-YY-lEL">
             <objects>
-                <viewController title="Map View Controller" id="Beb-Hd-0rH" customClass="MapViewController" customModule="Trail_of_History" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Map View Controller" title="Map View Controller" id="Beb-Hd-0rH" customClass="MapViewController" customModule="Trail_of_History" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="ZBb-zJ-ExH"/>
                         <viewControllerLayoutGuide type="bottom" id="FYe-Xg-zzx"/>
@@ -23,13 +23,13 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="jyz-cg-gtj">
-                                <rect key="frame" x="0.0" y="20" width="375" height="647"/>
+                                <rect key="frame" x="8" y="20" width="367" height="647"/>
                                 <connections>
                                     <outlet property="delegate" destination="Beb-Hd-0rH" id="2oy-Bu-6JL"/>
                                 </connections>
                             </mapView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="dcM-wA-t3l" userLabel="POI Card Collection View">
-                                <rect key="frame" x="0.0" y="537" width="375" height="80"/>
+                                <rect key="frame" x="4" y="537" width="367" height="80"/>
                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="80" id="jGq-wn-nMj"/>
@@ -66,9 +66,9 @@
                         </subviews>
                         <constraints>
                             <constraint firstItem="jyz-cg-gtj" firstAttribute="top" secondItem="ZBb-zJ-ExH" secondAttribute="bottom" id="C39-nj-ukq"/>
-                            <constraint firstAttribute="leading" secondItem="jyz-cg-gtj" secondAttribute="leading" id="JxG-T3-zTB"/>
+                            <constraint firstItem="jyz-cg-gtj" firstAttribute="leading" secondItem="gCW-Op-v4E" secondAttribute="leading" constant="8" id="JxG-T3-zTB"/>
                             <constraint firstItem="FYe-Xg-zzx" firstAttribute="top" secondItem="dcM-wA-t3l" secondAttribute="bottom" constant="50" id="O0E-tL-xbR"/>
-                            <constraint firstAttribute="trailing" secondItem="jyz-cg-gtj" secondAttribute="trailing" id="T3Z-C8-1Ag"/>
+                            <constraint firstItem="jyz-cg-gtj" firstAttribute="trailing" secondItem="gCW-Op-v4E" secondAttribute="trailing" id="T3Z-C8-1Ag"/>
                             <constraint firstItem="dcM-wA-t3l" firstAttribute="centerX" secondItem="gCW-Op-v4E" secondAttribute="centerX" id="XTo-jG-6nj"/>
                             <constraint firstItem="FYe-Xg-zzx" firstAttribute="top" secondItem="jyz-cg-gtj" secondAttribute="bottom" id="Y59-jS-qze"/>
                             <constraint firstItem="dcM-wA-t3l" firstAttribute="width" secondItem="jyz-cg-gtj" secondAttribute="width" id="pU2-u3-eUg"/>
@@ -80,7 +80,7 @@
                             <barButtonItem image="list" id="DjC-nn-NjM" userLabel="Back to List View">
                                 <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 <connections>
-                                    <segue destination="bQf-DL-2yk" kind="unwind" unwindAction="unwind:" id="4w1-Ou-wRG"/>
+                                    <segue destination="bQf-DL-2yk" kind="unwind" identifier="Unwind Map" unwindAction="unwind:" id="4w1-Ou-wRG"/>
                                 </connections>
                             </barButtonItem>
                             <barButtonItem image="DropDown" id="NV8-Rb-mmg" userLabel="Show Options">

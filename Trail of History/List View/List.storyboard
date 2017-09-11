@@ -12,8 +12,8 @@
         <!--Trail of History-->
         <scene sceneID="gGf-TZ-cuL">
             <objects>
-                <collectionViewController id="am0-QG-21i" customClass="ListViewController" customModule="Trail_of_History" customModuleProvider="target" sceneMemberID="viewController">
-                    <collectionView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" dataMode="prototypes" id="Qgc-in-7Ng">
+                <collectionViewController storyboardIdentifier="List View Controller" id="am0-QG-21i" customClass="ListViewController" customModule="Trail_of_History" customModuleProvider="target" sceneMemberID="viewController">
+                    <collectionView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" id="Qgc-in-7Ng">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
@@ -33,7 +33,7 @@
                         <barButtonItem key="rightBarButtonItem" image="map" id="3Ab-Jc-IcE">
                             <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             <connections>
-                                <segue destination="gEc-BO-G8V" kind="show" id="vOT-dk-nlw"/>
+                                <segue destination="gEc-BO-G8V" kind="show" identifier="List to Map" id="vOT-dk-nlw"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>

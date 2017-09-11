@@ -11,6 +11,8 @@ import VerticonsToolbox
 
 class ListViewController: UICollectionViewController {
 
+    var pageViewController: PageViewController?
+
     fileprivate let poiCellReuseIdentifier = "PointOfInterestCell"
     fileprivate var pointsOfInterest = [PointOfInterest]()
     private var observerToken: Any!
@@ -33,7 +35,15 @@ class ListViewController: UICollectionViewController {
         doubleTapRecognizer.delaysTouchesBegan = true
         //collectionView?.addGestureRecognizer(doubleTapRecognizer)
     }
-    
+
+    override func viewWillAppear(_ animated: Bool) {
+        navigationItem.hidesBackButton = true
+        
+        if let pageVC = pageViewController {
+            pageVC.navigationItem.rightBarButtonItems = self.navigationItem.rightBarButtonItems
+        }
+    }
+
     func didDoubleTapCollectionView(recognizer: UITapGestureRecognizer) {
         if recognizer.state == .ended {
             let doubleTapPoint = recognizer.location(in: collectionView)
@@ -93,9 +103,16 @@ class ListViewController: UICollectionViewController {
         collectionView.deselectItem(at: indexPath, animated: false)
     }
 
-    @IBAction func unwind(_ segue:UIStoryboardSegue) {
+    override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
+        if let pageVC = pageViewController {
+            pageVC.switchPages(sender: self)
+            return false
+        }
+        return true
     }
 
+    @IBAction func unwind(_ segue:UIStoryboardSegue) {
+    }
 }
 
 extension ListViewController : UICollectionViewDelegateFlowLayout {
