@@ -6,7 +6,6 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
-        <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -76,23 +75,21 @@
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Trail of History" id="ugj-J8-1UX">
-                        <rightBarButtonItems>
-                            <barButtonItem image="list" id="DjC-nn-NjM" userLabel="Back to List View">
-                                <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                <connections>
-                                    <segue destination="bQf-DL-2yk" kind="unwind" identifier="Unwind Map" unwindAction="unwind:" id="4w1-Ou-wRG"/>
-                                </connections>
-                            </barButtonItem>
-                            <barButtonItem image="DropDown" id="NV8-Rb-mmg" userLabel="Show Options">
-                                <inset key="imageInsets" minX="0.0" minY="16" maxX="2" maxY="0.0"/>
-                                <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <connections>
-                                    <segue destination="cnU-hy-0dD" kind="popoverPresentation" identifier="Show Options" popoverAnchorBarButtonItem="NV8-Rb-mmg" id="gxE-pU-u7X">
-                                        <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
-                                    </segue>
-                                </connections>
-                            </barButtonItem>
-                        </rightBarButtonItems>
+                        <barButtonItem key="leftBarButtonItem" image="DropDown" id="NV8-Rb-mmg" userLabel="Show Options">
+                            <inset key="imageInsets" minX="0.0" minY="16" maxX="2" maxY="0.0"/>
+                            <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <connections>
+                                <segue destination="cnU-hy-0dD" kind="popoverPresentation" identifier="Show Options" popoverAnchorBarButtonItem="NV8-Rb-mmg" id="gxE-pU-u7X">
+                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                </segue>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" image="list" id="DjC-nn-NjM" userLabel="Back to List View">
+                            <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                            <connections>
+                                <segue destination="bQf-DL-2yk" kind="unwind" identifier="Unwind Map" unwindAction="unwind:" id="4w1-Ou-wRG"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="collectionView" destination="dcM-wA-t3l" id="Nb4-Vn-1ek"/>

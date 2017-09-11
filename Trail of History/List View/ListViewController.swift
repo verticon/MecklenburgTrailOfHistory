@@ -40,6 +40,7 @@ class ListViewController: UICollectionViewController {
         navigationItem.hidesBackButton = true
         
         if let pageVC = pageViewController {
+            pageVC.navigationItem.leftBarButtonItems = self.navigationItem.leftBarButtonItems
             pageVC.navigationItem.rightBarButtonItems = self.navigationItem.rightBarButtonItems
         }
     }

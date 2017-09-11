@@ -92,6 +92,7 @@ class MapViewController: UIViewController {
         navigationItem.hidesBackButton = true
 
         if let pageVC = pageViewController {
+            pageVC.navigationItem.leftBarButtonItems = self.navigationItem.leftBarButtonItems
             pageVC.navigationItem.rightBarButtonItems = self.navigationItem.rightBarButtonItems
         }
     }
@@ -107,7 +108,7 @@ class MapViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         switch segue.identifier {
 
-        case "Show Options"?:
+        case "Show Options"?: // TODO: Disable navigating to the List View while the Options View is being displayed.
             let optionsViewController = segue.destination as! OptionsViewController
             // TODO: Calculate the preferred size from the actual content of the Options controller's table.
             optionsViewController.preferredContentSize = CGSize(width: 150, height: 325)
