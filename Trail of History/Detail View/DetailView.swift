@@ -6,39 +6,47 @@
 //  Copyright © 2016 CLT Mobile. All rights reserved.
 //
 
+import AVFoundation
 import UIKit
+import AVKit
 import VerticonsToolbox
 
-class DetailView : UIView {
+class DetailView : UIView, AVPlayerViewControllerDelegate {
 
     private let poiId : String
     private let textView = UITextView()
     private let imageView = UIImageView()
+    private let movieButton = UIButton()
     private let controller = UIViewController()
     private let presenter: UIViewController
     private let inset: CGFloat = 16
     private var observerToken: Any!
+    private let movieUrl: URL?
 
     public init(poi: PointOfInterest) {
         poiId = poi.id
+        movieUrl = poi.movieUrl
 
         let window = UIApplication.shared.delegate!.window!!
         presenter = window.visibleViewController!
 
         super.init(frame: CGRect.zero)
 
-        backgroundColor = UIColor(white: 1, alpha: 0.5)
+        backgroundColor = UIColor(white: 1, alpha: 0.5) // Allow the underlying view to be seen through a white haze.
         addGestureRecognizer(UITapGestureRecognizer(target:self, action: #selector(dismiss(_:))))
         
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        
         addSubview(imageView)
 
         textView.isEditable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
-        
         addSubview(textView)
 
+        movieButton.translatesAutoresizingMaskIntoConstraints = false
+        movieButton.setImage(#imageLiteral(resourceName: "PlayMovieButton"), for: .normal)
+        movieButton.addTarget(self, action: #selector(playMovie), for: .touchUpInside)
+        addSubview(movieButton)
+        
         update(using: poi)
 
         // Here we constrain the image view to not exceed the size of its superview; this causes the scaleAspectFit contentMode to "kick in".
@@ -52,6 +60,11 @@ class DetailView : UIView {
             textView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             textView.widthAnchor.constraint(equalTo: imageView.widthAnchor),
             textView.heightAnchor.constraint(equalTo: imageView.heightAnchor),
+            
+            movieButton.rightAnchor.constraint(equalTo: imageView.rightAnchor, constant: -8),
+            movieButton.bottomAnchor.constraint(equalTo: imageView.bottomAnchor, constant: -8),
+            movieButton.widthAnchor.constraint(equalToConstant: 32),
+            movieButton.heightAnchor.constraint(equalToConstant: 32),
             ])
 
         controller.modalPresentationStyle = .overCurrentContext
@@ -107,24 +120,38 @@ class DetailView : UIView {
         // Note: The code assumes that the image and text view are initially centered in their super view.
         // This should have be assurred by the contraints that were applied by the initializer.
 
-        
-        var newTextFrame = textView.frame
-        newTextFrame.size.height = textView.contentSize.height
-        if newTextFrame.height + imageSize.height > availableVerticalSpace {
-            newTextFrame.size.height = availableVerticalSpace - imageSize.height
+        // Expand the height of the text view to the height of its content, up to but not exceeding the available space
+        if textView.contentSize.height + imageSize.height > availableVerticalSpace {
+            textView.frame.size.height = availableVerticalSpace - imageSize.height
         }
-        textView.frame = newTextFrame
+        else {
+            textView.frame.size.height = textView.contentSize.height
+        }
         
+
         let totalHeight = imageSize.height + textView.frame.height
 
+        // Position the image vertically
         let currImageTop = self.center.y - imageSize.height/2
         let newImageTop = self.center.y - totalHeight/2 + barHeight/2
         imageView.frame.origin.y -= currImageTop - newImageTop
 
+        // Position the text view vertically
         let currTextTop = textView.frame.origin.y
         let newTextTop = newImageTop + imageSize.height
         textView.frame.origin.y -= currTextTop - newTextTop
  
+        // Place the movie button in the lower right corner of the image
+        if movieUrl != nil {
+            movieButton.frame.origin.x = textView.frame.maxX - (movieButton.frame.width + 8)
+            movieButton.frame.origin.y = textView.frame.minY - (movieButton.frame.height + 8)
+        }
+        else {
+            movieButton.isHidden = true
+        }
+
+        // TODO: Improve the shadow
+        // Create a shadow around the combined image and text views
         let shadowView = UIView(frame: CGRect(x: inset, y: newImageTop, width: imageSize.width, height: totalHeight))
         let radius: CGFloat = shadowView.frame.width / 2.0 //change it to .height if you need spread for height
         let shadowPath = UIBezierPath(rect: CGRect(x: 0, y: 0, width: 2.1 * radius, height: shadowView.frame.height))
@@ -168,11 +195,30 @@ class DetailView : UIView {
         textView.attributedText = text
     }
 
+    @objc private func playMovie() {
+        dismiss()
+
+        let player = AVPlayer(url: movieUrl!)
+        let playerViewController = AVPlayerViewController()
+        playerViewController.player = player
+        presenter.present(playerViewController, animated: true) {
+            playerViewController.player!.play()
+        }
+    }
+
+    func playerViewController(_ playerViewController: AVPlayerViewController, failedToStartPictureInPictureWithError error: Error) {
+        print("There was a playback error: \(error)")
+    }
+
     @objc private func dismiss(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
-            _ = PointOfInterest.removeObserver(token: observerToken)
-            controller.dismiss(animated: false, completion: nil)
+            dismiss()
         }
+    }
+    
+    private func dismiss() {
+        _ = PointOfInterest.removeObserver(token: observerToken)
+        controller.dismiss(animated: false, completion: nil)
     }
     
     private func describe(view: UIView, indent: String) {

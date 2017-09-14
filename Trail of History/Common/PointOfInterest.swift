@@ -27,6 +27,8 @@ class PointOfInterest {
     typealias Observer = (PointOfInterest, Event) -> Void
     typealias ObserverToken = Any
 
+    // Points of Interest are obtained via observers. Observwers will receive the
+    // currently existing POIs and will be informed of additions, updates, or removals.
     static func addObserver(_ observer: @escaping Observer, dispatchQueue: DispatchQueue) -> ObserverToken {
         return Database.ObserverToken(observer: Database.Observer(observer: observer, dispatchQueue: dispatchQueue))
     }
@@ -44,6 +46,7 @@ class PointOfInterest {
     let coordinate: CLLocationCoordinate2D
     let image: UIImage
     let id: String
+    let movieUrl: URL?
 
     var distanceToUser: String {
         if let distance = _distanceToUser {
@@ -62,11 +65,12 @@ class PointOfInterest {
     private var management: ListenerManagement? = nil
 
     
-    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, observer: Database.Observer) {
+    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, movieUrl: URL?, observer: Database.Observer) {
         self.id = id
         self.name = name
         self.description = description
         self.image = image
+        self.movieUrl = movieUrl
         
         coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
         location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
@@ -214,6 +218,11 @@ class PointOfInterest {
                     return
                 }
 
+                var movieUrl: URL? = nil
+                if let movieUrlString = properties["movieUrl"] as? String {
+                    movieUrl = URL(string: movieUrlString)
+                }
+
                 let imageUrlKey = "url:" + id
                 let imageDataKey = "image:" + id
 
@@ -239,7 +248,7 @@ class PointOfInterest {
                         image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: errorText)
                     }
 
-                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: image, observer: self)
+                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: image, movieUrl: movieUrl, observer: self)
                     self.notify(poi: poi, event: event)
                 }
 
