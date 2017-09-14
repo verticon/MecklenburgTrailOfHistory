@@ -9,26 +9,59 @@
 import AVFoundation
 import UIKit
 import AVKit
+import SafariServices
 import VerticonsToolbox
 
 class DetailView : UIView, AVPlayerViewControllerDelegate {
 
+    static func present(poi: PointOfInterest) {
+        let window = UIApplication.shared.delegate!.window!!
+        let presenter = window.visibleViewController!
+
+        if let webPageUrl = URL(string: poi.description) {
+            let safariVC = SFSafariViewController(url: webPageUrl, entersReaderIfAvailable: true)
+            presenter.present(safariVC, animated: false) {
+                var frame = safariVC.view.frame
+                //if status bar not hidden
+                let OffsetY: CGFloat  = 64
+                //if status bar hidden
+                //let OffsetY: CGFloat  = 44
+                
+                frame.origin = CGPoint(x: frame.origin.x, y: frame.origin.y - OffsetY)
+                frame.size = CGSize(width: frame.width, height: frame.height + OffsetY)
+                safariVC.view.frame = frame
+            }
+        }
+        else {
+            let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
+
+            let controller = UIViewController()
+            controller.modalPresentationStyle = .overCurrentContext
+            controller.modalTransitionStyle = .crossDissolve
+
+            controller.view = DetailView(poi: poi, presenter: presenter, controller: controller, barHeight: barHeight)
+
+            presenter.present(controller, animated: false, completion: nil)
+        }
+    }
+    
     private let poiId : String
     private let textView = UITextView()
     private let imageView = UIImageView()
     private let movieButton = UIButton()
-    private let controller = UIViewController()
-    private let presenter: UIViewController
     private let inset: CGFloat = 16
     private var observerToken: Any!
     private let movieUrl: URL?
+    private let barHeight: CGFloat
+    private let presenter: UIViewController
+    private let controller: UIViewController
 
-    public init(poi: PointOfInterest) {
+    private init(poi: PointOfInterest, presenter: UIViewController, controller: UIViewController, barHeight: CGFloat) {
         poiId = poi.id
         movieUrl = poi.movieUrl
-
-        let window = UIApplication.shared.delegate!.window!!
-        presenter = window.visibleViewController!
+        self.presenter = presenter
+        self.controller = controller
+        self.barHeight = barHeight
 
         super.init(frame: CGRect.zero)
 
@@ -67,10 +100,6 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
             movieButton.heightAnchor.constraint(equalToConstant: 32),
             ])
 
-        controller.modalPresentationStyle = .overCurrentContext
-        controller.modalTransitionStyle = .crossDissolve
-        controller.view = self
-
         observerToken = PointOfInterest.addObserver(poiListener, dispatchQueue: DispatchQueue.main)
     }
 
@@ -97,7 +126,6 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         super.layoutSubviews()
  
         let imageSize = imageView.aspectFitImageSize()
-        let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
         let availableVerticalSpace = self.frame.height - (barHeight + 2*inset)
 
         func info(_ header: String) {
@@ -167,10 +195,6 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
         //info("After")
         //print("\tShadow View: \(shadowView.frame)")
-    }
-
-    func present() {
-        presenter.present(controller, animated: false, completion: nil)
     }
 
     private func update(using poi: PointOfInterest) {

@@ -174,7 +174,7 @@ class MapViewController: UIViewController {
             poiAnnotations.append(annotation)
             mapView.addAnnotation(annotation)
 
-            poiAnnotations = poiAnnotations.sorted { $0.poi.coordinate.longitude < $1.poi.coordinate.longitude } // Westmost first
+            poiAnnotations = poiAnnotations.sorted { $0.poi.coordinate.latitude > $1.poi.coordinate.latitude } // Northmost first
 
             if currentPoi == nil {
                 currentPoi = annotation
@@ -290,7 +290,7 @@ extension MapViewController : UICollectionViewDelegate {
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        DetailView(poi: poiAnnotations[indexPath.item].poi).present()
+        DetailView.present(poi: poiAnnotations[indexPath.item].poi)
     }
 }
 

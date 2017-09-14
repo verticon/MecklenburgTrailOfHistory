@@ -17,6 +17,6 @@ class PointOfInterestCard: UICollectionViewCell {
     var poi: PointOfInterest!
 
     @IBAction func presentDetailView(_ sender: UIButton) {
-        DetailView(poi: poi).present()
+        DetailView.present(poi: poi)
     }
 }

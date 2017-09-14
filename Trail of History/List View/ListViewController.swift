@@ -75,7 +75,7 @@ class ListViewController: UICollectionViewController {
             pointsOfInterest = pointsOfInterest.filter { $0.id != poi.id }
         }
 
-        pointsOfInterest = pointsOfInterest.sorted { $0.coordinate.longitude < $1.coordinate.longitude }
+        pointsOfInterest = pointsOfInterest.sorted { $0.coordinate.latitude > $1.coordinate.latitude }
         
         collectionView?.reloadData()
     }
@@ -100,7 +100,7 @@ class ListViewController: UICollectionViewController {
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        DetailView(poi: pointsOfInterest[indexPath.item]).present()
+        DetailView.present(poi: pointsOfInterest[indexPath.item])
         collectionView.deselectItem(at: indexPath, animated: false)
     }
 
