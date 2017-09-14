@@ -37,6 +37,13 @@ class PageViewController: UIViewController {
         view.addSubview(pageViewController.view)
 
         pageViewController.dataSource = self
+        
+        // We do not want taps in the List View to cause page swicthes.
+        pageViewController.gestureRecognizers.forEach {
+            if $0 is UITapGestureRecognizer {
+                pageViewController.view.removeGestureRecognizer($0)
+            }
+        }
 
         pageViewController.didMove(toParentViewController: self)
     }

@@ -73,6 +73,8 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
         textView.isEditable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.textColor = UIColor.lightGray
+        textView.backgroundColor = UIColor(red: 248.0/255.0, green: 241.0/255.0, blue: 227.0/255.0, alpha: 1) // Safari's tan, reader view color.
         addSubview(textView)
 
         movieButton.translatesAutoresizingMaskIntoConstraints = false
