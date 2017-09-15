@@ -13,6 +13,6 @@ class NavigationController: UINavigationController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.navigationBar.barTintColor = UIColor.tohGreyishBrownTwoColor()
+        self.navigationBar.barTintColor = UIColor.tohGreyishBrownTwoColor
     }
 }

@@ -12,7 +12,18 @@ class PageViewController: UIViewController {
 
     var mapViewController: MapViewController!
     var listViewController: ListViewController!
-    let pageViewController: UIPageViewController = UIPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
+    let pageViewController: UIPageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+
+    var pageControl: UIPageControl = {
+        let pageControl = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.maxY - 50, width: UIScreen.main.bounds.width, height: 50))
+        pageControl.numberOfPages = 2
+        pageControl.currentPage = 0
+        pageControl.alpha = 1
+        pageControl.tintColor = UIColor.clear
+        pageControl.pageIndicatorTintColor = UIColor.darkGray
+        pageControl.currentPageIndicatorTintColor = UIColor.tohTerracotaColor
+        return pageControl
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,14 +42,16 @@ class PageViewController: UIViewController {
         pageViewController.setViewControllers([listViewController], direction: .forward, animated: false, completion: nil)
 
         navigationItem.rightBarButtonItems = listViewController.navigationItem.rightBarButtonItems
-        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor()
+        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
 
         addChildViewController(pageViewController)
         view.addSubview(pageViewController.view)
+        view.addSubview(pageControl)
 
         pageViewController.dataSource = self
+        pageViewController.delegate = self
         
-        // We do not want taps in the List View to cause page swicthes.
+        // We do not want taps in the List View to cause page switches.
         pageViewController.gestureRecognizers.forEach {
             if $0 is UITapGestureRecognizer {
                 pageViewController.view.removeGestureRecognizer($0)
@@ -64,12 +77,20 @@ class PageViewController: UIViewController {
 }
 
 extension PageViewController : UIPageViewControllerDataSource {
-
+    
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         return viewController === mapViewController ? listViewController : nil
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
         return viewController === listViewController ? mapViewController : nil
+    }
+}
+
+extension PageViewController : UIPageViewControllerDelegate {
+
+    func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+        let pageContentViewController = pageViewController.viewControllers![0]
+        pageControl.currentPage = pageContentViewController === listViewController ? 0 : 1
     }
 }
