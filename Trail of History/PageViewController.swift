@@ -14,16 +14,7 @@ class PageViewController: UIViewController {
     var listViewController: ListViewController!
     let pageViewController: UIPageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
 
-    var pageControl: UIPageControl = {
-        let pageControl = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.maxY - 50, width: UIScreen.main.bounds.width, height: 50))
-        pageControl.numberOfPages = 2
-        pageControl.currentPage = 0
-        pageControl.alpha = 1
-        pageControl.tintColor = UIColor.clear
-        pageControl.pageIndicatorTintColor = UIColor.darkGray
-        pageControl.currentPageIndicatorTintColor = UIColor.tohTerracotaColor
-        return pageControl
-    }()
+    var pageControl: UIPageControl!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,6 +37,14 @@ class PageViewController: UIViewController {
 
         addChildViewController(pageViewController)
         view.addSubview(pageViewController.view)
+
+        pageControl = UIPageControl(frame: CGRect(x: 0, y: view.frame.maxY - 100, width: UIScreen.main.bounds.width, height: 50))
+        pageControl.numberOfPages = 2
+        pageControl.currentPage = 0
+        pageControl.alpha = 1
+        pageControl.tintColor = UIColor.clear
+        pageControl.pageIndicatorTintColor = UIColor.darkGray
+        pageControl.currentPageIndicatorTintColor = UIColor.tohTerracotaColor
         view.addSubview(pageControl)
 
         pageViewController.dataSource = self

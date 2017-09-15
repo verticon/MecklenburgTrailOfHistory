@@ -70,7 +70,8 @@ class MapViewController: UIViewController {
 
         navigationItem.titleView = UIView.fromNib("Title")
         navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
-        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor // TODO: We should be able to access the TOH custom colors in the Interface Builder
+        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
+        navigationItem.leftBarButtonItem?.tintColor = UIColor.tohTerracotaColor
 
         let poiCardNib = UINib(nibName: "PointOfInterestCard", bundle: nil)
         collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)

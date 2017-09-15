@@ -63,6 +63,7 @@
                                 </connections>
                             </collectionView>
                         </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="jyz-cg-gtj" firstAttribute="top" secondItem="ZBb-zJ-ExH" secondAttribute="bottom" id="C39-nj-ukq"/>
                             <constraint firstItem="jyz-cg-gtj" firstAttribute="leading" secondItem="gCW-Op-v4E" secondAttribute="leading" constant="8" id="JxG-T3-zTB"/>

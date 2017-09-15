@@ -34,11 +34,12 @@
                         <viewControllerLayoutGuide type="top" id="Gp0-ET-zYc"/>
                         <viewControllerLayoutGuide type="bottom" id="4Q7-EL-Pbl"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="rx6-KQ-bIB">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                    <view key="view" contentMode="scaleToFill" misplaced="YES" id="rx6-KQ-bIB">
+                        <rect key="frame" x="0.0" y="64" width="375" height="603"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
                     <navigationItem key="navigationItem" id="dwE-n5-q3k"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Mnu-Ze-TYs" userLabel="First Responder" sceneMemberID="firstResponder"/>
