@@ -43,28 +43,38 @@ class PointOfInterest {
 
     let name: String
     let description: String
-    let coordinate: CLLocationCoordinate2D
+    let location: CLLocation
     let image: UIImage
     let id: String
     let movieUrl: URL?
 
     var distanceToUser: String {
-        if let distance = _distanceToUser {
-            return "\(Int(round(distance))) yds"
+        if let userLocation = UserLocation.instance.currentLocation {
+            return "\(Int(round(self.location.yards(from: userLocation)))) yds"
         }
         return "<unknown>"
+    }
+    
+    // Return the heading that would take the user to the point of interest.
+    var poiHeading: Double? {
+        return UserLocation.instance.currentLocation?.bearing(to: self.location)
+    }
+    
+    // Return the angle between the user's actual heading and the heading that would take him/her to the point of interest.
+    // If the user's heading would take him/her south of the poi then the angle will be positive, else it will be negative.
+    var angleWithUserHeading: Double? {
+        if  let userHeading = UserLocation.instance.currentBearing, let poiHeading = self.poiHeading {
+            return userHeading - poiHeading
+        }
+        return nil
     }
     
     // **********************************************************************************************************************
     //                                              Internal
     // **********************************************************************************************************************
 
-    private let location: CLLocation
     private weak var observer: Database.Observer?
-    private var _distanceToUser: Double? // Units are yards
-    private var management: ListenerManagement? = nil
 
-    
     private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, movieUrl: URL?, observer: Database.Observer) {
         self.id = id
         self.name = name
@@ -72,33 +82,30 @@ class PointOfInterest {
         self.image = image
         self.movieUrl = movieUrl
         
-        coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-        location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        
-        if let userLocation = UserLocation.instance?.current {
-            _distanceToUser = distanceToUser(userLocation: userLocation)
-        }
+        location = CLLocation(latitude: latitude, longitude: longitude)
         
         self.observer = observer // Inform the observer of location updates
-        management = UserLocation.instance?.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler) // Listen to location updates
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler) // Listen to location updates
     }
     
-    private func distanceToUser(userLocation: CLLocation) -> Double {
-        let YardsPerMeter = 1.0936
-        return userLocation.distance(from: self.location) * YardsPerMeter
-    }
-
     // When updates are received from the database the observers will be sent a new version of a Point of Interest.
     // If the observer releases the previous version that it had received then the UserLocation will stop sendimg
     // location events to that previous instance. This is due to the fact that Broadcasters (which the UserLocation
     // is) store their listener references weakly.
     private func userLocationEventHandler(event: UserLocationEvent) {
-        if case .locationUpdate(let userLocation) = event {
-            _distanceToUser = distanceToUser(userLocation: userLocation)
-        
-            if let observer = self.observer {
-                observer.notify(poi: self, event: .updated)
-            }
+        switch event {
+        case .locationUpdate:
+            break
+            
+        case .headingUpdate:
+            break
+            
+        default:
+            return
+        }
+
+        if let observer = self.observer {
+            observer.notify(poi: self, event: .updated)
         }
     }
 
