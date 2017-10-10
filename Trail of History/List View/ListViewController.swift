@@ -75,7 +75,7 @@ class ListViewController: UICollectionViewController {
             pointsOfInterest = pointsOfInterest.filter { $0.id != poi.id }
         }
 
-        pointsOfInterest = pointsOfInterest.sorted { $0.coordinate.latitude > $1.coordinate.latitude }
+        pointsOfInterest = pointsOfInterest.sorted { $0.location.coordinate.latitude > $1.location.coordinate.latitude }
         
         collectionView?.reloadData()
     }
