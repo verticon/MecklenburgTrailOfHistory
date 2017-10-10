@@ -33,6 +33,7 @@
 		E1823A4C1E15602F00498A92 /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A4B1E15602F00498A92 /* NavigationController.swift */; };
 		E1823A4E1E16BD4900498A92 /* UIWindowExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A4D1E16BD4900498A92 /* UIWindowExtensions.swift */; };
 		E1823A521E170BE100498A92 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A511E170BE100498A92 /* DetailView.swift */; };
+		E182C6FC1F7680B2003903CE /* MainPath.json in Resources */ = {isa = PBXBuildFile; fileRef = E182C6FA1F7680B2003903CE /* MainPath.json */; };
 		E1C2383C1D6B28C700A718A8 /* Map.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1C2383B1D6B28C700A718A8 /* Map.storyboard */; };
 		E1C2383F1D6B29E900A718A8 /* PointOfInterestCard.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1C2383D1D6B29E900A718A8 /* PointOfInterestCard.xib */; };
 		E1C238461D6B6AFD00A718A8 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C238451D6B6AFD00A718A8 /* MapViewController.swift */; };
@@ -133,6 +134,7 @@
 		E1823A4B1E15602F00498A92 /* NavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationController.swift; sourceTree = "<group>"; };
 		E1823A4D1E16BD4900498A92 /* UIWindowExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIWindowExtensions.swift; path = Common/UI/UIWindowExtensions.swift; sourceTree = "<group>"; };
 		E1823A511E170BE100498A92 /* DetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DetailView.swift; path = "Detail View/DetailView.swift"; sourceTree = "<group>"; };
+		E182C6FA1F7680B2003903CE /* MainPath.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = MainPath.json; path = Data/MainPath.json; sourceTree = SOURCE_ROOT; };
 		E1C2383B1D6B28C700A718A8 /* Map.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Map.storyboard; path = "Map View/Map.storyboard"; sourceTree = "<group>"; };
 		E1C2383D1D6B29E900A718A8 /* PointOfInterestCard.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PointOfInterestCard.xib; path = "Map View/PointOfInterestCard.xib"; sourceTree = "<group>"; };
 		E1C238451D6B6AFD00A718A8 /* MapViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MapViewController.swift; path = "Map View/MapViewController.swift"; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 		0C01F50A1D63DDCB005C6284 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				E182C6FA1F7680B2003903CE /* MainPath.json */,
 				E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */,
 				4D8B76551C97944300A70B71 /* Assets.xcassets */,
 				E150ED421D763903006C40AF /* Archer-Medium.otf */,
@@ -470,6 +473,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E182C6FC1F7680B2003903CE /* MainPath.json in Resources */,
 				E14F8F281E044C7F004AB05D /* GoogleService-Info.plist in Resources */,
 				4D8B76561C97944300A70B71 /* Assets.xcassets in Resources */,
 				0C01F5131D63E0D1005C6284 /* Main.storyboard in Resources */,

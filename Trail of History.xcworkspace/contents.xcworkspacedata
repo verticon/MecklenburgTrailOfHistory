@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:UserPath.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:Trail of History.xcodeproj">
    </FileRef>
    <FileRef

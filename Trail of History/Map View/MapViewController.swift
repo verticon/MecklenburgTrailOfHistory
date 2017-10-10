@@ -10,20 +10,21 @@ import UIKit
 import MapKit
 import VerticonsToolbox
 
-// The Map View Controller presents a MKMapView and a UICollectionView. Each of these two views present the Trail of History's
-// points of interest. The map view presents a set of annotations. The collection view presents a set of cards. The map view
-// controller uses the concept of a "current" point of interest to keep these two views in sync. The current point of interest
-// is the one whose card is centered in the card collection view and whose map annotation is highlighted and centered in the map.
-// Initially the current point of interest is set to the middle (from an east/west perspective) point of interest.
-//
-// The user can change the current point of interest in one of two ways:
-//      1) By tapping on a different map annotation. The controller will highlight that annotation and center the map on it.
-//      2) By scrolling the collection view to a different card.
-// Whenever the user performs one of the above actions, the controller will automatically perform the other. Thus the annotations
-// and the cards are always kept in sync, each indicating the same current point of interest.
-//
-// The Map View Controller also gives the user access to an Options View Controller (via a small drop down arrow to the right
-// of the title view). The Options controller allows the user to set various features and to perform various actions.
+/* The Map View Controller presents a MKMapView and a UICollectionView. Each of these two views present the Trail of History's
+ * points of interest. The map view presents a set of annotations. The collection view presents a set of cards. The map view
+ * controller uses the concept of a "current" point of interest to keep these two views in sync. The current point of interest
+ * is the one whose card is centered in the card collection view and whose map annotation is highlighted and centered in the map.
+ * Initially the current point of interest is set to the middle (from an east/west perspective) point of interest.
+ *
+ * The user can change the current point of interest in one of two ways:
+ *      1) By tapping on a different map annotation. The controller will highlight that annotation and center the map on it.
+ *      2) By scrolling the collection view to a different card.
+ * Whenever the user performs one of the above actions, the controller will automatically perform the other. Thus the annotations
+ * and the cards are always kept in sync, each indicating the same current point of interest.
+ *
+ * The Map View Controller also gives the user access to an Options View Controller (via a small drop down arrow to the right
+ * of the title view). The Options controller allows the user to set various features and to perform various actions.
+ */
 
 class MapViewController: UIViewController {
 
@@ -37,36 +38,55 @@ class MapViewController: UIViewController {
 
         init(poi: PointOfInterest) {
             title = poi.name
-            subtitle = "lat \(poi.coordinate.latitude), long \(poi.coordinate.longitude)"
-            coordinate = poi.coordinate
+            coordinate = poi.location.coordinate
+            subtitle = "lat \(coordinate.latitude), long \(coordinate.longitude)"
 
             self.poi = poi
         }
 
         func update(with poi: PointOfInterest) {
             title = poi.name
-            subtitle = "lat \(poi.coordinate.latitude), long \(poi.coordinate.longitude)"
-            coordinate = poi.coordinate
+            coordinate = poi.location.coordinate
+            subtitle = "lat \(coordinate.latitude), long \(coordinate.longitude)"
             
             self.poi = poi
         }
     }
 
+
     var pageViewController: PageViewController?
 
     @IBOutlet fileprivate weak var mapView: MKMapView!
     fileprivate var boundary: MKCoordinateRegion!
-    fileprivate var currentPoi: PoiAnnotation?
     fileprivate var poiAnnotations = [PoiAnnotation]()
     fileprivate var _calloutsEnabled = false
 
+    fileprivate var trackingTurnedOffLocation: CLLocation?
+    fileprivate let trackingReenabledDistance = 2.0
+
     @IBOutlet fileprivate weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
-    
+
     private var observerToken: Any!
+    
+    fileprivate let showBoundaryOverlay = false
+    fileprivate var boundaryOverlay: MKPolygon?
+
+    fileprivate let showDebugLayer = false
+    fileprivate var debugLayer: VerticallyCenteredTextLayer!
+    fileprivate var debugStrings: [String]!
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        if showDebugLayer {
+            debugStrings = ["", "", ""]
+            debugLayer = VerticallyCenteredTextLayer()
+            debugLayer.frame = view.bounds
+            debugLayer.alignmentMode = kCAAlignmentCenter
+            debugLayer.foregroundColor = UIColor.lightGray.withAlphaComponent(0.6).cgColor
+            view.layer.addSublayer(debugLayer)
+        }
 
         navigationItem.titleView = UIView.fromNib("Title")
         navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
@@ -83,6 +103,20 @@ class MapViewController: UIViewController {
         boundary = MKCoordinateRegionMake(midPoint, span)
         mapView.region = boundary
         mapView.setCenter(midPoint, animated: true)
+        mapView.showsCompass = true
+
+        var overlays = [MKPolyline]()
+        if let path = mainPath {
+            let polyline = MKPolyline(coordinates: path, count: path.count)
+            polyline.title = "Main Path"
+            overlays.append(polyline)
+        }
+        if let path = captainJackSidePath {
+            let polyline = MKPolyline(coordinates: path, count: path.count)
+            polyline.title = "Captain Jack Side Path"
+            overlays.append(polyline)
+        }
+        mapView.addOverlays(overlays)
         
         observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
 
@@ -128,9 +162,9 @@ class MapViewController: UIViewController {
 
         func updateBoundary() {
             if poiAnnotations.count > 0 {
-                var westmost = poiAnnotations[0].poi.coordinate.longitude
+                var westmost = poiAnnotations[0].poi.location.coordinate.longitude
                 var eastmost = westmost
-                var northmost = poiAnnotations[0].poi.coordinate.latitude
+                var northmost = poiAnnotations[0].poi.location.coordinate.latitude
                 var southmost = northmost
                 
                 for poi in poiAnnotations {
@@ -140,10 +174,10 @@ class MapViewController: UIViewController {
                     else if poi.coordinate.latitude < southmost { southmost = poi.coordinate.latitude }
                 }
 
-                westmost -= 0.005
-                eastmost += 0.005
-                northmost += 0.005
-                southmost -= 0.005
+                westmost -= 0.0005
+                eastmost += 0.0005
+                northmost += 0.0005
+                southmost -= 0.0005
 
                 let latitudeDelta = northmost - southmost
                 let longitudeDelta = eastmost - westmost
@@ -152,20 +186,23 @@ class MapViewController: UIViewController {
                 
                 boundary = MKCoordinateRegionMake(midPoint, span)
                 mapView.region = boundary
-            }
-        }
 
-        func findCentermost() -> PoiAnnotation? { // East to west centermost
-            var centermost: PoiAnnotation?
-            var delta = Double.greatestFiniteMagnitude
-            for annotation in poiAnnotations {
-                let newDelta = fabs(mapView.region.center.longitude - annotation.coordinate.longitude)
-                if newDelta < delta {
-                    delta = newDelta
-                    centermost = annotation
+                if showBoundaryOverlay {
+                    if let polygon = boundaryOverlay  {
+                        mapView.remove(polygon)
+                    }
+
+                    let coords = [CLLocationCoordinate2D(latitude: northmost, longitude: westmost),
+                                  CLLocationCoordinate2D(latitude: northmost, longitude: eastmost),
+                                  CLLocationCoordinate2D(latitude: southmost, longitude: eastmost),
+                                  CLLocationCoordinate2D(latitude: southmost, longitude: westmost)]
+                    let polygon = MKPolygon(coordinates: coords, count: 4)
+                    polygon.title = "Trail Boundary"
+                    mapView.add(polygon)
+                    
+                    boundaryOverlay = polygon
                 }
             }
-            return centermost
         }
 
         switch event {
@@ -175,11 +212,9 @@ class MapViewController: UIViewController {
             poiAnnotations.append(annotation)
             mapView.addAnnotation(annotation)
 
-            poiAnnotations = poiAnnotations.sorted { $0.poi.coordinate.latitude > $1.poi.coordinate.latitude } // Northmost first
+            poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.longitude < $1.poi.location.coordinate.longitude } // Westmost first
 
-            if currentPoi == nil {
-                currentPoi = annotation
-            }
+            if currentPoi == nil { currentPoi = annotation }
 
             updateBoundary()
 
@@ -205,10 +240,120 @@ class MapViewController: UIViewController {
             }
         }
 
+        if trackUser && poiAnnotations.count > 0 {
+            let sorted = poiAnnotations.sorted{ abs($0.poi.angleWithUserHeading ?? 0.0) < abs($1.poi.angleWithUserHeading ?? 0.0) }
+            currentPoi = sorted.first
+        }
+
         collectionView.reloadData()
+
         if let index = poiAnnotations.index(where: { $0.poi.id == currentPoi?.poi.id }) {
             collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
         }
+    }
+
+    fileprivate var _currentPoi: PoiAnnotation?
+    fileprivate var currentPoi: PoiAnnotation? {
+        get {
+            return _currentPoi
+        }
+        set {
+            func setImagesFor(annotation: PoiAnnotation, isCurrent: Bool) {
+                mapView.view(for: annotation)?.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
+                if let index = poiAnnotations.index(where: { $0.poi.id == annotation.poi.id }) {
+                    (collectionView.cellForItem(at: IndexPath(item: index, section: 0)) as? PointOfInterestCard)?.imageView.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
+                }
+            }
+    
+            if let current = currentPoi { setImagesFor(annotation: current, isCurrent: false) }
+            _currentPoi = newValue
+            if let current = currentPoi { setImagesFor(annotation: current, isCurrent: true) }
+
+            }
+    }
+
+    fileprivate func userLocationEventHandler(event: UserLocationEvent) {
+        switch event {
+        case .locationUpdate(let userLocation):
+            if userIsOnTrail() {
+                if let stoppedLocation = trackingTurnedOffLocation {
+                    if userLocation.distance(from: stoppedLocation) < trackingReenabledDistance { break }
+                    trackingTurnedOffLocation = nil
+                }
+                mapView.userTrackingMode = .followWithHeading
+            }
+            else {
+                mapView.userTrackingMode = .none
+            }
+            
+        case .headingUpdate:
+            break
+            
+        default:
+            break
+        }
+
+        if showDebugLayer {
+            debug("\(userIsOnTrail() ? "" : "Not ")On Trail, \(trackUser ? "" : "Not ")Tracking", 0)
+        }
+    }
+
+    fileprivate func userIsOnTrail() -> Bool {
+        if let location = UserLocation.instance.currentLocation {
+            return boundary.contains(coordinate: location.coordinate)
+        }
+        return false
+    }
+
+    private var _mainPath : [CLLocationCoordinate2D]? = nil
+    private var mainPath : [CLLocationCoordinate2D]? {
+        if _mainPath == nil {
+            _mainPath = getPath(name: "MainPath")
+        }
+        return _mainPath
+    }
+    private var _captainJackSidePath : [CLLocationCoordinate2D]? = nil
+    private var captainJackSidePath : [CLLocationCoordinate2D]? {
+        if _captainJackSidePath == nil {
+            _captainJackSidePath = getPath(name: "CaptainJackSidePath")
+        }
+        return _captainJackSidePath
+    }
+    private func getPath(name: String) -> [CLLocationCoordinate2D]? {
+        if let jsonFilePath = Bundle.main.path(forResource: name, ofType: "json") {
+            
+            let jsonFileUrl = URL(fileURLWithPath: jsonFilePath)
+            do {
+                let jsonData = try Data(contentsOf: jsonFileUrl)
+                let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
+                
+                if let container = jsonObject as? [String : Any],
+                   let coordinates = container[name] as? [String : [String : Any]] {
+                    
+                    var path = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: coordinates.count)
+                    
+                    for (key, value) in coordinates {
+                        let index = Int(key)! - 1
+                        let latitude = value["latitude"] as! Double
+                        let longitude = value["longitude"] as! Double
+                        path[index] = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+                    }
+                    
+                    return path
+                }
+                else {
+                    print("The json object does not contain the expected types:\n\(jsonObject)")
+                }
+            }
+            catch {
+                print("Error reading/parsing \(name).json: \(error)")
+            }
+        }
+        else {
+            print("Cannot get \(name).json from bundle.")
+        }
+        
+        return nil
     }
 }
 
@@ -257,6 +402,39 @@ extension MapViewController : MKMapViewDelegate {
             }
         }
     }
+
+    // User tracking can only be turned on after the map has finished loading so let's wait until then to add the listener.
+    // TODO: Consider whether or not the activation of the options view should be defered until loading is complete - it
+    // probabley doesn't matter since the user wouldn't be able to use the options that quickly (right?).
+    func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: MapViewController.userLocationEventHandler) // Listen to location updates
+    }
+
+    func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
+        if mode == .none {
+            trackingTurnedOffLocation = UserLocation.instance.currentLocation
+        }
+
+        if showDebugLayer {
+            debug("Tracking turned \(mode == .none ? "Off" : "On")", 1)
+        }
+    }
+
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        let renderer : MKOverlayPathRenderer
+        if overlay is MKPolygon {
+            renderer = MKPolygonRenderer(polygon: overlay as! MKPolygon)
+            renderer.lineWidth = 2
+            renderer.strokeColor = .red
+        }
+        else {
+            renderer = ZoomingPolylineRenderer(polyline: overlay as! MKPolyline, mapView: mapView, polylineWidth: 3)
+            renderer.strokeColor = UIColor.green
+        }
+        renderer.fillColor = .clear
+        print("Created \(type(of: renderer)) renderer for \(String(describing: overlay.title))")
+        return renderer
+    }
 }
 
 extension MapViewController : UICollectionViewDelegate {
@@ -274,18 +452,9 @@ extension MapViewController : UICollectionViewDelegate {
         let centerPoint = CGPoint(x: collectionView.frame.width/2, y: collectionView.frame.height/2)
         if let indexOfCenterCell = self.collectionView.indexPathForItem(at: CGPoint(x: centerPoint.x + self.collectionView.contentOffset.x, y: centerPoint.y + self.collectionView.contentOffset.y)) {
 
-            if let current = currentPoi {
-                mapView.view(for: current)?.image = #imageLiteral(resourceName: "PoiAnnotationImage")
-                if let index = poiAnnotations.index(where: { $0.poi.id == current.poi.id }) {
-                    (collectionView.cellForItem(at: IndexPath(item: index, section: 0)) as? PointOfInterestCard)?.imageView.image = #imageLiteral(resourceName: "PoiAnnotationImage")
-                }
-            }
-            
             currentPoi = poiAnnotations[indexOfCenterCell.item]
-            mapView.view(for: currentPoi!)?.image = #imageLiteral(resourceName: "CurrentPoiAnnotationImage")
             mapView.setCenter(currentPoi!.coordinate, animated: true)
-            (collectionView.cellForItem(at: indexOfCenterCell) as? PointOfInterestCard)?.imageView.image = #imageLiteral(resourceName: "CurrentPoiAnnotationImage")
-        }
+         }
 
         if !collectionView.isDragging && !collectionView.isDecelerating { timer.invalidate() }
     }
@@ -364,7 +533,7 @@ extension MapViewController : OptionsViewControllerDelegate {
         }
     }
 
-/*
+    /*
     var trailRouteVisible: Bool {
         get {
             // We only have 1 possible overlay (currently)
@@ -377,13 +546,15 @@ extension MapViewController : OptionsViewControllerDelegate {
             else {
                 mapView.remove(Trail.instance.route)
             }
-        }
+     
     }
-*/
-    
+     */
+ 
     // The POI Annotations set their subtitle to display their coordinates.
-    // We might not want callouts in the final version and/or we might want to display something different. For
-    // now it is useful as a validation tool when we are testing by physically walking the Trail.
+    // We might not want callouts in the final version and/or we might want to display something different.
+    // For now it is useful as a validation tool when we are testing by physically walking the trail.
+    //
+    // Update 9/18/17 - Currently the Options View Controller does not present this option
     var calloutsEnabled: Bool {
         get {
             return _calloutsEnabled
@@ -395,7 +566,16 @@ extension MapViewController : OptionsViewControllerDelegate {
             }
         }
     }
-    
+ 
+    var trackUser: Bool {
+        get {
+            return mapView.userTrackingMode == .followWithHeading
+        }
+        set {
+            mapView.userTrackingMode = newValue ? .followWithHeading : .none
+        }
+    }
+
     func zoomToTrail() {
         mapView.region = boundary
         if let current = currentPoi {
@@ -419,30 +599,30 @@ extension MapViewController : OptionsViewControllerDelegate {
     }
 }
 
-extension MapViewController { // Utility Methods
+fileprivate extension MapViewController { // Utility Methods
 
-    fileprivate func isCurrent(_ annotation: PoiAnnotation) -> Bool {
+    func isCurrent(_ annotation: PoiAnnotation) -> Bool {
         return currentPoi?.poi.id == annotation.poi.id
     }
 
-    // TODO: I am fairly certain that makeRect() will fail if the user and the Trail of History
-    // are on different sides of the equator and/or the prime meridian. Does this really matter?
-    //
-    // Latitude is 0 degrees at the equater. It increases heading north, becoming +90 degrees
-    // at the north pole. It decreases heading south, becoming -90 degrees at the south pole.
-    //
-    // Longitude is 0 degress at the prime meridian (Greenwich, England). It increases heading
-    // east, becoming +180 degrees when it reaches the "other side" of the prime meridian.
-    // It decreases heading west, becoming -180 degrees when it reaches the other side.
-    //
-    // For Points and Rects: x increases to the right, y increases down
+    func findCentermost() -> PoiAnnotation? { // East to west centermost
+        var centermost: PoiAnnotation?
+        var delta = Double.greatestFiniteMagnitude
+        for annotation in poiAnnotations {
+            let newDelta = fabs(mapView.region.center.longitude - annotation.coordinate.longitude)
+            if newDelta < delta {
+                delta = newDelta
+                centermost = annotation
+            }
+        }
+        return centermost
+    }
     
-    fileprivate func makeRect(center: CLLocationCoordinate2D, span: MKCoordinateSpan) -> MKMapRect {
-        let northWestCornerCoordinate = CLLocationCoordinate2D(latitude: center.latitude + span.latitudeDelta/2, longitude: center.longitude - span.longitudeDelta/2)
-        let southEastCornetCoordinate = CLLocationCoordinate2D(latitude: center.latitude - span.latitudeDelta/2, longitude: center.longitude + span.longitudeDelta/2)
-        let upperLeftCornerPoint = MKMapPointForCoordinate(northWestCornerCoordinate)
-        let lowerRightCornerPoint = MKMapPointForCoordinate(southEastCornetCoordinate)
-        return MKMapRectMake(upperLeftCornerPoint.x, upperLeftCornerPoint.y, lowerRightCornerPoint.x - upperLeftCornerPoint.x, lowerRightCornerPoint.y - upperLeftCornerPoint.y)
+    func debug(_ text: String, _  index: Int) {
+        debugStrings[index] = text
+        var debugString = ""
+        debugStrings.forEach { debugString += $0 + "\n\n" }
+        debugLayer.string = debugString
     }
 }
- 
+
