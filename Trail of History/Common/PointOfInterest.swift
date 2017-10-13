@@ -48,11 +48,16 @@ class PointOfInterest {
     let id: String
     let movieUrl: URL?
 
-    var distanceToUser: String {
-        if let userLocation = UserLocation.instance.currentLocation {
-            return "\(Int(round(self.location.yards(from: userLocation)))) yds"
-        }
-        return "<unknown>"
+    var distanceToUser: Int? {
+        guard let userLocation = UserLocation.instance.currentLocation else { return nil }
+        
+        return Int(round(self.location.yards(from: userLocation)))
+    }
+    
+    var distanceToUserText: String {
+        guard let distance = distanceToUser else { return "<unknown>" }
+        
+        return "\(distance) yds"
     }
     
     // Return the heading that would take the user to the point of interest.
