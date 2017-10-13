@@ -94,7 +94,7 @@ class ListViewController: UICollectionViewController {
         imageView.contentMode = .scaleAspectFill
         poiCell.backgroundView = imageView
         poiCell.nameLabel.text = poi.name
-        poiCell.distanceLabel.text = poi.distanceToUser
+        poiCell.distanceLabel.text = poi.distanceToUserText
         
         return poiCell
     }

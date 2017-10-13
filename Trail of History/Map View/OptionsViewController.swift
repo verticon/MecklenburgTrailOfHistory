@@ -11,8 +11,7 @@ import MapKit
 
 protocol OptionsViewControllerDelegate: class {
     var mapType: MKMapType { get set }
-    //var trailRouteVisible: Bool { get set }
-    var calloutsEnabled: Bool { get set }
+
     func zoomToTrail()
     func zoomToUser()
     func zoomToBoth()
@@ -26,9 +25,6 @@ class OptionsViewController: UITableViewController {
         case Standard
         case Satellite
         case Hybrid
-        
-        //case TrailRoute
-        case Callouts
         
         case ZoomToTrail
         case ZoomToUser
@@ -68,8 +64,6 @@ class OptionsViewController: UITableViewController {
         if let mapTypeName = userDefaults.string(forKey: UserDefaultsKey.mapType.rawValue), let mapType = CellIdentifier(rawValue: mapTypeName)?.mapType {
             delegate.mapType = mapType
         }
-        
-        delegate.calloutsEnabled = userDefaults.bool(forKey: UserDefaultsKey.callouts.rawValue)
     }
 
     weak var delegate: OptionsViewControllerDelegate!
@@ -87,9 +81,6 @@ class OptionsViewController: UITableViewController {
         default:
             break
         }
-
-        //CellIdentifier.TrailRoute.getCell(tableView)?.accessoryType = delegate.trailRouteVisible ? .checkmark : .none
-        CellIdentifier.Callouts.getCell(tableView)?.accessoryType = delegate.calloutsEnabled ? .checkmark : .none
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -102,7 +93,7 @@ class OptionsViewController: UITableViewController {
         case .Standard: fallthrough
         case .Satellite: fallthrough
         case .Hybrid:
-            if cell.accessoryType == .none { // If the user taps the one that is already checked then there is nothing that needs to be done
+            if cell.accessoryType == .none { // Only take action if the user taps one other than the one that is currently
                 // Check the selected cell and uncheck the others.
                 cell.accessoryType = .checkmark
                 for id in [CellIdentifier.Standard, CellIdentifier.Satellite, CellIdentifier.Hybrid] where id != identifier {
@@ -111,17 +102,6 @@ class OptionsViewController: UITableViewController {
                 delegate.mapType = identifier.mapType!
                 UserDefaults.standard.set(identifier.rawValue, forKey: UserDefaultsKey.mapType.rawValue)
             }
-
-        // Map Features
-        /*
-        case .TrailRoute:
-            cell.accessoryType = cell.accessoryType == .none ? .checkmark : .none
-            delegate.trailRouteVisible = cell.accessoryType == .checkmark
-        */
-        case .Callouts:
-            cell.accessoryType = cell.accessoryType == .none ? .checkmark : .none
-            delegate.calloutsEnabled = cell.accessoryType == .checkmark
-            UserDefaults.standard.set(delegate.calloutsEnabled, forKey: UserDefaultsKey.callouts.rawValue)
 
         // Map Actions
         case .ZoomToTrail:

@@ -24,6 +24,7 @@
 		E13F30881E0D53CD009EBF74 /* PointOfInterest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */; };
 		E14F8F281E044C7F004AB05D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */; };
 		E150ED441D763903006C40AF /* Archer-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = E150ED421D763903006C40AF /* Archer-Medium.otf */; };
+		E15B51481F8D50F6009B8E38 /* Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15B51471F8D50F6009B8E38 /* Path.swift */; };
 		E1823A371E14635600498A92 /* AlertUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A361E14635600498A92 /* AlertUser.swift */; };
 		E1823A431E1548EC00498A92 /* PointOfInterestCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */; };
 		E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */; };
@@ -125,6 +126,7 @@
 		E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterest.swift; path = Common/PointOfInterest.swift; sourceTree = "<group>"; };
 		E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Resources/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		E150ED421D763903006C40AF /* Archer-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Archer-Medium.otf"; path = "Resources/Archer-Medium.otf"; sourceTree = "<group>"; };
+		E15B51471F8D50F6009B8E38 /* Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Path.swift; sourceTree = "<group>"; };
 		E1823A361E14635600498A92 /* AlertUser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AlertUser.swift; path = Common/UI/AlertUser.swift; sourceTree = "<group>"; };
 		E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCell.swift; path = "List View/PointOfInterestCell.swift"; sourceTree = "<group>"; };
 		E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PointOfInterestCell.xib; path = "List View/PointOfInterestCell.xib"; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 				E1110D441D83564E00CA5135 /* OptionsViewController.swift */,
 				E1C2383D1D6B29E900A718A8 /* PointOfInterestCard.xib */,
 				E114C71D1D7B0D8500BE3984 /* PointOfInterestCard.swift */,
+				E15B51471F8D50F6009B8E38 /* Path.swift */,
 			);
 			name = "Map View";
 			sourceTree = "<group>";
@@ -663,6 +666,7 @@
 				4D8B764C1C97944300A70B71 /* AppDelegate.swift in Sources */,
 				E1C238461D6B6AFD00A718A8 /* MapViewController.swift in Sources */,
 				E1110D461D83564E00CA5135 /* OptionsViewController.swift in Sources */,
+				E15B51481F8D50F6009B8E38 /* Path.swift in Sources */,
 				E1823A431E1548EC00498A92 /* PointOfInterestCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
