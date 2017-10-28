@@ -13,7 +13,7 @@ import MapKit
 
 class Marker : NSObject, MKAnnotation {
     
-    var title: String? = "Path Marker"
+    var title: String?
     var subtitle: String?
     var coordinate: CLLocationCoordinate2D {
         return CLLocationCoordinate2D(latitude: initialCoordinate.latitude + latitudeAdjustment, longitude: initialCoordinate.longitude + longitudeAdjustment)
@@ -24,8 +24,9 @@ class Marker : NSObject, MKAnnotation {
     
     private let initialCoordinate: CLLocationCoordinate2D
     
-    init(coordinate: CLLocationCoordinate2D) {
+    init(coordinate: CLLocationCoordinate2D, position: Int) {
         initialCoordinate = coordinate
+        title = "Marker \(position)"
         super.init()
     }
 }
@@ -44,6 +45,7 @@ class ViewController: UIViewController {
     fileprivate let iCloud = ICloud()
 
     private var initialZoomCompleted = false
+    private var trackUser = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,6 +53,16 @@ class ViewController: UIViewController {
         mapView.delegate = self
 
         _ = UserLocation.instance.addListener(self, handlerClassMethod: ViewController.userLocationEventHandler)
+
+        let doubleTapRecognizer: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(didDoubleTapMapView))
+        doubleTapRecognizer.numberOfTapsRequired = 2
+        doubleTapRecognizer.numberOfTouchesRequired = 1
+        doubleTapRecognizer.delaysTouchesBegan = true
+        mapView.gestureView.addGestureRecognizer(doubleTapRecognizer)
+    }
+
+    @objc func didDoubleTapMapView(recognizer: UITapGestureRecognizer) {
+        if recognizer.state == .ended { trackUser = !trackUser }
     }
 
     private func userLocationEventHandler(event: UserLocationEvent) {
@@ -64,11 +76,10 @@ class ViewController: UIViewController {
                 initialZoomCompleted = true
             }
 
-            mapView.setCenter(location.coordinate, animated: false)
+            if trackUser { mapView.setCenter(location.coordinate, animated: false) }
             
         case .headingUpdate(let heading):
-            mapView.camera.heading = heading.trueHeading
-            break
+            if trackUser { mapView.camera.heading = heading.trueHeading }
             
         default:
             break
@@ -131,7 +142,7 @@ extension ViewController { // Toolbar Items
     }
     
     @IBAction func mark(_ sender: UIBarButtonItem) {
-        let marker = Marker(coordinate: UserLocation.instance.currentLocation!.coordinate)
+        let marker = Marker(coordinate: UserLocation.instance.currentLocation!.coordinate, position: markers.count + 1)
         markers.append(marker)
         mapView.addAnnotation(marker)
     }
@@ -193,9 +204,10 @@ private extension String {
             if  let container = jsonObject as? [String : [String: Any]],
                 let coordinates = container[ViewController.jsonKey] as? [String : [String : Double]] {
                 
-                var markers = Array<Marker>(repeating: Marker(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0)), count: coordinates.count)
+                var markers = Array<Marker>(repeating: Marker(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0), position: 0), count: coordinates.count)
                 for (key, value) in coordinates {
-                    markers[Int(key)! - 1] = Marker(coordinate: CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!))
+                    let position = Int(key)!
+                    markers[position - 1] = Marker(coordinate: CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!), position: position)
                 }
                 return markers
             }
