@@ -12,11 +12,13 @@ import CoreLocation
 import VerticonsToolbox
 
 // TODO: More testing of realtime response to database updates.
-class PointOfInterest {
+class PointOfInterest : Equatable {
 
     // **********************************************************************************************************************
     //                                                  API
     // **********************************************************************************************************************
+
+    static func == (lhs: PointOfInterest, rhs: PointOfInterest) -> Bool { return lhs.id == rhs.id }
 
     enum Event {
         case added
@@ -50,7 +52,7 @@ class PointOfInterest {
 
     var distanceToUser: Int? {
         guard let userLocation = UserLocation.instance.currentLocation else { return nil }
-        
+
         return Int(round(self.location.yards(from: userLocation)))
     }
     
@@ -65,11 +67,11 @@ class PointOfInterest {
         return UserLocation.instance.currentLocation?.bearing(to: self.location)
     }
     
-    // Return the angle between the user's actual heading and the heading that would take him/her to the point of interest.
-    // If the user's heading would take him/her south of the poi then the angle will be positive, else it will be negative.
+    // Return the positive, clockwise angle (0 -> 359.999) from the user's heading to the poi's heading.
     var angleWithUserHeading: Double? {
         if  let userHeading = UserLocation.instance.currentBearing, let poiHeading = self.poiHeading {
-            return userHeading - poiHeading
+            let delta = abs(poiHeading - userHeading)
+            return userHeading > poiHeading ? 360 - delta : delta
         }
         return nil
     }
@@ -90,30 +92,8 @@ class PointOfInterest {
         location = CLLocation(latitude: latitude, longitude: longitude)
         
         self.observer = observer // Inform the observer of location updates
-        _ = UserLocation.instance.addListener(self, handlerClassMethod: PointOfInterest.userLocationEventHandler) // Listen to location updates
     }
     
-    // When updates are received from the database the observers will be sent a new version of a Point of Interest.
-    // If the observer releases the previous version that it had received then the UserLocation will stop sendimg
-    // location events to that previous instance. This is due to the fact that Broadcasters (which the UserLocation
-    // is) store their listener references weakly.
-    private func userLocationEventHandler(event: UserLocationEvent) {
-        switch event {
-        case .locationUpdate:
-            break
-            
-        case .headingUpdate:
-            break
-            
-        default:
-            return
-        }
-
-        if let observer = self.observer {
-            observer.notify(poi: self, event: .updated)
-        }
-    }
-
     // **********************************************************************************************************************
 
     private class Database {
@@ -182,8 +162,6 @@ class PointOfInterest {
         
         class Observer {
             
-            private static let path = "points-of-interest"
-            
             private var observer: PointOfInterest.Observer
             private var dispatchQueue: DispatchQueue
             private var reference: FIRDatabaseReference?
@@ -195,9 +173,9 @@ class PointOfInterest {
                 self.observer = observer
                 self.dispatchQueue = dispatchQueue
                 
-                // Note: Itried using a single Observer of the event type .value but each event sent all of the poi records???
+                // Note: I tried using a single Observer of the event type .value but each event sent all of the poi records???
                 
-                reference = FIRDatabase.database().reference(withPath: Observer.path)
+                reference = FIRDatabase.database().reference(withPath: "PointsOfInterest").child(jsonDataSelector)
                 childAddedObservationId = reference!.observe(.childAdded,   with: { self.eventHandler(properties: $0.value as! [String: Any], event: .added) })
                 childChangedObservationId = reference!.observe(.childChanged, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .updated) })
                 childRemovedObservationId = reference!.observe(.childRemoved, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .removed) })

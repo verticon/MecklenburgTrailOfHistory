@@ -45,7 +45,7 @@ class ListViewController: UICollectionViewController {
         }
     }
 
-    func didDoubleTapCollectionView(recognizer: UITapGestureRecognizer) {
+    @objc func didDoubleTapCollectionView(recognizer: UITapGestureRecognizer) {
         if recognizer.state == .ended {
             let doubleTapPoint = recognizer.location(in: collectionView)
             if  let path = collectionView?.indexPathForItem(at: doubleTapPoint),
@@ -68,15 +68,14 @@ class ListViewController: UICollectionViewController {
         switch event {
         case .added:
             pointsOfInterest.append(poi)
+            pointsOfInterest = pointsOfInterest.sorted { $0.location.coordinate.latitude > $1.location.coordinate.latitude } // northmost first
         case .updated:
-            pointsOfInterest = pointsOfInterest.filter { $0.id != poi.id }
+            pointsOfInterest = pointsOfInterest.filter { $0 != poi }
             pointsOfInterest.append(poi)
         case .removed:
-            pointsOfInterest = pointsOfInterest.filter { $0.id != poi.id }
+            pointsOfInterest = pointsOfInterest.filter { $0 != poi }
         }
 
-        pointsOfInterest = pointsOfInterest.sorted { $0.location.coordinate.latitude > $1.location.coordinate.latitude }
-        
         collectionView?.reloadData()
     }
 
@@ -100,6 +99,7 @@ class ListViewController: UICollectionViewController {
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+print("POI selected")
         DetailView.present(poi: pointsOfInterest[indexPath.item])
         collectionView.deselectItem(at: indexPath, animated: false)
     }

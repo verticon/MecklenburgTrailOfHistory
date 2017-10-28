@@ -9,6 +9,7 @@
 import AVFoundation
 import UIKit
 import AVKit
+import WebKit
 import SafariServices
 import VerticonsToolbox
 
@@ -19,18 +20,48 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         let presenter = window.visibleViewController!
 
         if let webPageUrl = URL(string: poi.description) {
-            let safariVC = SFSafariViewController(url: webPageUrl, entersReaderIfAvailable: true)
-            presenter.present(safariVC, animated: false) {
-                var frame = safariVC.view.frame
-                //if status bar not hidden
-                let OffsetY: CGFloat  = 64
-                //if status bar hidden
-                //let OffsetY: CGFloat  = 44
-                
-                frame.origin = CGPoint(x: frame.origin.x, y: frame.origin.y - OffsetY)
-                frame.size = CGSize(width: frame.width, height: frame.height + OffsetY)
-                safariVC.view.frame = frame
+
+            func safariView() {
+                class Delegate : NSObject, SFSafariViewControllerDelegate {
+                    static let instance = Delegate()
+                    func safariViewController(_ controller: SFSafariViewController, didCompleteInitialLoad didLoadSuccessfully: Bool) {
+                        // Hide the address bar (move it above the screen) so that the user is not able to toggle the Reader mode.
+                        var frame = controller.view.frame
+                        let OffsetY: CGFloat  = 64
+                        frame.origin = CGPoint(x: frame.origin.x, y: frame.origin.y - OffsetY)
+                        frame.size = CGSize(width: frame.width, height: frame.height + OffsetY)
+                        controller.view.frame = frame
+                    }
+                }
+
+                let configuration = SFSafariViewController.Configuration()
+                configuration.entersReaderIfAvailable = true
+                let safariVC = SFSafariViewController(url: webPageUrl, configuration: configuration)
+
+                // Note: The present method's completion handler could be used to immediately hide the address bar.
+                // But then, AFAIK, it would not be possiblre to show a progress indicator. Using a delegate was the
+                // best compromise that I could arrive at.
+                safariVC.delegate = Delegate.instance // Using a static instance prevents the delegate from being deallocated.
+                presenter.present(safariVC, animated: false)
             }
+            
+            func webView() {
+                let controller = UIViewController()
+                controller.modalPresentationStyle = .overCurrentContext
+                controller.modalTransitionStyle = .crossDissolve
+                
+                let webConfiguration = WKWebViewConfiguration()
+                let webView = WKWebView(frame: .zero, configuration: webConfiguration)
+                //webView.uiDelegate = self
+                controller.view = webView
+                
+                presenter.present(controller, animated: false) {
+                    webView.load(URLRequest(url: webPageUrl))
+                }
+            }
+
+            //webView()
+            safariView()
         }
         else {
             let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
@@ -214,10 +245,10 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         let style = NSMutableParagraphStyle()
         style.alignment = NSTextAlignment.center
         let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)", attributes: [
-            NSFontAttributeName : UIFont(name: "Helvetica", size: 18)!,
-            NSParagraphStyleAttributeName : style
+            NSAttributedStringKey.font : UIFont(name: "Helvetica", size: 18)!,
+            NSAttributedStringKey.paragraphStyle : style
             ])
-        text.addAttributes([NSFontAttributeName : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.characters.count))
+        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.characters.count))
         textView.attributedText = text
     }
 

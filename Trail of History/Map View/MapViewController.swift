@@ -29,7 +29,8 @@ import VerticonsToolbox
 class MapViewController: UIViewController {
 
     class PoiAnnotation: NSObject, MKAnnotation {
-        
+ 
+        // TODO: Why are these declared dynamic?
         dynamic var title: String?
         dynamic var subtitle: String?
         dynamic var coordinate: CLLocationCoordinate2D
@@ -51,6 +52,11 @@ class MapViewController: UIViewController {
             
             self.poi = poi
         }
+        
+        override func isEqual(_ object: Any?) -> Bool {
+            guard let lhs = object as? PoiAnnotation else { return false }
+            return lhs.poi == poi
+        }
     }
 
     class DebugConsole {
@@ -59,12 +65,12 @@ class MapViewController: UIViewController {
         // the instantiation line in viewDidLoad as desired.
         
         private var strings = [Int : String]()
-        private let debugLayer: VerticallyCenteredTextLayer
+        private let debugLayer: CATextLayer
         
         init(on: UIView) {
-            debugLayer = VerticallyCenteredTextLayer()
+            debugLayer = CATextLayer()
             debugLayer.frame = on.bounds
-            debugLayer.alignmentMode = kCAAlignmentCenter
+            //debugLayer.alignmentMode = kCAAlignmentCenter
             debugLayer.foregroundColor = UIColor.lightGray.withAlphaComponent(0.6).cgColor
             on.layer.addSublayer(debugLayer)
         }
@@ -72,9 +78,13 @@ class MapViewController: UIViewController {
         func update(line: Int, with: String) {
             strings[line] = with
 
-            var debugString = ""
-            strings.forEach { debugString += $0.value + "\n\n" }
-            debugLayer.string = debugString
+            var orderedStrings = Array<String>(repeating: "", count: strings.count)
+            strings.forEach { orderedStrings[$0.key] = $0.value }
+
+            var concatenatedString = ""
+            orderedStrings.forEach { concatenatedString += $0 + "\n" }
+
+            debugLayer.string = concatenatedString
         }
     }
 
@@ -93,16 +103,19 @@ class MapViewController: UIViewController {
             }
         }
         
-        private let userOnColor = UIColor.darkGray
-        private let userOffColor = UIColor.lightGray
+        private let userOnColor = UIColor(red: 33/255, green: 88/255, blue: 17/255, alpha: 1)
+        private let userOffColor = UIColor(red: 244/255, green: 43/255, blue: 16/255, alpha: 1)
         private func setColor(path: Path) {
             strokeColor = path.userIsOn ? userOnColor : userOffColor
         }
     }
 
+    // *****************************************************************************
+
     var pageViewController: PageViewController?
 
     @IBOutlet fileprivate weak var mapView: MKMapView!
+
     fileprivate var poiAnnotations = [PoiAnnotation]()
 
     @IBOutlet fileprivate weak var collectionView : UICollectionView!
@@ -115,6 +128,8 @@ class MapViewController: UIViewController {
 
     fileprivate var debugConsole: DebugConsole?
 
+    // *****************************************************************************
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -124,25 +139,28 @@ class MapViewController: UIViewController {
         navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
         navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
         navigationItem.leftBarButtonItem?.tintColor = UIColor.tohTerracotaColor
-        navigationItem.leftBarButtonItems?.append(MKUserTrackingBarButtonItem(mapView: mapView))
 
         let poiCardNib = UINib(nibName: "PointOfInterestCard", bundle: nil)
         collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)
         collectionView.decelerationRate = UIScrollViewDecelerationRateFast
         
+        mapView.showsCompass = true
         mapView.showsUserLocation = true
 
-        switch Path.load(name: "MainPath") {
+        switch Path.load(pathName: jsonDataSelector) {
         case .success(let path):
             trail = path
             mapView.add(path.polyline)
-            mapView.region = path.boundingRegion
+            //mapView.add(path.boundingPolygon)
+            mapView.region = 1.25 * path.boundingRegion
             mapView.setCenter(path.midCoordinate, animated: true)
+
         case .error(let message):
             fatalError(message)
         }
-        
-        
+
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: MapViewController.userLocationEventHandler)
+
         poiObserverToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
 
         OptionsViewController.initialize(delegate: self)
@@ -183,7 +201,6 @@ class MapViewController: UIViewController {
         }
     }
 
-    // TODO: Think about the inefficiencies involved in having all of the POIs generate updates in response to user location changes.
     func poiObserver(poi: PointOfInterest, event: PointOfInterest.Event) {
 
         switch event {
@@ -191,78 +208,112 @@ class MapViewController: UIViewController {
         case .added:
             let annotation = PoiAnnotation(poi: poi)
             poiAnnotations.append(annotation)
+            //poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.longitude < $1.poi.location.coordinate.longitude } // Westmost first
+            poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.latitude > $1.poi.location.coordinate.latitude } // Northmost first
+
             mapView.addAnnotation(annotation)
+            currentPoi = annotation // TODO: Add a comment about why we do this each time. Something doesn't work properly if we choose only one, say the first one.
 
-            poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.longitude < $1.poi.location.coordinate.longitude } // Westmost first
-
-            if currentPoi == nil { currentPoi = annotation }
-
-        case .updated: // Note: the Points of Interest generate updates when their spatial relationship (angle and/or distance) with the user changes.
+        case .updated:
             if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
                 poiAnnotations[index].update(with: poi)
             }
             else {
                 print("An unrecognized POI was updated: \(poi.name)")
             }
-            debugConsole?.update(line: 0, with: "\(trail.userIsOn ? "" : "Not ")On Trail")
 
         case .removed:
             if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
                 let removed = poiAnnotations.remove(at: index)
                 mapView.removeAnnotation(removed)
-
-                if let current = currentPoi, current.poi.id == removed.poi.id {
-                    currentPoi = nil
-                }
+                if poiAnnotations.count == 0 { currentPoi = nil }
             }
             else {
-                print("An unrecognized POI was removed: \(poi)")
-            }
-        }
-
-        if poiAnnotations.count > 0 {
-            switch mapView.userTrackingMode {
-            case .none:
-                break
-            case .follow:
-                let sorted = poiAnnotations.sorted{ abs($0.poi.distanceToUser ?? 0) < abs($1.poi.distanceToUser ?? 0) }
-                currentPoi = sorted.first
-            case .followWithHeading:
-                let sorted = poiAnnotations.sorted{ abs($0.poi.angleWithUserHeading ?? 0.0) < abs($1.poi.angleWithUserHeading ?? 0.0) }
-                currentPoi = sorted.first
+                print("An unrecognized POI was removed: \(poi.name)")
             }
         }
 
         collectionView.reloadData()
-
-        if let index = poiAnnotations.index(where: { $0.poi.id == currentPoi?.poi.id }) {
-            collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
-        }
     }
 
-    fileprivate var _currentPoi: PoiAnnotation?
+    private var _currentPoi: PoiAnnotation?
     fileprivate var currentPoi: PoiAnnotation? {
         get {
             return _currentPoi
         }
         set {
+
             func setImagesFor(annotation: PoiAnnotation, isCurrent: Bool) {
                 mapView.view(for: annotation)?.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
                 if let index = poiAnnotations.index(where: { $0.poi.id == annotation.poi.id }) {
                     (collectionView.cellForItem(at: IndexPath(item: index, section: 0)) as? PointOfInterestCard)?.imageView.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
                 }
             }
-    
-            if let current = currentPoi { setImagesFor(annotation: current, isCurrent: false) }
-            _currentPoi = newValue
-            if let current = currentPoi { setImagesFor(annotation: current, isCurrent: true) }
+            
+            guard newValue != _currentPoi else { return }
 
+            if let old = _currentPoi {
+                setImagesFor(annotation: old, isCurrent: false)
             }
+
+            _currentPoi = newValue
+
+            if let new = _currentPoi {
+                //let didZoom = mapView.region.zoomOut(to: new.coordinate)
+                //debugConsole?.update(line: 0, with: "\(didZoom ? "Did Zoom" : "Didn't Zoom")")
+
+                if poiAnnotations.count > 1, let index = poiAnnotations.index(of: new) {
+                    collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
+                }
+
+                setImagesFor(annotation: new, isCurrent: true)
+            }
+        }
+    }
+
+    private var lastInteractionTime = Date()
+    private func userLocationEventHandler(event: UserLocationEvent) {
+        guard !mapView.userIsInteracting else { lastInteractionTime = Date(); return }
+        guard DateInterval(start: lastInteractionTime, end: Date()).duration > 3 else { return }
+        
+        switch event {
+        case .locationUpdate(let location):
+            self.mapView.setCenter(location.coordinate, animated: false)
+        case .headingUpdate(let heading):
+            self.mapView.camera.heading = heading.trueHeading
+        default:
+            break
+        }
+        
+        func poiIsInFrontOfUser(_ poi: PointOfInterest) -> Bool {
+            guard let angle = poi.angleWithUserHeading else {
+                print("Warning: could not obtain the user -> poi angle???")
+                return true // Include everthing
+            }
+            
+            let capture = 90.0
+            return angle <= capture/2.0 || angle > 360.0 - capture/2 // capture/2 degrees to either side of user's current heading
+         }
+
+        func poiIsCloserToUser(_ poi1: PointOfInterest, _ poi2: PointOfInterest) -> Bool {
+            guard let distance1 = poi1.distanceToUser, let distance2 = poi2.distanceToUser else {
+                print("Warning: could not obtain the user -> poi distance???")
+                return false // Don't sort
+            }
+
+            return distance1 < distance2
+        }
+
+        currentPoi = poiAnnotations.filter{ poiIsInFrontOfUser($0.poi) }.sorted{ poiIsCloserToUser($0.poi, $1.poi) }.first
     }
 }
 
 extension MapViewController : MKMapViewDelegate {
-    
+
+    func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
+        //mapView.userTrackingMode = .follow
+    }
+
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
         if let annotation = annotation as? PoiAnnotation {
@@ -273,7 +324,7 @@ extension MapViewController : MKMapViewDelegate {
                 annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             }
             
-            annotationView!.image = isCurrent(annotation)  ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
+            annotationView!.image = annotation == currentPoi  ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
             return annotationView
         }
         
@@ -286,35 +337,7 @@ extension MapViewController : MKMapViewDelegate {
     
     // Make the selected point of interest the new current POI
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        if let selected = view.annotation as? PoiAnnotation , !isCurrent(selected) {
-
-            if let current = currentPoi {
-                mapView.view(for: current)?.image = #imageLiteral(resourceName: "PoiAnnotationImage")
-                if let index = poiAnnotations.index(where: { $0.poi.id == current.poi.id }) {
-                    (collectionView.cellForItem(at: IndexPath(item: index, section: 0)) as? PointOfInterestCard)?.imageView.image = #imageLiteral(resourceName: "PoiAnnotationImage")
-                }
-            }
-            
-            currentPoi = selected
-            view.image = #imageLiteral(resourceName: "CurrentPoiAnnotationImage")
-            mapView.setCenter(currentPoi!.coordinate, animated: true)
-            if let index = poiAnnotations.index(where: { $0.poi.id == selected.poi.id }) {
-                let path = IndexPath(item: index, section: 0)
-                (collectionView.cellForItem(at: path) as? PointOfInterestCard)?.imageView.image = #imageLiteral(resourceName: "CurrentPoiAnnotationImage")
-                collectionView.scrollToItem(at: path, at: .centeredHorizontally, animated: true)
-            }
-        }
-    }
-
-    func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
-        switch mode {
-        case .none:
-            mapView.showsCompass = false
-        case .follow:
-            mapView.showsCompass = false
-        case .followWithHeading:
-            mapView.showsCompass = true
-        }
+        if let selected = view.annotation as? PoiAnnotation { currentPoi = selected }
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -330,7 +353,6 @@ extension MapViewController : MKMapViewDelegate {
             renderer = pathRenderer
         }
         renderer.fillColor = .clear
-        print("Created \(type(of: renderer)) renderer for \(String(describing: overlay.title))")
         return renderer
     }
 }
@@ -349,9 +371,7 @@ extension MapViewController : UICollectionViewDelegate {
     @objc func currentPoiDetectionTimer(_ timer: Timer) {
         let centerPoint = CGPoint(x: collectionView.frame.width/2, y: collectionView.frame.height/2)
         if let indexOfCenterCell = self.collectionView.indexPathForItem(at: CGPoint(x: centerPoint.x + self.collectionView.contentOffset.x, y: centerPoint.y + self.collectionView.contentOffset.y)) {
-
             currentPoi = poiAnnotations[indexOfCenterCell.item]
-            mapView.setCenter(currentPoi!.coordinate, animated: true)
          }
 
         if !collectionView.isDragging && !collectionView.isDecelerating { timer.invalidate() }
@@ -410,7 +430,7 @@ extension MapViewController : UICollectionViewDataSource {
 
         let poiCell = collectionView.dequeueReusableCell(withReuseIdentifier: poiCardReuseIdentifier, for: indexPath) as! PointOfInterestCard
         poiCell.nameLabel.text = poi.name
-        poiCell.imageView.image = isCurrent(annotation) ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
+        poiCell.imageView.image = annotation == currentPoi ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
         poiCell.distanceLabel.text = poi.distanceToUserText
         poiCell.layer.shadowOpacity = 0.3
         poiCell.layer.masksToBounds = false
@@ -434,10 +454,6 @@ extension MapViewController : OptionsViewControllerDelegate {
 
     func zoomToTrail() {
         mapView.region = trail.boundingRegion
-        mapView.setCenter(trail.midCoordinate, animated: true)
-        if let current = currentPoi {
-            mapView.setCenter(current.coordinate, animated: true)
-        }
     }
 
     func zoomToUser() {
@@ -457,10 +473,6 @@ extension MapViewController : OptionsViewControllerDelegate {
 }
 
 extension MapViewController { // Utility Methods
-
-    func isCurrent(_ annotation: PoiAnnotation) -> Bool {
-        return currentPoi?.poi.id == annotation.poi.id
-    }
 
     func findCentermost() -> PoiAnnotation? { // East to west centermost
         var centermost: PoiAnnotation?

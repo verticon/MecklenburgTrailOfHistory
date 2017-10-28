@@ -21,14 +21,15 @@ class Path : Broadcaster<PathEvent> {
         case error(String)
     }
 
-    static func load(name: String) -> LoadStatus {
-        return fromFile(name: name)
+    static func load(pathName: String) -> LoadStatus {
+        return fromFile(pathName: pathName)
     }
 
-    private static func fromFile(name: String) -> LoadStatus {
+    private static let jsonBundledFileName = "Path"
+    private static func fromFile(pathName: String) -> LoadStatus {
         
-        guard let jsonFilePath = Bundle.main.path(forResource: name, ofType: "json") else {
-            return .error("Cannot find \(name).json in bundle.")
+        guard let jsonFilePath = Bundle.main.path(forResource: jsonBundledFileName, ofType: "json") else {
+            return .error("Cannot find \(jsonBundledFileName).json in bundle.")
         }
             
         let jsonFileUrl = URL(fileURLWithPath: jsonFilePath)
@@ -37,29 +38,26 @@ class Path : Broadcaster<PathEvent> {
             let jsonData = try Data(contentsOf: jsonFileUrl)
             let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
             
-            if let container = jsonObject as? [String : Any],
-               let coordinates = container[name] as? [String : [String : Any]] {
+            if  let container = jsonObject as? [String : [String: Any]],
+                let coordinates = container["Path"]?[pathName] as? [String : [String : Double]] {
                 
                 var path = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: coordinates.count)
                 
                 for (key, value) in coordinates {
-                    let index = Int(key)! - 1
-                    let latitude = value["latitude"] as! Double
-                    let longitude = value["longitude"] as! Double
-                    path[index] = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+                    path[Int(key)! - 1] = CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!)
                 }
                 
                 let polyline = MKPolyline(coordinates: path, count: path.count)
-                polyline.title = name
+                polyline.title = pathName
 
                 return .success(Path(polyline: polyline))
             }
             else {
-                return .error("The json object does not contain the expected types/keys:\n\(jsonObject)")
+                return .error("The json object does not contain the expected types and/or keys:\n\(jsonObject)")
             }
         }
         catch {
-            return .error("Error reading/parsing \(name).json: \(error)")
+            return .error("Error reading/parsing \(jsonBundledFileName).json: \(error)")
         }
     }
     
@@ -122,13 +120,17 @@ class Path : Broadcaster<PathEvent> {
      }()
 
     private lazy var boundingCorners: [CLLocationCoordinate2D] = {
-        let origin = self.polyline.boundingMapRect.origin
-        let size = self.polyline.boundingMapRect.size
+        let rect = self.polyline.boundingMapRect
+        let margin = 50.0
+        let northWestCorner = MKMapPoint(x: rect.origin.x - margin, y: rect.origin.y - margin)
+        let width = rect.size.width + 2 * margin
+        let height = rect.size.height + 2 * margin
+
         var coords = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: 4)
-        coords[Path.northWestCornerIndex] = MKCoordinateForMapPoint(origin)
-        coords[Path.northEastCornerIndex] = MKCoordinateForMapPoint(MKMapPoint(x: origin.x + size.width, y: origin.y))
-        coords[Path.southEastCornerIndex] = MKCoordinateForMapPoint(MKMapPoint(x: origin.x + size.width, y: origin.y + size.height))
-        coords[Path.southWestCornerIndex] = MKCoordinateForMapPoint(MKMapPoint(x: origin.x, y: origin.y + size.height))
+        coords[Path.northWestCornerIndex] = MKCoordinateForMapPoint(northWestCorner)
+        coords[Path.northEastCornerIndex] = MKCoordinateForMapPoint(MKMapPoint(x: northWestCorner.x + width, y: northWestCorner.y))
+        coords[Path.southEastCornerIndex] = MKCoordinateForMapPoint(MKMapPoint(x: northWestCorner.x + width, y: northWestCorner.y + height))
+        coords[Path.southWestCornerIndex] = MKCoordinateForMapPoint(MKMapPoint(x: northWestCorner.x, y: northWestCorner.y + height))
         return coords
     }()
 }
