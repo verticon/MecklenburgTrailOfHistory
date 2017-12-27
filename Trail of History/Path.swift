@@ -12,6 +12,7 @@ import VerticonsToolbox
 
 enum PathEvent {
     case userOnChange(Path)
+    case currentSegmentChange(Path)
 }
 
 class Path : Broadcaster<PathEvent> {
@@ -21,15 +22,48 @@ class Path : Broadcaster<PathEvent> {
         case error(String)
     }
 
+    struct Segment : Equatable {
+        static func == (lhs: Segment, rhs: Segment) -> Bool { return lhs.northern == rhs.northern && lhs.southern == rhs.southern }
+
+        static let maxLaterlTolerence = 10.0
+
+        let northern: CLLocation
+        let southern: CLLocation
+        let bearing: CLLocationDegrees // radians
+
+        init(northern: CLLocationCoordinate2D, southern: CLLocationCoordinate2D) {
+            self.northern = CLLocation(latitude: northern.latitude, longitude: northern.longitude)
+            self.southern = CLLocation(latitude: southern.latitude, longitude: southern.longitude)
+            bearing = degreesToRadians(degrees: self.southern.bearing(to: self.northern))
+        }
+        func locationIsOn(_ testLocation: CLLocation) -> Bool {
+            // Ensure that the test location's latitude is between the segment ends
+            guard   testLocation.coordinate.latitude <= northern.coordinate.latitude &&
+                    testLocation.coordinate.latitude >= southern.coordinate.latitude
+            else { return false }
+
+            // Determine the location along the segment whereat the latitude is equal to that of the test location.
+            let latitude = testLocation.coordinate.latitude
+            let deltaLat = degreesToRadians(latitude - southern.coordinate.latitude)
+            let radius = deltaLat / sin(bearing)
+            let deltaLng = radius * cos(bearing)
+            let longitude = southern.coordinate.longitude + deltaLng
+            let segmentLocation = CLLocation(latitude: latitude, longitude: longitude)
+ 
+            let distance = segmentLocation.yards(from: testLocation)
+            return distance <= Segment.maxLaterlTolerence
+        }
+    }
+
     static func load(pathName: String) -> LoadStatus {
         return fromFile(pathName: pathName)
     }
 
-    private static let jsonBundledFileName = "Path"
+    private static let bundledJsonFileName = "Path"
     private static func fromFile(pathName: String) -> LoadStatus {
         
-        guard let jsonFilePath = Bundle.main.path(forResource: jsonBundledFileName, ofType: "json") else {
-            return .error("Cannot find \(jsonBundledFileName).json in bundle.")
+        guard let jsonFilePath = Bundle.main.path(forResource: bundledJsonFileName, ofType: "json") else {
+            return .error("Cannot find \(bundledJsonFileName).json in bundle.")
         }
             
         let jsonFileUrl = URL(fileURLWithPath: jsonFilePath)
@@ -38,26 +72,33 @@ class Path : Broadcaster<PathEvent> {
             let jsonData = try Data(contentsOf: jsonFileUrl)
             let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
             
-            if  let container = jsonObject as? [String : [String: Any]],
-                let coordinates = container["Path"]?[pathName] as? [String : [String : Double]] {
+            if  let jsonContainer = jsonObject as? [String : [String: Any]],
+                let jsonCoordinates = jsonContainer["Path"]?[pathName] as? [String : [String : Double]] {
                 
-                var path = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: coordinates.count)
-                
-                for (key, value) in coordinates {
-                    path[Int(key)! - 1] = CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!)
+                guard jsonCoordinates.count >= 2 else {
+                    return .error("\(bundledJsonFileName).json has \(jsonCoordinates.count) coordinates; there need to be at least 2.")
                 }
                 
-                let polyline = MKPolyline(coordinates: path, count: path.count)
+                var coordinates = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: jsonCoordinates.count)
+                for (key, value) in jsonCoordinates {
+                    coordinates[Int(key)! - 1] = CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!)
+                }
+                coordinates.sort{ $0.latitude > $1.latitude } // North to south
+
+                var segments = Array<Segment>(repeating: Segment(northern: CLLocationCoordinate2D(), southern: CLLocationCoordinate2D()), count: coordinates.count - 1)
+                for i in 0 ... coordinates.count - 2 { segments[i] = Segment(northern: coordinates[i], southern: coordinates[i+1]) }
+
+                let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
                 polyline.title = pathName
 
-                return .success(Path(polyline: polyline))
+                return .success(Path(polyline: polyline, segments: segments))
             }
             else {
                 return .error("The json object does not contain the expected types and/or keys:\n\(jsonObject)")
             }
         }
         catch {
-            return .error("Error reading/parsing \(jsonBundledFileName).json: \(error)")
+            return .error("Error reading/parsing \(bundledJsonFileName).json: \(error)")
         }
     }
     
@@ -69,36 +110,49 @@ class Path : Broadcaster<PathEvent> {
     // **************************************************************
 
     let polyline: MKPolyline
-    private var previousIsOnState = false
+    let segments: [Segment]
 
-
-    private init(polyline: MKPolyline) {
+    private init(polyline: MKPolyline, segments: [Segment]) {
         self.polyline = polyline
+        self.segments = segments
         super.init()
 
-        previousIsOnState = userIsOn
         _ = UserLocation.instance.addListener(self, handlerClassMethod: Path.userLocationEventHandler)
     }
 
+    private var previousIsOnState = false
     private func userLocationEventHandler(event: UserLocationEvent) {
         switch event {
-        case .locationUpdate:
+
+        case .locationUpdate(let userLocation):
+            var currentSegment: Segment?
+            for segment in segments { // TODO: Consider the optimization of beginning the search with the current segment
+                if segment.locationIsOn(userLocation) {
+                    currentSegment = segment
+                    break
+                }
+            }
+
+            if currentSegment != self.currentSegment {
+                self.currentSegment = currentSegment
+                broadcast(.currentSegmentChange(self))
+            }
+
             if previousIsOnState != userIsOn {
                 previousIsOnState = !previousIsOnState
                 broadcast(.userOnChange(self))
             }
-            break
             
         default:
             return
         }
     }
 
-    // TODO: Find a good way to detect that the user is on the trail
     var userIsOn: Bool {
-        guard let coord = UserLocation.instance.currentLocation?.coordinate else { return false }
-        return boundingRegion.contains(coordinate: coord)
+        return currentSegment != nil
     }
+
+    private(set) var currentSegment: Segment?
 
     private (set) lazy var boundingPolygon: MKPolygon = {
         let coords = self.boundingCorners

@@ -90,7 +90,7 @@ class MapViewController: UIViewController {
 
     class PathRenderer : ZoomingPolylineRenderer {
         
-        // I couldn't figure out how to do it with initialixzers :-(
+        // I couldn't figure out how to do it with initializers :-(
         func subscribe(to: Path) {
             setColor(path: to)
             _ = to.addListener(self, handlerClassMethod: PathRenderer.pathEventHandler)
@@ -103,8 +103,8 @@ class MapViewController: UIViewController {
             }
         }
         
-        private let userOnColor = UIColor(red: 33/255, green: 88/255, blue: 17/255, alpha: 1)
-        private let userOffColor = UIColor(red: 244/255, green: 43/255, blue: 16/255, alpha: 1)
+        private let userOnColor = UIColor.green //(red: 33/255, green: 88/255, blue: 17/255, alpha: 1)
+        private let userOffColor = UIColor.red //(red: 244/255, green: 43/255, blue: 16/255, alpha: 1)
         private func setColor(path: Path) {
             strokeColor = path.userIsOn ? userOnColor : userOffColor
         }
@@ -123,6 +123,9 @@ class MapViewController: UIViewController {
 
     private var poiObserverToken: Any!
 
+    private var compass: MKCompassButton!
+    private var trackUser: UIImageView!
+
     fileprivate var trail: Path!
     fileprivate let trailWidth = 3.0 // Meters
 
@@ -133,38 +136,77 @@ class MapViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        debugConsole = DebugConsole(on: view)
+        func setupUserTracking() {
+            compass = MKCompassButton(mapView: mapView)
+            compass.gestureRecognizers = [UITapGestureRecognizer(target: self, action: #selector(toggleUserTrackimg))]
+            compass.translatesAutoresizingMaskIntoConstraints = false
+            mapView.addSubview(compass)
+            
+            trackUser = UIImageView(image: #imageLiteral(resourceName: "TrackUser"))
+            trackUser.bounds = compass.bounds
+            trackUser.contentMode = .scaleAspectFit
+            trackUser.isUserInteractionEnabled = true
+            trackUser.gestureRecognizers = [UITapGestureRecognizer(target: self, action: #selector(toggleUserTrackimg))]
+            trackUser.translatesAutoresizingMaskIntoConstraints = false
+            mapView.addSubview(trackUser)
+            
+            NSLayoutConstraint.activate([
+                compass.topAnchor.constraint(equalTo: mapView.topAnchor, constant: 32),
+                compass.leftAnchor.constraint(equalTo: mapView.leftAnchor, constant: 32),
+                trackUser.topAnchor.constraint(equalTo: compass.topAnchor, constant: 0),
+                trackUser.leftAnchor.constraint(equalTo: compass.leftAnchor, constant: 0),
+                trackUser.heightAnchor.constraint(equalToConstant: compass.bounds.height),
+                trackUser.widthAnchor.constraint(equalToConstant: compass.bounds.width)])
 
-        navigationItem.titleView = UIView.fromNib("Title")
-        navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
-        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
-        navigationItem.leftBarButtonItem?.tintColor = UIColor.tohTerracotaColor
-
-        let poiCardNib = UINib(nibName: "PointOfInterestCard", bundle: nil)
-        collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)
-        collectionView.decelerationRate = UIScrollViewDecelerationRateFast
-        
-        mapView.showsCompass = true
-        mapView.showsUserLocation = true
-
-        switch Path.load(pathName: jsonDataSelector) {
-        case .success(let path):
-            trail = path
-            mapView.add(path.polyline)
-            //mapView.add(path.boundingPolygon)
-            mapView.region = 1.25 * path.boundingRegion
-            mapView.setCenter(path.midCoordinate, animated: true)
-
-        case .error(let message):
-            fatalError(message)
+            trackingUser = false
         }
+
+        func loadPath() {
+            switch Path.load(pathName: jsonDataSelector) {
+            case .success(let path):
+                trail = path
+                mapView.add(path.polyline)
+                //mapView.add(path.boundingPolygon)
+                mapView.region = 1.25 * path.boundingRegion
+                mapView.setCenter(path.midCoordinate, animated: true)
+                
+            case .error(let message):
+                fatalError(message)
+            }
+        }
+
+        func setupNavigation() {
+            navigationItem.titleView = UIView.fromNib("Title")
+            navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
+            navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
+            navigationItem.leftBarButtonItem?.tintColor = UIColor.tohTerracotaColor
+        }
+
+        func setupPointsOfInterest() {
+            let poiCardNib = UINib(nibName: "PointOfInterestCard", bundle: nil)
+            collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)
+            collectionView.decelerationRate = UIScrollViewDecelerationRateFast
+
+            poiObserverToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
+        }
+    
+        setupUserTracking()
+
+        loadPath()
+
+        setupNavigation()
+
+        setupPointsOfInterest()
 
         _ = UserLocation.instance.addListener(self, handlerClassMethod: MapViewController.userLocationEventHandler)
 
-        poiObserverToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
+        _ = trail.addListener(self, handlerClassMethod: MapViewController.pathEventHandler)
 
         OptionsViewController.initialize(delegate: self)
+
+        debugConsole = DebugConsole(on: view)
     }
+
 
     override func viewWillAppear(_ animated: Bool) {
         navigationItem.hidesBackButton = true
@@ -271,40 +313,85 @@ class MapViewController: UIViewController {
         }
     }
 
-    private var lastInteractionTime = Date()
+    private var lastInteractionTime = Date() // TODO: Account for card view interaction as well
     private func userLocationEventHandler(event: UserLocationEvent) {
+
+        // If the user has been changing the map then leave it alone for a bit
+        let interactionTimeout = 3.0 // Seconds
         guard !mapView.userIsInteracting else { lastInteractionTime = Date(); return }
-        guard DateInterval(start: lastInteractionTime, end: Date()).duration > 3 else { return }
-        
-        switch event {
-        case .locationUpdate(let location):
-            self.mapView.setCenter(location.coordinate, animated: false)
-        case .headingUpdate(let heading):
-            self.mapView.camera.heading = heading.trueHeading
-        default:
-            break
+        guard DateInterval(start: lastInteractionTime, end: Date()).duration > interactionTimeout else { return }
+
+        if trackingUser {
+            switch event {
+            case .locationUpdate(let location):
+                self.mapView.setCenter(location.coordinate, animated: false)
+            case .headingUpdate(let heading):
+                self.mapView.camera.heading = heading.trueHeading // Rotate the map so that the top of the view corresponds with the user's heading.
+            default:
+                break
+            }
         }
         
-        func poiIsInFrontOfUser(_ poi: PointOfInterest) -> Bool {
-            guard let angle = poi.angleWithUserHeading else {
-                print("Warning: could not obtain the user -> poi angle???")
-                return true // Include everthing
+        if trail.userIsOn { // If the user is on the trail then set the current POI to the next one that he/she will encounter.
+
+            func poiIsInFrontOfUser(_ poi: PointOfInterest) -> Bool {
+                guard let angle = poi.angleWithUserHeading else {
+                    print("Warning: could not obtain the user -> poi angle???")
+                    return true // Include everthing
+                }
+                
+                let cone = 90.0
+                return angle <= cone/2.0 || angle > 360.0 - cone/2 // cone/2 degrees to either side of user's current heading
+             }
+
+            func poiIsCloserToUser(_ poi1: PointOfInterest, _ poi2: PointOfInterest) -> Bool {
+                guard let distance1 = poi1.distanceToUser, let distance2 = poi2.distanceToUser else {
+                    print("Warning: could not obtain the user -> poi distance???")
+                    return false // Don't sort
+                }
+
+                return distance1 < distance2
             }
+
+            currentPoi = poiAnnotations.filter{ poiIsInFrontOfUser($0.poi) }.sorted{ poiIsCloserToUser($0.poi, $1.poi) }.first
+        }
+    }
+
+    private var segment: MKPolyline?
+    private func pathEventHandler(event: PathEvent) {
+        if case .currentSegmentChange(let path) = event {
+            if let segment = self.segment {
+                mapView.remove(segment)
+                self.segment = nil
+            }
+            if let current = path.currentSegment {
+                segment = MKPolyline(coordinates: [current.northern.coordinate, current.southern.coordinate], count: 2)
+                mapView.add(segment!)
+            }
+        }
+    }
+    
+
+    @objc private func toggleUserTrackimg(_ sender: UITapGestureRecognizer) {
+        trackingUser = !trackingUser
+    }
+
+    private var trackingUser: Bool {
+        get {
+            return compass.compassVisibility == .visible
+        }
+        set {
+            guard newValue != trackingUser else { return }
             
-            let capture = 90.0
-            return angle <= capture/2.0 || angle > 360.0 - capture/2 // capture/2 degrees to either side of user's current heading
-         }
+            // If we are tracking then show the compass, else show trackUser.
+            compass.compassVisibility = newValue ? .visible : .hidden
+            trackUser.isHidden = trackingUser
 
-        func poiIsCloserToUser(_ poi1: PointOfInterest, _ poi2: PointOfInterest) -> Bool {
-            guard let distance1 = poi1.distanceToUser, let distance2 = poi2.distanceToUser else {
-                print("Warning: could not obtain the user -> poi distance???")
-                return false // Don't sort
+            if trackingUser {
+                if let location = mapView.userLocation.location { mapView.setCenter(location.coordinate, animated: false) }
+                if let heading = mapView.userLocation.heading { mapView.camera.heading = heading.trueHeading }
             }
-
-            return distance1 < distance2
         }
-
-        currentPoi = poiAnnotations.filter{ poiIsInFrontOfUser($0.poi) }.sorted{ poiIsCloserToUser($0.poi, $1.poi) }.first
     }
 }
 
@@ -329,7 +416,7 @@ extension MapViewController : MKMapViewDelegate {
         }
         
         if let userLocation = annotation as? MKUserLocation {
-            userLocation.subtitle = "lat \(String(format: "%.6f", userLocation.coordinate.latitude)), long \(String(format: "%.6f", userLocation.coordinate.longitude))"
+            userLocation.subtitle = userLocation.coordinate.description
         }
         
         return nil
@@ -348,9 +435,16 @@ extension MapViewController : MKMapViewDelegate {
             renderer.strokeColor = .red
         }
         else {
-            let pathRenderer = PathRenderer(polyline: overlay as! MKPolyline, mapView: mapView, polylineWidth: trailWidth)
-            pathRenderer.subscribe(to: trail)
-            renderer = pathRenderer
+            let polyline = overlay as! MKPolyline
+            if polyline.pointCount > 2 {
+                let pathRenderer = PathRenderer(polyline: polyline, mapView: mapView, polylineWidth: trailWidth)
+                pathRenderer.subscribe(to: trail)
+                renderer = pathRenderer
+            }
+            else {
+                renderer = ZoomingPolylineRenderer(polyline: polyline, mapView: mapView, polylineWidth: trailWidth)
+                renderer.strokeColor = .black
+            }
         }
         renderer.fillColor = .clear
         return renderer

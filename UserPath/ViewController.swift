@@ -230,17 +230,13 @@ extension ViewController : MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        func describeCoordinate(_ coordinate: CLLocationCoordinate2D) -> String {
-            return "lat \(String(format: "%.6f", coordinate.latitude)), lng \(String(format: "%.6f", coordinate.longitude))"
-        }
-
         let reuseID = "MarkerView"
 
         if let userLocation = annotation as? MKUserLocation {
             userLocation.subtitle = describeCoordinate(userLocation.coordinate)
         }
         else if let marker = annotation as? Marker {
-            marker.subtitle = describeCoordinate(marker.coordinate)
+            marker.subtitle = marker.coordinate.description
 
             if let view = mapView.dequeueReusableAnnotationView(withIdentifier: reuseID) { return view }
             
@@ -254,10 +250,7 @@ extension ViewController : MKMapViewDelegate {
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
         let renderer = ZoomingPolylineRenderer(polyline: overlay as! MKPolyline, mapView: mapView, polylineWidth: 2)
-
         renderer.strokeColor = .red
-        renderer.fillColor = .clear
-
         return renderer
     }
 
