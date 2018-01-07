@@ -12,12 +12,6 @@ import Firebase
 import FirebaseDatabase
 import VerticonsToolbox
 
-#if DeveloperNeighborhood
-let jsonDataSelector = "DeveloperNeighborhood"
-#else
-let jsonDataSelector = "LittleSugarCreek"
-#endif
-
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 

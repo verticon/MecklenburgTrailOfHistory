@@ -26,6 +26,8 @@ import VerticonsToolbox
  * of the title view). The Options controller allows the user to set various features and to perform various actions.
  */
 
+// TODO: When swiping the cards causes the current poi to change, pan the map so as to see the new, current poi
+
 class MapViewController: UIViewController {
 
     class PoiAnnotation: NSObject, MKAnnotation {
@@ -59,56 +61,6 @@ class MapViewController: UIViewController {
         }
     }
 
-    class DebugConsole {
-        // Display debugging information while we are actually walking the
-        // trail (i.e. the dev machine is not attached). Comment out, or not,
-        // the instantiation line in viewDidLoad as desired.
-        
-        private var strings = [Int : String]()
-        private let debugLayer: CATextLayer
-        
-        init(on: UIView) {
-            debugLayer = CATextLayer()
-            debugLayer.frame = on.bounds
-            //debugLayer.alignmentMode = kCAAlignmentCenter
-            debugLayer.foregroundColor = UIColor.lightGray.withAlphaComponent(0.6).cgColor
-            on.layer.addSublayer(debugLayer)
-        }
-        
-        func update(line: Int, with: String) {
-            strings[line] = with
-
-            var orderedStrings = Array<String>(repeating: "", count: strings.count)
-            strings.forEach { orderedStrings[$0.key] = $0.value }
-
-            var concatenatedString = ""
-            orderedStrings.forEach { concatenatedString += $0 + "\n" }
-
-            debugLayer.string = concatenatedString
-        }
-    }
-
-    class PathRenderer : ZoomingPolylineRenderer {
-        
-        // I couldn't figure out how to do it with initializers :-(
-        func subscribe(to: Path) {
-            setColor(path: to)
-            _ = to.addListener(self, handlerClassMethod: PathRenderer.pathEventHandler)
-        }
-        
-        private func pathEventHandler(event: PathEvent) {
-            if case .userOnChange(let path) = event {
-                setColor(path: path)
-                setNeedsDisplay()
-            }
-        }
-        
-        private let userOnColor = UIColor.green //(red: 33/255, green: 88/255, blue: 17/255, alpha: 1)
-        private let userOffColor = UIColor.red //(red: 244/255, green: 43/255, blue: 16/255, alpha: 1)
-        private func setColor(path: Path) {
-            strokeColor = path.userIsOn ? userOnColor : userOffColor
-        }
-    }
 
     // *****************************************************************************
 
@@ -123,66 +75,100 @@ class MapViewController: UIViewController {
 
     private var poiObserverToken: Any!
 
-    private var compass: MKCompassButton!
-    private var trackUser: UIImageView!
-
-    fileprivate var trail: Path!
-    fileprivate let trailWidth = 3.0 // Meters
-
-    fileprivate var debugConsole: DebugConsole?
+    private var userTrackingPolyline: UserTrackingPolyline?
+    private let polylineWidth = 4.0 // meters
+    
+    private var userIsOnAnnotation = MKPointAnnotation()
+    private var userIsOnAnnotationAnimator: UIViewPropertyAnimator?
+    
+    private var debugConsole: DebugLayer?
 
     // *****************************************************************************
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        func setupUserTracking() {
-            compass = MKCompassButton(mapView: mapView)
-            compass.gestureRecognizers = [UITapGestureRecognizer(target: self, action: #selector(toggleUserTrackimg))]
-            compass.translatesAutoresizingMaskIntoConstraints = false
-            mapView.addSubview(compass)
-            
-            trackUser = UIImageView(image: #imageLiteral(resourceName: "TrackUser"))
-            trackUser.bounds = compass.bounds
-            trackUser.contentMode = .scaleAspectFit
-            trackUser.isUserInteractionEnabled = true
-            trackUser.gestureRecognizers = [UITapGestureRecognizer(target: self, action: #selector(toggleUserTrackimg))]
-            trackUser.translatesAutoresizingMaskIntoConstraints = false
-            mapView.addSubview(trackUser)
-            
+        do {
+            let userTrackingButton = UserTrackingButton(mapView: mapView, stateChangeHandler: setUserTracking(_:))
+            userTrackingButton.translatesAutoresizingMaskIntoConstraints = false
+            mapView.addSubview(userTrackingButton)
             NSLayoutConstraint.activate([
-                compass.topAnchor.constraint(equalTo: mapView.topAnchor, constant: 32),
-                compass.leftAnchor.constraint(equalTo: mapView.leftAnchor, constant: 32),
-                trackUser.topAnchor.constraint(equalTo: compass.topAnchor, constant: 0),
-                trackUser.leftAnchor.constraint(equalTo: compass.leftAnchor, constant: 0),
-                trackUser.heightAnchor.constraint(equalToConstant: compass.bounds.height),
-                trackUser.widthAnchor.constraint(equalToConstant: compass.bounds.width)])
-
-            trackingUser = false
+                userTrackingButton.topAnchor.constraint(equalTo: mapView.topAnchor, constant: 32),
+                userTrackingButton.leftAnchor.constraint(equalTo: mapView.leftAnchor, constant: 32),
+                userTrackingButton.heightAnchor.constraint(equalToConstant: 32),
+                userTrackingButton.widthAnchor.constraint(equalToConstant: 32)])
+            
+            trackingUser = userTrackingButton.trackingUser
         }
-
-        func loadPath() {
-            switch Path.load(pathName: jsonDataSelector) {
-            case .success(let path):
-                trail = path
-                mapView.add(path.polyline)
-                //mapView.add(path.boundingPolygon)
-                mapView.region = 1.25 * path.boundingRegion
-                mapView.setCenter(path.midCoordinate, animated: true)
+        
+        
+        do {
+            
+            enum LoadStatus {
+                case success(UserTrackingPolyline)
+                case error(String)
+            }
+            
+            let loadStatus = { () -> LoadStatus in
                 
-            case .error(let message):
-                fatalError(message)
+                let bundledPolylinesFileName = "Path"
+                
+                guard let jsonFilePath = Bundle.main.path(forResource: bundledPolylinesFileName, ofType: "json") else {
+                    return .error("Cannot find \(bundledPolylinesFileName).json in bundle.")
+                }
+                
+                let jsonFileUrl = URL(fileURLWithPath: jsonFilePath)
+                
+                do {
+                    let jsonData = try Data(contentsOf: jsonFileUrl)
+                    let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
+                    
+                    if  let jsonCoordinates = jsonObject as? [String : [String : Double]] {
+                        
+                        guard jsonCoordinates.count >= 2 else {
+                            return .error("\(bundledPolylinesFileName).json has \(jsonCoordinates.count) coordinates; there need to be at least 2.")
+                        }
+                        
+                        var coordinates = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: jsonCoordinates.count)
+                        for (key, value) in jsonCoordinates {
+                            coordinates[Int(key)! - 1] = CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!)
+                        }
+                        
+                        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+                        polyline.title = "Trail Of History"
+                        
+                        return .success(UserTrackingPolyline(polyline: polyline, mapView: mapView))
+                    }
+                    else {
+                        return .error("The json object does not contain the expected types and/or keys:\n\(jsonObject)")
+                    }
+                }
+                catch {
+                    return .error("Error reading/parsing \(bundledPolylinesFileName).json: \(error)")
+                }
+            }()
+            
+            switch loadStatus {
+            case .success(let tracker):
+                tracker.renderer.userIsOnColor = UIColor.tohTerracotaColor
+                tracker.renderer.userIsOffColor = UIColor.tohDullYellowColor
+                self.userTrackingPolyline = tracker
+                userIsOnAnnotation.title = mapView.userLocation.title
+                _ = tracker.addListener(self, handlerClassMethod: MapViewController.trackngPolylineEventHandler)
+                
+            case .error(let error):
+                print(error)
             }
         }
 
-        func setupNavigation() {
-            navigationItem.titleView = UIView.fromNib("Title")
-            navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
+        do {
+            //navigationItem.titleView = UIView.fromNib("Title")
+            //navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
             navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
             navigationItem.leftBarButtonItem?.tintColor = UIColor.tohTerracotaColor
         }
 
-        func setupPointsOfInterest() {
+        do {
             let poiCardNib = UINib(nibName: "PointOfInterestCard", bundle: nil)
             collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)
             collectionView.decelerationRate = UIScrollViewDecelerationRateFast
@@ -190,21 +176,11 @@ class MapViewController: UIViewController {
             poiObserverToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
         }
     
-        setupUserTracking()
-
-        loadPath()
-
-        setupNavigation()
-
-        setupPointsOfInterest()
-
         _ = UserLocation.instance.addListener(self, handlerClassMethod: MapViewController.userLocationEventHandler)
-
-        _ = trail.addListener(self, handlerClassMethod: MapViewController.pathEventHandler)
 
         OptionsViewController.initialize(delegate: self)
 
-        debugConsole = DebugConsole(on: view)
+        //debugConsole = DebugLayer.add(to: view)
     }
 
 
@@ -321,18 +297,23 @@ class MapViewController: UIViewController {
         guard !mapView.userIsInteracting else { lastInteractionTime = Date(); return }
         guard DateInterval(start: lastInteractionTime, end: Date()).duration > interactionTimeout else { return }
 
-        if trackingUser {
-            switch event {
-            case .locationUpdate(let location):
-                self.mapView.setCenter(location.coordinate, animated: false)
-            case .headingUpdate(let heading):
-                self.mapView.camera.heading = heading.trueHeading // Rotate the map so that the top of the view corresponds with the user's heading.
-            default:
-                break
-            }
+
+        switch event {
+        case .locationUpdate(let location):
+            mapView.userLocation.subtitle = location.coordinate.description
+            if location.horizontalAccuracy < 20 { userTrackingPolyline?.enableTracking(withTolerence: polylineWidth) }
+            if trackingUser { self.mapView.setCenter(location.coordinate, animated: false) }
+            
+            if let data = userTrackingPolyline?.userTrackingData { debugConsole?.update(line: 6, with: String(format: "Distance = %.1f meters", data.distance)) }
+            debugConsole?.update(line: 7, with: String(format: "Accuracy = %.1f meters", location.horizontalAccuracy))
+        case .headingUpdate(let heading):
+            if trackingUser { self.mapView.camera.heading = heading.trueHeading }
+        default:
+            break
         }
-        
-        if trail.userIsOn { // If the user is on the trail then set the current POI to the next one that he/she will encounter.
+
+
+        if let isOn = userTrackingPolyline?.userIsOn, isOn { // If the user is on the trail then set the current POI to the next one that he/she will encounter.
 
             func poiIsInFrontOfUser(_ poi: PointOfInterest) -> Bool {
                 guard let angle = poi.angleWithUserHeading else {
@@ -357,40 +338,56 @@ class MapViewController: UIViewController {
         }
     }
 
-    private var segment: MKPolyline?
-    private func pathEventHandler(event: PathEvent) {
-        if case .currentSegmentChange(let path) = event {
-            if let segment = self.segment {
-                mapView.remove(segment)
-                self.segment = nil
-            }
-            if let current = path.currentSegment {
-                segment = MKPolyline(coordinates: [current.northern.coordinate, current.southern.coordinate], count: 2)
-                mapView.add(segment!)
-            }
-        }
+    private func setUserTracking(_ state: Bool) {
+        trackingUser = state
     }
     
-
-    @objc private func toggleUserTrackimg(_ sender: UITapGestureRecognizer) {
-        trackingUser = !trackingUser
-    }
-
-    private var trackingUser: Bool {
-        get {
-            return compass.compassVisibility == .visible
-        }
-        set {
-            guard newValue != trackingUser else { return }
-            
-            // If we are tracking then show the compass, else show trackUser.
-            compass.compassVisibility = newValue ? .visible : .hidden
-            trackUser.isHidden = trackingUser
-
+    private var trackingUser: Bool = false {
+        didSet {
             if trackingUser {
                 if let location = mapView.userLocation.location { mapView.setCenter(location.coordinate, animated: false) }
                 if let heading = mapView.userLocation.heading { mapView.camera.heading = heading.trueHeading }
             }
+        }
+    }
+    
+    private func trackngPolylineEventHandler(event: UserTrackingPolylineEvent) {
+        
+        guard let userLocation = UserLocation.instance.currentLocation, let userIsOn = userTrackingPolyline?.userIsOn, let trackingData = userTrackingPolyline?.userTrackingData else {
+            fatalError("User Location and/or Polyline Tracking data is nil. Huh?! How did the event handler even get called?")
+        }
+        
+        debugConsole?.update(line: 5, with: "\(userIsOn ? "On" : "Off"), tol. = \(String(format: "%.1f", userTrackingPolyline?.trackingTolerence ?? 0))")
+        
+        switch event {
+            
+        case .userIsOnChanged:
+            userIsOnAnnotationAnimator = UIViewPropertyAnimator(duration: 2, curve: .linear, animations: nil)
+            if userIsOn {
+                userIsOnAnnotation.coordinate = userLocation.coordinate
+                mapView.addAnnotation(userIsOnAnnotation) // The MKMapViewDelegate's didAdd method will animate it into positon (we have to wait for the view to be created and displayed).
+                mapView.showsUserLocation = false
+            }
+            else {
+                userIsOnAnnotationAnimator!.addAnimations { // Animate the move from the closest point on the polyline to the user's actual location
+                    self.userIsOnAnnotation.coordinate = userLocation .coordinate
+                }
+                userIsOnAnnotationAnimator!.addCompletion() { animatingPosition in
+                    self.mapView.removeAnnotation(self.userIsOnAnnotation)
+                    self.mapView.showsUserLocation = true
+                    self.userIsOnAnnotationAnimator = nil
+                }
+                userIsOnAnnotationAnimator!.startAnimation()
+            }
+            
+            
+        case .userPositionChanged:
+            guard userIsOnAnnotationAnimator == nil else { return }
+            userIsOnAnnotation.coordinate = MKCoordinateForMapPoint(trackingData.point)
+            userIsOnAnnotation.subtitle = userIsOnAnnotation.coordinate.description
+            
+        case .trackingDisabled:
+            break
         }
     }
 }
@@ -398,8 +395,12 @@ class MapViewController: UIViewController {
 extension MapViewController : MKMapViewDelegate {
 
     func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-        //mapView.userTrackingMode = .follow
+        if let tracker = self.userTrackingPolyline, mapView.overlays.count == 0 {
+            mapView.add(tracker.polyline)
+            mapView.region = 1.25 * tracker.polyline.boundingRegion
+        }
     }
+    
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
@@ -434,19 +435,13 @@ extension MapViewController : MKMapViewDelegate {
             renderer.lineWidth = 2
             renderer.strokeColor = .red
         }
-        else {
-            let polyline = overlay as! MKPolyline
-            if polyline.pointCount > 2 {
-                let pathRenderer = PathRenderer(polyline: polyline, mapView: mapView, polylineWidth: trailWidth)
-                pathRenderer.subscribe(to: trail)
-                renderer = pathRenderer
-            }
-            else {
-                renderer = ZoomingPolylineRenderer(polyline: polyline, mapView: mapView, polylineWidth: trailWidth)
-                renderer.strokeColor = .black
-            }
+        else if let tracker = userTrackingPolyline {
+            renderer = tracker.renderer
+            tracker.renderer.width = polylineWidth
         }
-        renderer.fillColor = .clear
+        else {
+            fatalError("Unsupported orvelay: \(overlay)")
+        }
         return renderer
     }
 }
@@ -547,21 +542,27 @@ extension MapViewController : OptionsViewControllerDelegate {
     }
 
     func zoomToTrail() {
-        mapView.region = trail.boundingRegion
+        if let tracker = userTrackingPolyline {
+            mapView.region = tracker.polyline.boundingRegion
+        }
     }
 
     func zoomToUser() {
-        let userRect = makeRect(center: mapView.userLocation.coordinate, span: trail.boundingRegion.span)
-        mapView.region = MKCoordinateRegionForMapRect(userRect)
+        if let tracker = userTrackingPolyline {
+            let userRect = makeRect(center: mapView.userLocation.coordinate, span: tracker.polyline.boundingRegion.span)
+            mapView.region = MKCoordinateRegionForMapRect(userRect)
+        }
     }
 
     func zoomToBoth() {
-        mapView.region = trail.boundingRegion
-        if !mapView.isUserLocationVisible {
-            let trailRect = makeRect(center: trail.boundingRegion.center, span: trail.boundingRegion.span)
-            let userRect = makeRect(center: mapView.userLocation.coordinate, span: trail.boundingRegion.span)
-            let combinedRect = MKMapRectUnion(trailRect, userRect)
-            mapView.region = MKCoordinateRegionForMapRect(combinedRect)
+        if let tracker = userTrackingPolyline {
+            mapView.region = tracker.polyline.boundingRegion
+            if !mapView.isUserLocationVisible {
+                let trailRect = makeRect(center: tracker.polyline.boundingRegion.center, span: tracker.polyline.boundingRegion.span)
+                let userRect = makeRect(center: mapView.userLocation.coordinate, span: tracker.polyline.boundingRegion.span)
+                let combinedRect = MKMapRectUnion(trailRect, userRect)
+                mapView.region = MKCoordinateRegionForMapRect(combinedRect)
+            }
         }
     }
 }

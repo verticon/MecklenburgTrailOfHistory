@@ -233,7 +233,7 @@ extension ViewController : MKMapViewDelegate {
         let reuseID = "MarkerView"
 
         if let userLocation = annotation as? MKUserLocation {
-            userLocation.subtitle = describeCoordinate(userLocation.coordinate)
+            userLocation.subtitle = userLocation.coordinate.description
         }
         else if let marker = annotation as? Marker {
             marker.subtitle = marker.coordinate.description
@@ -249,7 +249,8 @@ extension ViewController : MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        let renderer = ZoomingPolylineRenderer(polyline: overlay as! MKPolyline, mapView: mapView, polylineWidth: 2)
+        let renderer = UserTrackingPolyline.Renderer(polyline: overlay as! MKPolyline, mapView: mapView)
+        renderer.width = 2
         renderer.strokeColor = .red
         return renderer
     }

@@ -175,7 +175,7 @@ class PointOfInterest : Equatable {
                 
                 // Note: I tried using a single Observer of the event type .value but each event sent all of the poi records???
                 
-                reference = FIRDatabase.database().reference(withPath: "PointsOfInterest").child(jsonDataSelector)
+                reference = FIRDatabase.database().reference(withPath: "PointsOfInterest")
                 childAddedObservationId = reference!.observe(.childAdded,   with: { self.eventHandler(properties: $0.value as! [String: Any], event: .added) })
                 childChangedObservationId = reference!.observe(.childChanged, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .updated) })
                 childRemovedObservationId = reference!.observe(.childRemoved, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .removed) })

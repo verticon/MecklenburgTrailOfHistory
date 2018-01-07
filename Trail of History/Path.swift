@@ -34,7 +34,7 @@ class Path : Broadcaster<PathEvent> {
         init(northern: CLLocationCoordinate2D, southern: CLLocationCoordinate2D) {
             self.northern = CLLocation(latitude: northern.latitude, longitude: northern.longitude)
             self.southern = CLLocation(latitude: southern.latitude, longitude: southern.longitude)
-            bearing = degreesToRadians(degrees: self.southern.bearing(to: self.northern))
+            bearing = toRadians(degrees: self.southern.bearing(to: self.northern))
         }
         func locationIsOn(_ testLocation: CLLocation) -> Bool {
             // Ensure that the test location's latitude is between the segment ends
@@ -44,7 +44,7 @@ class Path : Broadcaster<PathEvent> {
 
             // Determine the location along the segment whereat the latitude is equal to that of the test location.
             let latitude = testLocation.coordinate.latitude
-            let deltaLat = degreesToRadians(latitude - southern.coordinate.latitude)
+            let deltaLat = toRadians(degrees: latitude - southern.coordinate.latitude)
             let radius = deltaLat / sin(bearing)
             let deltaLng = radius * cos(bearing)
             let longitude = southern.coordinate.longitude + deltaLng

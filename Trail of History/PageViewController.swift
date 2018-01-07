@@ -25,15 +25,12 @@ class PageViewController: UIViewController {
         let listStoryboard = UIStoryboard(name: "List", bundle: nil)
         listViewController = (listStoryboard.instantiateViewController(withIdentifier: "List View Controller") as! ListViewController)
         listViewController.pageViewController = self
-        
+
         let mapStoryboard = UIStoryboard(name: "Map", bundle: nil)
         mapViewController = (mapStoryboard.instantiateViewController(withIdentifier: "Map View Controller") as! MapViewController)
         mapViewController.pageViewController = self
 
         pageViewController.setViewControllers([listViewController], direction: .forward, animated: false, completion: nil)
-
-        navigationItem.rightBarButtonItems = listViewController.navigationItem.rightBarButtonItems
-        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
 
         addChildViewController(pageViewController)
         view.addSubview(pageViewController.view)

@@ -103,6 +103,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         addSubview(imageView)
 
         textView.isEditable = false
+        textView.isSelectable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.textColor = UIColor.lightGray
         textView.backgroundColor = UIColor(red: 248.0/255.0, green: 241.0/255.0, blue: 227.0/255.0, alpha: 1) // Safari's tan, reader view color.
@@ -188,7 +189,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         else {
             textView.frame.size.height = textView.contentSize.height
         }
-        
+
 
         let totalHeight = imageSize.height + textView.frame.height
 
@@ -201,6 +202,8 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         let currTextTop = textView.frame.origin.y
         let newTextTop = newImageTop + imageSize.height
         textView.frame.origin.y -= currTextTop - newTextTop
+        textView.contentOffset = CGPoint.zero
+
  
         // Place the movie button in the lower right corner of the image
         if movieUrl != nil {
@@ -221,7 +224,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         shadowView.layer.shadowColor = UIColor.black.cgColor
         shadowView.layer.shadowOffset = CGSize(width: 0.5, height: 0.4)  //Here you control x and y
         shadowView.layer.shadowOpacity = 0.5
-        shadowView.layer.shadowRadius = 5.0 //Here your control your blur
+        shadowView.layer.shadowRadius = 5.0 // This controls the blur
         shadowView.layer.masksToBounds =  false
         shadowView.layer.shadowPath = shadowPath.cgPath
         self.insertSubview(shadowView, at: 0)
@@ -248,7 +251,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
             NSAttributedStringKey.font : UIFont(name: "Helvetica", size: 18)!,
             NSAttributedStringKey.paragraphStyle : style
             ])
-        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.characters.count))
+        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.count))
         textView.attributedText = text
     }
 

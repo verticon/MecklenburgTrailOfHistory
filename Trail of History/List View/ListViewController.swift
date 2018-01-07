@@ -20,8 +20,8 @@ class ListViewController: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        navigationItem.titleView = UIView.fromNib("Title")
-        navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
+        //navigationItem.titleView = UIView.fromNib("Title")
+        //navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
         navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor // TODO: We should be able to access the TOH custom colors in the Interface Builder
 
         let poiCellNib: UINib? = UINib(nibName: "PointOfInterestCell", bundle: nil)
@@ -33,16 +33,7 @@ class ListViewController: UICollectionViewController {
         doubleTapRecognizer.numberOfTapsRequired = 2
         doubleTapRecognizer.numberOfTouchesRequired = 1
         doubleTapRecognizer.delaysTouchesBegan = true
-        //collectionView?.addGestureRecognizer(doubleTapRecognizer)
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        navigationItem.hidesBackButton = true
-        
-        if let pageVC = pageViewController {
-            pageVC.navigationItem.leftBarButtonItems = self.navigationItem.leftBarButtonItems
-            pageVC.navigationItem.rightBarButtonItems = self.navigationItem.rightBarButtonItems
-        }
+        collectionView?.addGestureRecognizer(doubleTapRecognizer)
     }
 
     @objc func didDoubleTapCollectionView(recognizer: UITapGestureRecognizer) {
@@ -60,6 +51,15 @@ class ListViewController: UICollectionViewController {
                     imageView.contentMode = .scaleToFill
                 }
             }
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        navigationItem.hidesBackButton = true
+        
+        if let pageVC = pageViewController {
+            pageVC.navigationItem.leftBarButtonItems = self.navigationItem.leftBarButtonItems
+            pageVC.navigationItem.rightBarButtonItems = self.navigationItem.rightBarButtonItems
         }
     }
 
@@ -94,12 +94,12 @@ class ListViewController: UICollectionViewController {
         poiCell.backgroundView = imageView
         poiCell.nameLabel.text = poi.name
         poiCell.distanceLabel.text = poi.distanceToUserText
+
         
         return poiCell
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-print("POI selected")
         DetailView.present(poi: pointsOfInterest[indexPath.item])
         collectionView.deselectItem(at: indexPath, animated: false)
     }
