@@ -91,12 +91,20 @@ class ListViewController: UICollectionViewController {
 
         let imageView = UIImageView(image: poi.image)
         imageView.contentMode = .scaleAspectFill
-        poiCell.backgroundView = imageView
+        let scrollView = UIScrollView()
+        scrollView.addSubview(imageView)
+        poiCell.backgroundView = scrollView
         poiCell.nameLabel.text = poi.name
         poiCell.distanceLabel.text = poi.distanceToUserText
 
-        
         return poiCell
+    }
+
+    override func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        if let scrollView = cell.backgroundView, let imageView = scrollView.subviews[0] as? UIImageView {
+            imageView.frame.size = scrollView.frame.size
+            imageView.frame.size = imageView.aspectFillImageSize()
+        }
     }
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
