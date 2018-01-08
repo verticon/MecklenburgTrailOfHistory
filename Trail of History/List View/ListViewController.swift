@@ -33,7 +33,7 @@ class ListViewController: UICollectionViewController {
         doubleTapRecognizer.numberOfTapsRequired = 2
         doubleTapRecognizer.numberOfTouchesRequired = 1
         doubleTapRecognizer.delaysTouchesBegan = true
-        collectionView?.addGestureRecognizer(doubleTapRecognizer)
+        //collectionView?.addGestureRecognizer(doubleTapRecognizer)
     }
 
     @objc func didDoubleTapCollectionView(recognizer: UITapGestureRecognizer) {

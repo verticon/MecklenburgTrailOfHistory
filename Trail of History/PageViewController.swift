@@ -12,7 +12,7 @@ class PageViewController: UIViewController {
 
     var mapViewController: MapViewController!
     var listViewController: ListViewController!
-    let pageViewController: UIPageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+    let pageViewController: UIPageViewController = UIPageViewController(transitionStyle: .pageCurl, navigationOrientation: .horizontal, options: nil)
 
     var pageControl: UIPageControl!
 

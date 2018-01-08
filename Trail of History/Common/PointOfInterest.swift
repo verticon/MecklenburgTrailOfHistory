@@ -49,6 +49,7 @@ class PointOfInterest : Equatable {
     let image: UIImage
     let id: String
     let movieUrl: URL?
+    let meckncGovUrl: URL?
 
     var distanceToUser: Int? {
         guard let userLocation = UserLocation.instance.currentLocation else { return nil }
@@ -82,13 +83,14 @@ class PointOfInterest : Equatable {
 
     private weak var observer: Database.Observer?
 
-    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, movieUrl: URL?, observer: Database.Observer) {
+    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, movieUrl: URL?, meckncGovUrl: URL?, observer: Database.Observer) {
         self.id = id
         self.name = name
         self.description = description
         self.image = image
         self.movieUrl = movieUrl
-        
+        self.meckncGovUrl = meckncGovUrl
+
         location = CLLocation(latitude: latitude, longitude: longitude)
         
         self.observer = observer // Inform the observer of location updates
@@ -212,7 +214,12 @@ class PointOfInterest : Equatable {
                 if let movieUrlString = properties["movieUrl"] as? String {
                     movieUrl = URL(string: movieUrlString)
                 }
-
+                
+                var meckncGovUrl: URL? = nil
+                if let meckncGovString = properties["meckncGovUrl"] as? String {
+                    meckncGovUrl = URL(string: meckncGovString)
+                }
+                
                 let imageUrlKey = "url:" + id
                 let imageDataKey = "image:" + id
 
@@ -238,7 +245,7 @@ class PointOfInterest : Equatable {
                         image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: errorText)
                     }
 
-                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: image, movieUrl: movieUrl, observer: self)
+                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: image, movieUrl: movieUrl, meckncGovUrl: meckncGovUrl, observer: self)
                     self.notify(poi: poi, event: event)
                 }
 

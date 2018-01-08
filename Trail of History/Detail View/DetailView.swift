@@ -103,7 +103,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         addSubview(imageView)
 
         textView.isEditable = false
-        textView.isSelectable = false
+        //textView.isSelectable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.textColor = UIColor.lightGray
         textView.backgroundColor = UIColor(red: 248.0/255.0, green: 241.0/255.0, blue: 227.0/255.0, alpha: 1) // Safari's tan, reader view color.
@@ -245,13 +245,17 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
          NSForegroundColorAttributeName : UIColor.white,
          NSStrokeWidthAttributeName : -3.0] as [String : Any]
          */
+        let link = "Learn More ..."
         let style = NSMutableParagraphStyle()
         style.alignment = NSTextAlignment.center
-        let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)", attributes: [
+        let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)\n\n\(poi.meckncGovUrl == nil ? "" : link)", attributes: [
             NSAttributedStringKey.font : UIFont(name: "Helvetica", size: 18)!,
             NSAttributedStringKey.paragraphStyle : style
             ])
-        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location:0, length: poi.name.count))
+        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location: 0, length: poi.name.count))
+        if let url = poi.meckncGovUrl {
+            text.addAttributes([NSAttributedStringKey.link : url], range: NSRange(location: text.length - link.count, length: link.count))
+        }
         textView.attributedText = text
     }
 
