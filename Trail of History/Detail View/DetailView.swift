@@ -15,65 +15,80 @@ import VerticonsToolbox
 
 class DetailView : UIView, AVPlayerViewControllerDelegate {
 
+    class PresentingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
+        
+        func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
+            return 2.5
+        }
+        
+        func animateTransition(using context: UIViewControllerContextTransitioning) {
+            
+            let toViewController = context.viewController(forKey: UITransitionContextViewControllerKey.to)!
+            let finalFrameForVC = context.finalFrame(for: toViewController)
+
+            // Move the detail view off of the screen.
+            toViewController.view.frame = finalFrameForVC.offsetBy(dx: 0, dy: UIScreen.main.bounds.size.height)
+            context.containerView.addSubview(toViewController.view)
+            
+            let animations = {
+                // Animate the detail view back onto the screen.
+                toViewController.view.frame = finalFrameForVC
+            }
+            UIView.animate(withDuration: transitionDuration(using: context), delay: 0.0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.0, options: .curveLinear, animations: animations) { _ in
+                context.completeTransition(!context.transitionWasCancelled)
+            }
+        }
+    }
+    
+    class DismissingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
+        
+        func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
+            return 1
+        }
+        
+        func animateTransition(using context: UIViewControllerContextTransitioning) {
+            
+            let fromViewController = context.viewController(forKey: UITransitionContextViewControllerKey.from)!
+            let containerView = context.containerView
+
+            let snapshotView = fromViewController.view.snapshotView(afterScreenUpdates: false)!
+            containerView.addSubview(snapshotView)
+            fromViewController.view.removeFromSuperview()
+
+            let animations = {
+                snapshotView.frame = fromViewController.view.frame.insetBy(dx: fromViewController.view.frame.size.width / 2, dy: fromViewController.view.frame.size.height / 2)
+            }
+            UIView.animate(withDuration: transitionDuration(using: context), animations: animations) { _ in
+                context.completeTransition(!context.transitionWasCancelled) }
+        }
+    }
+    
+    private class TransitionController : UIViewController, UIViewControllerTransitioningDelegate {
+
+        private let presentingAnimator = PresentingAnimator()
+        func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+            return presentingAnimator
+        }
+
+        private let dismissingAnimator = DismissingAnimator()
+        func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+            return dismissingAnimator
+        }
+    }
+    
     static func present(poi: PointOfInterest) {
         let window = UIApplication.shared.delegate!.window!!
         let presenter = window.visibleViewController!
 
-        if let webPageUrl = URL(string: poi.description) {
-
-            func safariView() {
-                class Delegate : NSObject, SFSafariViewControllerDelegate {
-                    static let instance = Delegate()
-                    func safariViewController(_ controller: SFSafariViewController, didCompleteInitialLoad didLoadSuccessfully: Bool) {
-                        // Hide the address bar (move it above the screen) so that the user is not able to toggle the Reader mode.
-                        var frame = controller.view.frame
-                        let OffsetY: CGFloat  = 64
-                        frame.origin = CGPoint(x: frame.origin.x, y: frame.origin.y - OffsetY)
-                        frame.size = CGSize(width: frame.width, height: frame.height + OffsetY)
-                        controller.view.frame = frame
-                    }
-                }
-
-                let configuration = SFSafariViewController.Configuration()
-                configuration.entersReaderIfAvailable = true
-                let safariVC = SFSafariViewController(url: webPageUrl, configuration: configuration)
-
-                // Note: The present method's completion handler could be used to immediately hide the address bar.
-                // But then, AFAIK, it would not be possiblre to show a progress indicator. Using a delegate was the
-                // best compromise that I could arrive at.
-                safariVC.delegate = Delegate.instance // Using a static instance prevents the delegate from being deallocated.
-                presenter.present(safariVC, animated: false)
-            }
-            
-            func webView() {
-                let controller = UIViewController()
-                controller.modalPresentationStyle = .overCurrentContext
-                controller.modalTransitionStyle = .crossDissolve
-                
-                let webConfiguration = WKWebViewConfiguration()
-                let webView = WKWebView(frame: .zero, configuration: webConfiguration)
-                //webView.uiDelegate = self
-                controller.view = webView
-                
-                presenter.present(controller, animated: false) {
-                    webView.load(URLRequest(url: webPageUrl))
-                }
-            }
-
-            //webView()
-            safariView()
-        }
-        else {
-            let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
-
-            let controller = UIViewController()
-            controller.modalPresentationStyle = .overCurrentContext
-            controller.modalTransitionStyle = .crossDissolve
-
-            controller.view = DetailView(poi: poi, presenter: presenter, controller: controller, barHeight: barHeight)
-
-            presenter.present(controller, animated: false, completion: nil)
-        }
+        let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
+        
+        let controller = TransitionController()
+        controller.modalPresentationStyle = .custom
+        controller.transitioningDelegate = controller
+        
+        controller.view = DetailView(poi: poi, presenter: presenter, controller: controller, barHeight: barHeight)
+        
+        presenter.present(controller, animated: true, completion: nil)
     }
     
     private let poiId : String
@@ -84,13 +99,11 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     private var observerToken: Any!
     private let movieUrl: URL?
     private let barHeight: CGFloat
-    private let presenter: UIViewController
     private let controller: UIViewController
 
     private init(poi: PointOfInterest, presenter: UIViewController, controller: UIViewController, barHeight: CGFloat) {
         poiId = poi.id
         movieUrl = poi.movieUrl
-        self.presenter = presenter
         self.controller = controller
         self.barHeight = barHeight
 
@@ -259,13 +272,12 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         textView.attributedText = text
     }
 
+    
     @objc private func playMovie() {
-        dismiss()
-
         let player = AVPlayer(url: movieUrl!)
         let playerViewController = AVPlayerViewController()
         playerViewController.player = player
-        presenter.present(playerViewController, animated: true) {
+        controller.present(playerViewController, animated: true) {
             playerViewController.player!.play()
         }
     }
@@ -282,7 +294,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     
     private func dismiss() {
         _ = PointOfInterest.removeObserver(token: observerToken)
-        controller.dismiss(animated: false, completion: nil)
+        controller.dismiss(animated: true, completion: nil)
     }
     
     private func describe(view: UIView, indent: String) {
