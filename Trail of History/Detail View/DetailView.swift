@@ -18,7 +18,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     class PresentingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
         
         func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
-            return 2.5
+            return 1.5
         }
         
         func animateTransition(using context: UIViewControllerContextTransitioning) {
@@ -41,8 +41,54 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     }
     
     class DismissingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
+ 
+        class InteractionController : UIPercentDrivenInteractiveTransition {
+            
+            var interactionInProgress = false
+            private var shouldCompleteTransition = false
+            private weak var targetController: UIViewController!
+            
+            init(targetController: UIViewController) {
+                super.init()
+                self.targetController = targetController
+                let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleGesture(_:)))
+                targetController.view.addGestureRecognizer(recognizer)
+            }
+            
+            @objc func handleGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
+                let translation = gestureRecognizer.translation(in: gestureRecognizer.view!.superview!)
+                var progress = (translation.x / 200)
+                progress = CGFloat(fminf(fmaxf(Float(progress), 0.0), 1.0))
+                
+                switch gestureRecognizer.state {
+                case .began:
+                    interactionInProgress = true
+                    targetController.dismiss(animated: true, completion: nil)
+                    report("Gesture began")
+                case .changed:
+                    shouldCompleteTransition = progress > 0.5
+                    update(progress)
+                    report("Gesture changed")
+                case .cancelled:
+                    interactionInProgress = false
+                    cancel()
+                    report("Gesture cancelled")
+                case .ended:
+                    interactionInProgress = false
+                    if shouldCompleteTransition { finish() }
+                    else { cancel() }
+                    report("Gesture ended")
+                default:
+                    break
+                }
+            }
+
+            func report(_ text: String) {
+                print("\(text)")
+            }
+        }
         
-        func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
+       func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
             return 1
         }
         
@@ -62,32 +108,66 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
                 context.completeTransition(!context.transitionWasCancelled) }
         }
     }
-    
-    private class TransitionController : UIViewController, UIViewControllerTransitioningDelegate {
+
+
+    private class TransitionController : NSObject, UIViewControllerTransitioningDelegate {
 
         private let presentingAnimator = PresentingAnimator()
+        private let dismissingAnimator = DismissingAnimator()
+        private let targetController: UIViewController
+        private let interactionController: DismissingAnimator.InteractionController? = nil
+
+        init(targetController: UIViewController) {
+            self.targetController = targetController
+            super.init()
+
+            // There is a problem with the interaction controller: the gesture recognizer produces a begin event,
+            // immediately followed by a cancel event. I have not been able to understand why the cancel occurs.
+            // My code responds to begin event by dismissing the target view controller. If I comment out that
+            // line then the cancel does not occur.
+            //interactionController = DismissingAnimator.InteractionController(targetController: targetController)
+
+            // Until I can work on the interaction controller, let's go with a tap to initiate the dismissal.
+            targetController.view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapHandler(_:))))
+        }
+ 
+        @objc func tapHandler(_ gestureRecognizer: UITapGestureRecognizer) {
+            targetController.dismiss(animated: true, completion: nil)
+        }
+
         func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
             return presentingAnimator
         }
 
-        private let dismissingAnimator = DismissingAnimator()
         func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
             return dismissingAnimator
         }
+
+        func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+            return interactionController
+        }
     }
-    
+
+    private class DetailViewController : UIViewController {
+        var transitionController: TransitionController! { // Store a strong reference (since controller.transitioningDelegate is weak)
+            didSet {
+                transitioningDelegate = transitionController
+            }
+        }
+    }
+    static private var save: TransitionController?
     static func present(poi: PointOfInterest) {
         let window = UIApplication.shared.delegate!.window!!
         let presenter = window.visibleViewController!
 
         let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
         
-        let controller = TransitionController()
+        let controller = DetailViewController()
+        controller.view = DetailView(poi: poi, controller: controller, barHeight: barHeight)
         controller.modalPresentationStyle = .custom
-        controller.transitioningDelegate = controller
-        
-        controller.view = DetailView(poi: poi, presenter: presenter, controller: controller, barHeight: barHeight)
-        
+        save = TransitionController(targetController: controller) // The target controller's view must have already been set
+        controller.transitionController = save
+
         presenter.present(controller, animated: true, completion: nil)
     }
     
@@ -101,7 +181,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     private let barHeight: CGFloat
     private let controller: UIViewController
 
-    private init(poi: PointOfInterest, presenter: UIViewController, controller: UIViewController, barHeight: CGFloat) {
+    private init(poi: PointOfInterest, controller: UIViewController, barHeight: CGFloat) {
         poiId = poi.id
         movieUrl = poi.movieUrl
         self.controller = controller
@@ -110,8 +190,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         super.init(frame: CGRect.zero)
 
         backgroundColor = UIColor(white: 1, alpha: 0.5) // Allow the underlying view to be seen through a white haze.
-        addGestureRecognizer(UITapGestureRecognizer(target:self, action: #selector(dismiss(_:))))
-        
+
         imageView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(imageView)
 
@@ -150,6 +229,14 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         observerToken = PointOfInterest.addObserver(poiListener, dispatchQueue: DispatchQueue.main)
     }
 
+    required public init?(coder aDecoder: NSCoder) {
+        fatalError("Init with coder not implemented")
+    }
+    
+    deinit {
+        _ = PointOfInterest.removeObserver(token: observerToken)
+    }
+
     func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
         
         if poi.id == poiId {
@@ -163,10 +250,6 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
                 break
             }
         }
-    }
-
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("Init with coder not implemented")
     }
 
     public override func layoutSubviews() {
@@ -284,17 +367,6 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
     func playerViewController(_ playerViewController: AVPlayerViewController, failedToStartPictureInPictureWithError error: Error) {
         print("There was a playback error: \(error)")
-    }
-
-    @objc private func dismiss(_ sender: UITapGestureRecognizer) {
-        if sender.state == .ended {
-            dismiss()
-        }
-    }
-    
-    private func dismiss() {
-        _ = PointOfInterest.removeObserver(token: observerToken)
-        controller.dismiss(animated: true, completion: nil)
     }
     
     private func describe(view: UIView, indent: String) {
