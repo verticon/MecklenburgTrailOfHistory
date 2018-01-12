@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="11762" systemVersion="16C67" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <customFonts key="customFonts">
         <array key="Archer-Medium.otf">
             <string>Archer-Medium</string>
+        </array>
+        <array key="Helvetica.ttc">
+            <string>Helvetica</string>
         </array>
     </customFonts>
     <objects>
@@ -25,41 +27,38 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="PoiAnnotationImage" translatesAutoresizingMaskIntoConstraints="NO" id="nMV-mg-0f5" userLabel="Image">
-                        <rect key="frame" x="8" y="18" width="40" height="34"/>
+                        <rect key="frame" x="16" y="18" width="40" height="34"/>
                         <constraints>
                             <constraint firstAttribute="width" constant="40" id="ZFx-72-Hdq"/>
                             <constraint firstAttribute="height" constant="34" id="uwA-c0-PMq"/>
                         </constraints>
                     </imageView>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Name" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="64L-MP-RrG" userLabel="Name">
-                        <rect key="frame" x="48" y="8" width="41" height="18"/>
+                        <rect key="frame" x="56" y="0.0" width="41" height="18"/>
                         <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="15"/>
                         <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <nil key="highlightedColor"/>
                     </label>
                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Line" translatesAutoresizingMaskIntoConstraints="NO" id="ksE-Ks-yq6" userLabel="Seperator">
-                        <rect key="frame" x="48" y="33" width="55" height="4"/>
+                        <rect key="frame" x="56" y="33" width="55" height="4"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="4" id="buH-vN-QaO"/>
                             <constraint firstAttribute="width" constant="55" id="p99-6C-ySn"/>
                         </constraints>
                     </imageView>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Distance" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="4M5-S0-Vwo" userLabel="Distance">
-                        <rect key="frame" x="48" y="45" width="64.5" height="17"/>
+                        <rect key="frame" x="56" y="53" width="64.5" height="17"/>
                         <fontDescription key="fontDescription" name="Archer-Medium" family="Archer" pointSize="17"/>
                         <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <nil key="highlightedColor"/>
                     </label>
                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pM6-hk-DqZ" userLabel="Detail Disclosure">
-                        <rect key="frame" x="192" y="8" width="30" height="30"/>
+                        <rect key="frame" x="184" y="0.0" width="30" height="30"/>
                         <constraints>
                             <constraint firstAttribute="height" constant="30" id="4cQ-Ww-RzX"/>
                             <constraint firstAttribute="width" constant="30" id="K3e-yK-jI8"/>
                         </constraints>
                         <state key="normal" image="ShowDetail"/>
-                        <connections>
-                            <action selector="presentDetailView:" destination="xq2-62-uxi" eventType="touchUpInside" id="GDO-nj-TZs"/>
-                        </connections>
                     </button>
                 </subviews>
             </view>

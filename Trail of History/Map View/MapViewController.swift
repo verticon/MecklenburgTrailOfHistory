@@ -467,7 +467,9 @@ extension MapViewController : UICollectionViewDelegate {
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        DetailView.present(poi: poiAnnotations[indexPath.item].poi)
+        let cell = collectionView.cellForItem(at: indexPath)!
+        let startFrom = cell.convert(cell.frame, to: self.view)
+        DetailView.present(poi: poiAnnotations[indexPath.item].poi, startingFrom: startFrom)
     }
 }
 

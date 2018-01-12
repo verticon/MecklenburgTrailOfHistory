@@ -13,212 +13,312 @@ import WebKit
 import SafariServices
 import VerticonsToolbox
 
-class DetailView : UIView, AVPlayerViewControllerDelegate {
-
-    class PresentingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
+private class PresentingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
+    
+    private let startingRect: CGRect
+    
+    init(startingRect: CGRect) {
+        self.startingRect = startingRect
+        super.init()
+    }
+    
+    func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
+        return 5.0
+    }
+    
+    func animateTransition2(using context: UIViewControllerContextTransitioning) {
         
-        func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
-            return 1.5
+        let toViewController = context.viewController(forKey: UITransitionContextViewControllerKey.to)!
+        let finalFrameForVC = context.finalFrame(for: toViewController)
+        
+        // Move the detail view off of the screen.
+        toViewController.view.frame = startingRect
+        toViewController.view.clipsToBounds = true
+        context.containerView.addSubview(toViewController.view)
+        
+        let animations = {
+            // Animate the detail view back onto the screen.
+            //toViewController.view.frame = finalFrameForVC
+            let deltaX = finalFrameForVC.origin.x - self.startingRect.origin.x
+            let deltaY = finalFrameForVC.origin.y - self.startingRect.origin.y
+            let deltaWidth = self.startingRect.width - finalFrameForVC.width
+            let deltaHeight = self.startingRect.height - finalFrameForVC.height
+            toViewController.view.frame = toViewController.view.frame.insetBy(dx: deltaWidth / 2, dy: deltaHeight / 2).offsetBy(dx: deltaX, dy: deltaY)
         }
-        
-        func animateTransition(using context: UIViewControllerContextTransitioning) {
-            
-            let toViewController = context.viewController(forKey: UITransitionContextViewControllerKey.to)!
-            let finalFrameForVC = context.finalFrame(for: toViewController)
-
-            // Move the detail view off of the screen.
-            toViewController.view.frame = finalFrameForVC.offsetBy(dx: 0, dy: UIScreen.main.bounds.size.height)
-            context.containerView.addSubview(toViewController.view)
-            
-            let animations = {
-                // Animate the detail view back onto the screen.
-                toViewController.view.frame = finalFrameForVC
-            }
-            UIView.animate(withDuration: transitionDuration(using: context), delay: 0.0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.0, options: .curveLinear, animations: animations) { _ in
-                context.completeTransition(!context.transitionWasCancelled)
-            }
+        UIView.animate(withDuration: transitionDuration(using: context), delay: 0.0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.0, options: .curveLinear, animations: animations) { _ in
+            context.completeTransition(!context.transitionWasCancelled)
         }
     }
     
-    class DismissingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
- 
-        class InteractionController : UIPercentDrivenInteractiveTransition {
-            
-            var interactionInProgress = false
-            private var shouldCompleteTransition = false
-            private weak var targetController: UIViewController!
-            
-            init(targetController: UIViewController) {
-                super.init()
-                self.targetController = targetController
-                let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleGesture(_:)))
-                targetController.view.addGestureRecognizer(recognizer)
-            }
-            
-            @objc func handleGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
-                let translation = gestureRecognizer.translation(in: gestureRecognizer.view!.superview!)
-                var progress = (translation.x / 200)
-                progress = CGFloat(fminf(fmaxf(Float(progress), 0.0), 1.0))
-                
-                switch gestureRecognizer.state {
-                case .began:
-                    interactionInProgress = true
-                    targetController.dismiss(animated: true, completion: nil)
-                    report("Gesture began")
-                case .changed:
-                    shouldCompleteTransition = progress > 0.5
-                    update(progress)
-                    report("Gesture changed")
-                case .cancelled:
-                    interactionInProgress = false
-                    cancel()
-                    report("Gesture cancelled")
-                case .ended:
-                    interactionInProgress = false
-                    if shouldCompleteTransition { finish() }
-                    else { cancel() }
-                    report("Gesture ended")
-                default:
-                    break
-                }
-            }
-
-            func report(_ text: String) {
-                print("\(text)")
-            }
-        }
+    func animateTransition(using context: UIViewControllerContextTransitioning) {
         
-       func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
-            return 1
-        }
+        let toViewController = context.viewController(forKey: UITransitionContextViewControllerKey.to)!
+        let finalFrameForVC = context.finalFrame(for: toViewController)
         
-        func animateTransition(using context: UIViewControllerContextTransitioning) {
-            
-            let fromViewController = context.viewController(forKey: UITransitionContextViewControllerKey.from)!
-            let containerView = context.containerView
-
-            let snapshotView = fromViewController.view.snapshotView(afterScreenUpdates: false)!
-            containerView.addSubview(snapshotView)
-            fromViewController.view.removeFromSuperview()
-
-            let animations = {
-                snapshotView.frame = fromViewController.view.frame.insetBy(dx: fromViewController.view.frame.size.width / 2, dy: fromViewController.view.frame.size.height / 2)
-            }
-            UIView.animate(withDuration: transitionDuration(using: context), animations: animations) { _ in
-                context.completeTransition(!context.transitionWasCancelled) }
+        // Move the detail view off of the screen.
+        toViewController.view.frame = finalFrameForVC.offsetBy(dx: 0, dy: UIScreen.main.bounds.size.height)
+        context.containerView.addSubview(toViewController.view)
+        
+        let animations = {
+            // Animate the detail view back onto the screen.
+            toViewController.view.frame = finalFrameForVC
+        }
+        UIView.animate(withDuration: transitionDuration(using: context), delay: 0.0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.0, options: .curveLinear, animations: animations) { _ in
+            context.completeTransition(!context.transitionWasCancelled)
         }
     }
+}
 
-
-    private class TransitionController : NSObject, UIViewControllerTransitioningDelegate {
-
-        private let presentingAnimator = PresentingAnimator()
-        private let dismissingAnimator = DismissingAnimator()
-        private let targetController: UIViewController
-        private let interactionController: DismissingAnimator.InteractionController? = nil
-
+private class DismissingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
+    
+    class InteractionController : UIPercentDrivenInteractiveTransition {
+        
+        var interactionInProgress = false
+        private var shouldCompleteTransition = false
+        private weak var targetController: UIViewController!
+        
         init(targetController: UIViewController) {
-            self.targetController = targetController
             super.init()
+            self.targetController = targetController
+            let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleGesture(_:)))
+            targetController.view.addGestureRecognizer(recognizer)
+        }
+        
+        @objc func handleGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
+            let translation = gestureRecognizer.translation(in: gestureRecognizer.view!.superview!)
+            var progress = (translation.x / 200)
+            progress = CGFloat(fminf(fmaxf(Float(progress), 0.0), 1.0))
+            
+            switch gestureRecognizer.state {
+            case .began:
+                interactionInProgress = true
+                targetController.dismiss(animated: true, completion: nil)
+                report("Gesture began")
+            case .changed:
+                shouldCompleteTransition = progress > 0.5
+                update(progress)
+                report("Gesture changed")
+            case .cancelled:
+                interactionInProgress = false
+                cancel()
+                report("Gesture cancelled")
+            case .ended:
+                interactionInProgress = false
+                if shouldCompleteTransition { finish() }
+                else { cancel() }
+                report("Gesture ended")
+            default:
+                break
+            }
+        }
+        
+        func report(_ text: String) {
+            print("\(text)")
+        }
+    }
+    
+    private let endingRect: CGRect
+    
+    init(endingRect: CGRect) {
+        self.endingRect = endingRect
+        super.init()
+    }
+    
+    func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
+        return 1
+    }
+    
+    func animateTransition(using context: UIViewControllerContextTransitioning) {
+        
+        let fromViewController = context.viewController(forKey: UITransitionContextViewControllerKey.from)!
+        let containerView = context.containerView
+        
+        let snapshotView = fromViewController.view.snapshotView(afterScreenUpdates: false)!
+        containerView.addSubview(snapshotView)
+        fromViewController.view.removeFromSuperview()
+        
+        let animations = {
+            snapshotView.frame = fromViewController.view.frame.insetBy(dx: fromViewController.view.frame.size.width / 2, dy: fromViewController.view.frame.size.height / 2)
+        }
+        UIView.animate(withDuration: transitionDuration(using: context), animations: animations) { _ in
+            context.completeTransition(!context.transitionWasCancelled)
+        }
+    }
+}
 
+
+private class TransitionController : NSObject, UIViewControllerTransitioningDelegate {
+    
+    private let presentingAnimator: UIViewControllerAnimatedTransitioning
+    private let dismissingAnimator: UIViewControllerAnimatedTransitioning
+    private let targetController: DetailViewController
+    private let interactionController: DismissingAnimator.InteractionController? = nil
+    
+    init(targetController: DetailViewController, initiatingRect: CGRect) {
+        self.targetController = targetController
+        self.presentingAnimator = PresentingAnimator(startingRect: initiatingRect)
+        self.dismissingAnimator = DismissingAnimator(endingRect: initiatingRect)
+        super.init()
+    }
+    
+    private var setupNeeded = true
+    func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        // At this point we can be sure that the target controller's view (the detail view) has been set and thus that we can add a gesture recognizer to it.
+        // If we were to perform this setup in the init method then we impose a condition upon the sequence of steps in the static present method.
+        if setupNeeded {
+            setupNeeded = false
+            
             // There is a problem with the interaction controller: the gesture recognizer produces a begin event,
             // immediately followed by a cancel event. I have not been able to understand why the cancel occurs.
             // My code responds to begin event by dismissing the target view controller. If I comment out that
             // line then the cancel does not occur.
             //interactionController = DismissingAnimator.InteractionController(targetController: targetController)
-
+            
             // Until I can work on the interaction controller, let's go with a tap to initiate the dismissal.
             targetController.view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapHandler(_:))))
         }
+        
+        return presentingAnimator
+    }
+    
+    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        return dismissingAnimator
+    }
+    
+    func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+        return interactionController
+    }
+    
+    @objc func tapHandler(_ gestureRecognizer: UITapGestureRecognizer) {
+        targetController.dismiss(animated: true, completion: nil)
+    }
+}
+
+private class DetailViewController : UIViewController {
+    var transitionController: TransitionController! { // Store a strong reference (since controller.transitioningDelegate is weak)
+        didSet {
+            transitioningDelegate = transitionController
+        }
+    }
+    
+    var detailView: DetailView! // Store a strong reference (since controller.transitioningDelegate is weak)
+}
+
+class DetailView : UIView, AVPlayerViewControllerDelegate {
  
-        @objc func tapHandler(_ gestureRecognizer: UITapGestureRecognizer) {
-            targetController.dismiss(animated: true, completion: nil)
-        }
-
-        func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-            return presentingAnimator
-        }
-
-        func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-            return dismissingAnimator
-        }
-
-        func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-            return interactionController
-        }
-    }
-
-    private class DetailViewController : UIViewController {
-        var transitionController: TransitionController! { // Store a strong reference (since controller.transitioningDelegate is weak)
-            didSet {
-                transitioningDelegate = transitionController
-            }
-        }
-    }
-    static private var save: TransitionController?
-    static func present(poi: PointOfInterest) {
+    static func present(poi: PointOfInterest, startingFrom: CGRect) {
         let window = UIApplication.shared.delegate!.window!!
         let presenter = window.visibleViewController!
 
         let barHeight = presenter.navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
         
         let controller = DetailViewController()
-        controller.view = DetailView(poi: poi, controller: controller, barHeight: barHeight)
-        controller.modalPresentationStyle = .custom
-        save = TransitionController(targetController: controller) // The target controller's view must have already been set
-        controller.transitionController = save
+        //controller.view.backgroundColor = UIColor(white: 1, alpha: 0.5) // Allow the underlying view to be seen through a white haze.
 
+        controller.detailView = DetailView(poi: poi, controller: controller, barHeight: barHeight)
+
+        let initiatingRect = startingFrom.offsetBy(dx: 0, dy: barHeight)
+        controller.transitionController = TransitionController(targetController: controller, initiatingRect: initiatingRect) // The target controller's view must have already been set
+
+        controller.modalPresentationStyle = .custom
         presenter.present(controller, animated: true, completion: nil)
     }
     
     private let poiId : String
-    private let textView = UITextView()
     private let imageView = UIImageView()
     private let movieButton = UIButton()
+    private let textView = UITextView()
+    private let learnMoreUrl: URL?
+    private let learnMoreButton = UIButton()
     private let inset: CGFloat = 16
     private var observerToken: Any!
     private let movieUrl: URL?
     private let barHeight: CGFloat
     private let controller: UIViewController
+    private let imageViewHeightConstraint: NSLayoutConstraint
 
     private init(poi: PointOfInterest, controller: UIViewController, barHeight: CGFloat) {
-        poiId = poi.id
-        movieUrl = poi.movieUrl
         self.controller = controller
         self.barHeight = barHeight
 
-        super.init(frame: CGRect.zero)
+        poiId = poi.id
+        movieUrl = poi.movieUrl
+        learnMoreUrl = poi.meckncGovUrl
 
-        backgroundColor = UIColor(white: 1, alpha: 0.5) // Allow the underlying view to be seen through a white haze.
+        var frame = UIScreen.main.bounds
+        frame.size.height -= barHeight
+        frame.origin.y += barHeight
+        frame = frame.insetBy(dx: inset, dy: inset)
+
+       imageViewHeightConstraint = imageView.heightAnchor.constraint(equalToConstant: frame.size.height)
+
+        super.init(frame: frame)
+
+        self.translatesAutoresizingMaskIntoConstraints = false
+        controller.view.addSubview(self)
 
         imageView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(imageView)
 
         textView.isEditable = false
-        //textView.isSelectable = false
-        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.isSelectable = false
         textView.textColor = UIColor.lightGray
         textView.backgroundColor = UIColor(red: 248.0/255.0, green: 241.0/255.0, blue: 227.0/255.0, alpha: 1) // Safari's tan, reader view color.
+        textView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(textView)
 
+        if movieUrl != nil {
+            movieButton.setImage(#imageLiteral(resourceName: "PlayMovieButton"), for: .normal)
+            movieButton.addTarget(self, action: #selector(playMovie), for: .touchUpInside)
+        }
+        else {
+            movieButton.isHidden = true
+        }
         movieButton.translatesAutoresizingMaskIntoConstraints = false
-        movieButton.setImage(#imageLiteral(resourceName: "PlayMovieButton"), for: .normal)
-        movieButton.addTarget(self, action: #selector(playMovie), for: .touchUpInside)
         addSubview(movieButton)
-        
+
+        if learnMoreUrl != nil { learnMoreButton.setTitle("Learn more ...", for: .normal) }
+        else { learnMoreButton.isHidden = true }
+        learnMoreButton.translatesAutoresizingMaskIntoConstraints = false
+        learnMoreButton.addTarget(self, action: #selector(learnMore(_:)), for: .touchUpInside)
+        addSubview(learnMoreButton)
+
+        // TODO: Improve the shadow
+        /*
+        let shadowView = UIView(frame: frame)
+        let radius: CGFloat = shadowView.frame.width / 2.0 //change it to .height if you need spread for height
+        let shadowPath = UIBezierPath(rect: CGRect(x: 0, y: 0, width: 2.1 * radius, height: shadowView.frame.height))
+        //Change 2.1 to amount of spread you need and for height replace the code for height
+        shadowView.layer.cornerRadius = 2
+        shadowView.layer.shadowColor = UIColor.black.cgColor
+        shadowView.layer.shadowOffset = CGSize(width: 0.5, height: 0.4)  //Here you control x and y
+        shadowView.layer.shadowOpacity = 0.5
+        shadowView.layer.shadowRadius = 5.0 // This controls the blur
+        shadowView.layer.masksToBounds =  false
+        shadowView.layer.shadowPath = shadowPath.cgPath
+        self.insertSubview(shadowView, at: 0)
+        */
+
         update(using: poi)
 
-        // Here we constrain the image view to not exceed the size of its superview; this causes the scaleAspectFit contentMode to "kick in".
         NSLayoutConstraint.activate([
-            imageView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            imageView.leftAnchor.constraint(equalTo: self.leftAnchor, constant: inset),
-            imageView.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -inset),
-            imageView.heightAnchor.constraint(lessThanOrEqualTo: self.heightAnchor),
-
+            self.topAnchor.constraint(equalTo: controller.view.topAnchor, constant: barHeight),
+            self.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
+            self.widthAnchor.constraint(equalToConstant: frame.width),
+            self.heightAnchor.constraint(equalToConstant: frame.height),
+            
+            imageView.topAnchor.constraint(equalTo: self.topAnchor),
+            imageView.leftAnchor.constraint(equalTo: self.leftAnchor),
+            imageView.rightAnchor.constraint(equalTo: self.rightAnchor),
+            imageViewHeightConstraint,
+            
+            learnMoreButton.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            learnMoreButton.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            
+            textView.topAnchor.constraint(equalTo: imageView.bottomAnchor),
+            textView.bottomAnchor.constraint(equalTo: learnMoreButton.bottomAnchor),
             textView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            textView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             textView.widthAnchor.constraint(equalTo: imageView.widthAnchor),
-            textView.heightAnchor.constraint(equalTo: imageView.heightAnchor),
             
             movieButton.rightAnchor.constraint(equalTo: imageView.rightAnchor, constant: -8),
             movieButton.bottomAnchor.constraint(equalTo: imageView.bottomAnchor, constant: -8),
@@ -237,6 +337,10 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         _ = PointOfInterest.removeObserver(token: observerToken)
     }
 
+    @objc func learnMore(_ sender: UIButton) {
+        if let link = learnMoreUrl { UIApplication.shared.open(link) }
+   }
+
     func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
         
         if poi.id == poiId {
@@ -253,88 +357,19 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     }
 
     public override func layoutSubviews() {
+ 
+        // Set the image view's height constraint equal to the height to which the image will be scaled.
+        imageView.bounds = self.bounds
+        imageViewHeightConstraint.constant = imageView.contentMode == .scaleAspectFit ? imageView.aspectFitImageSize().height : imageView.aspectFillImageSize().height
+
         super.layoutSubviews()
- 
-        let imageSize = imageView.aspectFitImageSize()
-        let availableVerticalSpace = self.frame.height - (barHeight + 2*inset)
-
-        func info(_ header: String) {
-            print("\n\(header)")
-            print("\tRoot View: \(self.frame)")
-            print("\tImage View: \(imageView.frame)")
-            print("\tText View: \(textView.frame)")
-            print("\tImage Size: \(imageSize)")
-            print("\tText Content Size: \(textView.contentSize)")
-        }
-
-        //info("Before")
-
-
-        // What we want to accomplish is that the image (which might be shorter that the image view) sits on top
-        // of the text view and that the space above the image (not counting the bars) be equal to the space below
-        // the text view. If there is a sufficient amount of text then the above/below spaces will go to almost zero
-        // (we will enforce an inset) and scrolling of the text will "kick in"
-        //
-        // Note: The code assumes that the image and text view are initially centered in their super view.
-        // This should have be assurred by the contraints that were applied by the initializer.
-
-        // Expand the height of the text view to the height of its content, up to but not exceeding the available space
-        if textView.contentSize.height + imageSize.height > availableVerticalSpace {
-            textView.frame.size.height = availableVerticalSpace - imageSize.height
-        }
-        else {
-            textView.frame.size.height = textView.contentSize.height
-        }
-
-
-        let totalHeight = imageSize.height + textView.frame.height
-
-        // Position the image vertically
-        let currImageTop = self.center.y - imageSize.height/2
-        let newImageTop = self.center.y - totalHeight/2 + barHeight/2
-        imageView.frame.origin.y -= currImageTop - newImageTop
-
-        // Position the text view vertically
-        let currTextTop = textView.frame.origin.y
-        let newTextTop = newImageTop + imageSize.height
-        textView.frame.origin.y -= currTextTop - newTextTop
-        textView.contentOffset = CGPoint.zero
-
- 
-        // Place the movie button in the lower right corner of the image
-        if movieUrl != nil {
-            movieButton.frame.origin.x = textView.frame.maxX - (movieButton.frame.width + 8)
-            movieButton.frame.origin.y = textView.frame.minY - (movieButton.frame.height + 8)
-        }
-        else {
-            movieButton.isHidden = true
-        }
-
-        // TODO: Improve the shadow
-        // Create a shadow around the combined image and text views
-        let shadowView = UIView(frame: CGRect(x: inset, y: newImageTop, width: imageSize.width, height: totalHeight))
-        let radius: CGFloat = shadowView.frame.width / 2.0 //change it to .height if you need spread for height
-        let shadowPath = UIBezierPath(rect: CGRect(x: 0, y: 0, width: 2.1 * radius, height: shadowView.frame.height))
-        //Change 2.1 to amount of spread you need and for height replace the code for height
-        shadowView.layer.cornerRadius = 2
-        shadowView.layer.shadowColor = UIColor.black.cgColor
-        shadowView.layer.shadowOffset = CGSize(width: 0.5, height: 0.4)  //Here you control x and y
-        shadowView.layer.shadowOpacity = 0.5
-        shadowView.layer.shadowRadius = 5.0 // This controls the blur
-        shadowView.layer.masksToBounds =  false
-        shadowView.layer.shadowPath = shadowPath.cgPath
-        self.insertSubview(shadowView, at: 0)
-
-        //info("After")
-        //print("\tShadow View: \(shadowView.frame)")
     }
 
     private func update(using poi: PointOfInterest) {
-        let window = UIApplication.shared.delegate!.window!!
 
         // AFAIK If no other action is taken then the image view will size itself to the image, even if this results in a size larger than the window.
         imageView.image = poi.image
-        imageView.contentMode = poi.image.size.width > (window.frame.width - 2*inset) || poi.image.size.height > (window.frame.height - 2*inset) ? .scaleAspectFit : .scaleAspectFill
+        imageView.contentMode = poi.image.size.width > self.bounds.size.width || poi.image.size.height > self.bounds.size.height ? .scaleAspectFit : .scaleAspectFill
 
         /*
          let textAttributes = [NSStrokeColorAttributeName : UIColor.black,
@@ -349,13 +384,9 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
             NSAttributedStringKey.paragraphStyle : style
             ])
         text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location: 0, length: poi.name.count))
-        if let url = poi.meckncGovUrl {
-            text.addAttributes([NSAttributedStringKey.link : url], range: NSRange(location: text.length - link.count, length: link.count))
-        }
         textView.attributedText = text
     }
 
-    
     @objc private func playMovie() {
         let player = AVPlayer(url: movieUrl!)
         let playerViewController = AVPlayerViewController()

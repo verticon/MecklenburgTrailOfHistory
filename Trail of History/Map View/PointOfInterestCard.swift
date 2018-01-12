@@ -15,8 +15,4 @@ class PointOfInterestCard: UICollectionViewCell {
     @IBOutlet weak var distanceLabel: UILabel!
     
     var poi: PointOfInterest!
-
-    @IBAction func presentDetailView(_ sender: UIButton) {
-        DetailView.present(poi: poi)
-    }
 }
