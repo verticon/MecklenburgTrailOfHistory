@@ -102,8 +102,7 @@ class ListViewController: UICollectionViewController {
 
     override func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         if let scrollView = cell.backgroundView, let imageView = scrollView.subviews[0] as? UIImageView {
-            imageView.frame.size = scrollView.frame.size
-            imageView.frame.size = imageView.aspectFillImageSize()
+            imageView.frame.size = imageView.image!.aspectFill(in: scrollView.frame.size)
         }
     }
 

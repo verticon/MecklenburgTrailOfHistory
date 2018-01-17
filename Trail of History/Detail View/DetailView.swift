@@ -41,7 +41,7 @@ private class PresentingAnimator : NSObject, UIViewControllerAnimatedTransitioni
         // is used so as to display the upper left portion, hopefully all of the width (i.e. the statue's upper torso).
         let imageView = UIImageView(image: image)
         imageView.contentMode = .scaleAspectFill
-        let size = aspectFillSize(for: image, in: initiatingFrame.size)
+        let size = image.aspectFill(in: initiatingFrame.size)
         imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
         let scrollView = UIScrollView(frame: initiatingFrame)
         scrollView.backgroundColor = .orange // A visual clue that things are misalighend, i.e. we should see no orange
@@ -56,7 +56,7 @@ private class PresentingAnimator : NSObject, UIViewControllerAnimatedTransitioni
             UIView.addKeyframe(withRelativeStartTime: 0,   relativeDuration: 1/2) { scrollView.alpha = 1 }
             UIView.addKeyframe(withRelativeStartTime: 1/2, relativeDuration: 1/2) {
                 scrollView.frame = self.imageFrame
-                let size = aspectFillSize(for: self.image, in: self.imageFrame.size)
+                let size = self.image.aspectFill(in: self.imageFrame.size)
                 imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
             }
         }
@@ -113,7 +113,7 @@ private class DismissingAnimator : NSObject, UIViewControllerAnimatedTransitioni
                 // Now move the scroll view back to the initiating frame.
                 UIView.addKeyframe(withRelativeStartTime: 0,   relativeDuration: 1/2) {
                     scrollView.frame = self.initiatingFrame
-                    let size = aspectFillSize(for: imageView.image!, in: self.initiatingFrame.size)
+                    let size = imageView.image!.aspectFill(in: self.initiatingFrame.size)
                     imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
                 }
                 // Finally fade the scroll view to transparent so as to reveal the initiating frame.
@@ -124,16 +124,6 @@ private class DismissingAnimator : NSObject, UIViewControllerAnimatedTransitioni
             }
         }
     }
-}
-
-private func aspectFillSize(for: UIImage, in: CGSize) -> CGSize {
-    var width = `in`.width
-    var height = (`for`.size.height / `for`.size.width) * width
-    if height < `in`.height {
-        height = `in`.height
-        width = (`for`.size.width / `for`.size.height) * height
-    }
-    return CGSize(width: width, height: height)
 }
 
 private class TransitionController : NSObject, UIViewControllerTransitioningDelegate {
@@ -242,6 +232,11 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         scrollViewHeightConstraint = scrollView.heightAnchor.constraint(equalToConstant: 0)
 
         super.init(frame: detailViewFrame())
+
+        self.borderWidth = 1
+        self.cornerRadius = 4
+        self.borderColor = .tohTerracotaColor
+        self.backgroundColor = .tohGreyishBrownTwoColor
         self.translatesAutoresizingMaskIntoConstraints = false
         controller.view.addSubview(self)
 
@@ -256,10 +251,8 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
         textView.isEditable = false
         textView.isSelectable = false
-        //textView.textColor = UIColor.lightGray
-        //textView.backgroundColor = UIColor(red: 248.0/255.0, green: 241.0/255.0, blue: 227.0/255.0, alpha: 1) // Safari's tan, reader view color.
-        textView.textColor = .white
-        textView.backgroundColor = .lightGray
+        //textView.textColor = UIColor.tohTerracotaColor
+        textView.backgroundColor = UIColor.tohGreyishBrownTwoColor
         textView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(textView)
 
@@ -277,7 +270,8 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         else { learnMoreButton.isHidden = true }
         learnMoreButton.translatesAutoresizingMaskIntoConstraints = false
         learnMoreButton.addTarget(self, action: #selector(learnMore(_:)), for: .touchUpInside)
-        learnMoreButton.setTitleColor(UIColor.tohTerracotaColor, for: .normal)
+        learnMoreButton.setTitleColor(.tohTerracotaColor, for: .normal)
+        learnMoreButton.backgroundColor = .tohGreyishBrownTwoColor
         addSubview(learnMoreButton)
 
         // TODO: Improve the shadow
@@ -374,12 +368,16 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         justified.alignment = NSTextAlignment.justified
         let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)\n", attributes: [
             NSAttributedStringKey.font : UIFont(name: "HoeflerText-Regular", size: 18)!,
-            NSAttributedStringKey.paragraphStyle : justified
+            NSAttributedStringKey.paragraphStyle : justified,
+            NSAttributedStringKey.foregroundColor : UIColor.white
             ])
         let centered = NSMutableParagraphStyle()
         centered.alignment = NSTextAlignment.center
-        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HoeflerText-Black", size: 18)!], range: NSRange(location: 0, length: poi.name.count))
-        text.addAttributes([NSAttributedStringKey.paragraphStyle : centered], range: NSRange(location: 0, length: poi.name.count))
+        text.addAttributes([
+            NSAttributedStringKey.font : UIFont(name: "HoeflerText-Black", size: 18)!,
+            NSAttributedStringKey.paragraphStyle : centered,
+            NSAttributedStringKey.foregroundColor : UIColor.tohTerracotaColor
+            ], range: NSRange(location: 0, length: poi.name.count))
         textView.attributedText = text
     }
 
