@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="Beb-Hd-0rH">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="Beb-Hd-0rH">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13527"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -61,15 +61,25 @@
                                     <outlet property="delegate" destination="Beb-Hd-0rH" id="9EF-cq-ukh"/>
                                 </connections>
                             </collectionView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="IgZ-gz-X3w" customClass="PageSwiper" customModule="Trail_of_History" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="20" width="8" height="647"/>
+                                <color key="backgroundColor" red="0.93480329949999996" green="0.50043116080000005" blue="0.12721355570000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="8" id="Ma1-3N-00G"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="IgZ-gz-X3w" firstAttribute="leading" secondItem="gCW-Op-v4E" secondAttribute="leading" id="7TC-JU-BwS"/>
                             <constraint firstItem="jyz-cg-gtj" firstAttribute="top" secondItem="ZBb-zJ-ExH" secondAttribute="bottom" id="C39-nj-ukq"/>
-                            <constraint firstItem="jyz-cg-gtj" firstAttribute="leading" secondItem="gCW-Op-v4E" secondAttribute="leading" constant="8" id="JxG-T3-zTB"/>
-                            <constraint firstItem="FYe-Xg-zzx" firstAttribute="top" secondItem="dcM-wA-t3l" secondAttribute="bottom" constant="50" id="O0E-tL-xbR"/>
+                            <constraint firstItem="jyz-cg-gtj" firstAttribute="leading" secondItem="IgZ-gz-X3w" secondAttribute="trailing" id="J9b-dT-TZs"/>
+                            <constraint firstItem="IgZ-gz-X3w" firstAttribute="top" secondItem="ZBb-zJ-ExH" secondAttribute="bottom" id="MOG-2q-R8b"/>
+                            <constraint firstItem="dcM-wA-t3l" firstAttribute="bottom" secondItem="FYe-Xg-zzx" secondAttribute="top" constant="-50" id="O0E-tL-xbR"/>
                             <constraint firstItem="jyz-cg-gtj" firstAttribute="trailing" secondItem="gCW-Op-v4E" secondAttribute="trailing" id="T3Z-C8-1Ag"/>
                             <constraint firstItem="dcM-wA-t3l" firstAttribute="centerX" secondItem="gCW-Op-v4E" secondAttribute="centerX" id="XTo-jG-6nj"/>
-                            <constraint firstItem="FYe-Xg-zzx" firstAttribute="top" secondItem="jyz-cg-gtj" secondAttribute="bottom" id="Y59-jS-qze"/>
+                            <constraint firstItem="jyz-cg-gtj" firstAttribute="bottom" secondItem="FYe-Xg-zzx" secondAttribute="top" id="Y59-jS-qze"/>
                             <constraint firstItem="dcM-wA-t3l" firstAttribute="width" secondItem="jyz-cg-gtj" secondAttribute="width" id="pU2-u3-eUg"/>
+                            <constraint firstItem="IgZ-gz-X3w" firstAttribute="bottom" secondItem="FYe-Xg-zzx" secondAttribute="top" id="zBF-8I-wU0"/>
                         </constraints>
                     </view>
                     <toolbarItems/>
@@ -93,12 +103,13 @@
                     <connections>
                         <outlet property="collectionView" destination="dcM-wA-t3l" id="Nb4-Vn-1ek"/>
                         <outlet property="mapView" destination="jyz-cg-gtj" id="XBY-wC-oSL"/>
+                        <outlet property="pageSwiper" destination="IgZ-gz-X3w" id="Bfe-RT-AXJ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="jyN-r6-PMc" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <exit id="bQf-DL-2yk" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
-            <point key="canvasLocation" x="854" y="516"/>
+            <point key="canvasLocation" x="853.60000000000002" y="515.8920539730135"/>
         </scene>
         <!--Options View Controller-->
         <scene sceneID="oM0-2z-tGl">

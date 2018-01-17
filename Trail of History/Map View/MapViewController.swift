@@ -66,6 +66,8 @@ class MapViewController: UIViewController {
 
     var pageViewController: PageViewController?
 
+    @IBOutlet weak var pageSwiper: PageSwiper!
+
     @IBOutlet fileprivate weak var mapView: MKMapView!
 
     fileprivate var poiAnnotations = [PoiAnnotation]()
@@ -87,6 +89,9 @@ class MapViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        view.sendSubview(toBack: pageSwiper)
+        pageSwiper.backgroundColor = UIColor.tohTerracotaColor
 
         do {
             let userTrackingButton = UserTrackingButton(mapView: mapView, stateChangeHandler: setUserTracking(_:))
