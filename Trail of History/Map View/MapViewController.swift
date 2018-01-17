@@ -468,8 +468,8 @@ extension MapViewController : UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let cell = collectionView.cellForItem(at: indexPath)!
-        let startFrom = cell.convert(cell.frame, to: self.view)
-        DetailView.present(poi: poiAnnotations[indexPath.item].poi, startingFrom: startFrom)
+        let frame = collectionView.convert(cell.frame, to: self.view)
+        DetailView.present(poi: poiAnnotations[indexPath.item].poi, startingFrom: frame)
     }
 }
 

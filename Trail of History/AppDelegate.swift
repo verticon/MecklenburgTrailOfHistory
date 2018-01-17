@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         print("\(applicationName) started")
-        
+        //listFonts()
         FIRApp.configure()
         FIRDatabase.database().persistenceEnabled = true
 
@@ -50,6 +50,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.saveContext()
     }
 
+    func listFonts() {
+        var list = ""
+        for family in UIFont.familyNames {
+            list += "\(family)\n"
+            for font in UIFont.fontNames(forFamilyName: family) {
+                list += "\t\(font)\n"
+            }
+        }
+        print(list)
+    }
     // MARK: - Core Data stack
 
     lazy var applicationDocumentsDirectory: URL = {

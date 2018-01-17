@@ -15,166 +15,151 @@ import VerticonsToolbox
 
 private class PresentingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
     
-    private let startingRect: CGRect
-    
-    init(startingRect: CGRect) {
-        self.startingRect = startingRect
+    private let initiatingFrame: CGRect // The frame of the element that was tapped to initiate the Detail View presentation
+    private let imageFrame: CGRect // The final size of the Detail View's image view subview.
+    private let image: UIImage
+    private var toViewController: UIViewController!
+
+    init(initiatingFrame: CGRect, imageFrame: CGRect, image: UIImage) {
+        self.initiatingFrame = initiatingFrame
+        self.imageFrame = imageFrame
+        self.image = image
         super.init()
     }
-    
+
     func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
-        return 5.0
-    }
-    
-    func animateTransition2(using context: UIViewControllerContextTransitioning) {
-        
-        let toViewController = context.viewController(forKey: UITransitionContextViewControllerKey.to)!
-        let finalFrameForVC = context.finalFrame(for: toViewController)
-        
-        // Move the detail view off of the screen.
-        toViewController.view.frame = startingRect
-        toViewController.view.clipsToBounds = true
-        context.containerView.addSubview(toViewController.view)
-        
-        let animations = {
-            // Animate the detail view back onto the screen.
-            //toViewController.view.frame = finalFrameForVC
-            let deltaX = finalFrameForVC.origin.x - self.startingRect.origin.x
-            let deltaY = finalFrameForVC.origin.y - self.startingRect.origin.y
-            let deltaWidth = self.startingRect.width - finalFrameForVC.width
-            let deltaHeight = self.startingRect.height - finalFrameForVC.height
-            toViewController.view.frame = toViewController.view.frame.insetBy(dx: deltaWidth / 2, dy: deltaHeight / 2).offsetBy(dx: deltaX, dy: deltaY)
-        }
-        UIView.animate(withDuration: transitionDuration(using: context), delay: 0.0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.0, options: .curveLinear, animations: animations) { _ in
-            context.completeTransition(!context.transitionWasCancelled)
-        }
+        return 1.5
     }
     
     func animateTransition(using context: UIViewControllerContextTransitioning) {
-        
-        let toViewController = context.viewController(forKey: UITransitionContextViewControllerKey.to)!
-        let finalFrameForVC = context.finalFrame(for: toViewController)
-        
-        // Move the detail view off of the screen.
-        toViewController.view.frame = finalFrameForVC.offsetBy(dx: 0, dy: UIScreen.main.bounds.size.height)
-        context.containerView.addSubview(toViewController.view)
+ 
+        self.toViewController = context.viewController(forKey: UITransitionContextViewControllerKey.to)!
+        let finalFrame = context.finalFrame(for: self.toViewController)
+
+        // Start by displaying the image, completely transparent, in the initiating frame. The image will fill the frame
+        // and its aspect ratio will be preserved. UIImageView's default behavior is to center the image. A UIScrollView
+        // is used so as to display the upper left portion, hopefully all of the width (i.e. the statue's upper torso).
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFill
+        let size = aspectFillSize(for: image, in: initiatingFrame.size)
+        imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        let scrollView = UIScrollView(frame: initiatingFrame)
+        scrollView.backgroundColor = .orange // A visual clue that things are misalighend, i.e. we should see no orange
+        scrollView.addSubview(imageView)
+        scrollView.alpha = 0
+        // The scroll view will end up on top of the detail view so we need to be able to tap it as well
+        scrollView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismiss(_:))))
+        context.containerView.addSubview(scrollView)
         
         let animations = {
-            // Animate the detail view back onto the screen.
-            toViewController.view.frame = finalFrameForVC
+            // Turn the image opaque and then move/resize it from the initiating frame to the final frame of the Detail View's image subview.
+            UIView.addKeyframe(withRelativeStartTime: 0,   relativeDuration: 1/2) { scrollView.alpha = 1 }
+            UIView.addKeyframe(withRelativeStartTime: 1/2, relativeDuration: 1/2) {
+                scrollView.frame = self.imageFrame
+                let size = aspectFillSize(for: self.image, in: self.imageFrame.size)
+                imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+            }
         }
-        UIView.animate(withDuration: transitionDuration(using: context), delay: 0.0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.0, options: .curveLinear, animations: animations) { _ in
-            context.completeTransition(!context.transitionWasCancelled)
+        UIView.animateKeyframes(withDuration: transitionDuration(using: context) * 2 / 3, delay: 0, animations: animations) { _ in
+            // Reduce the Detail View's height so that only its image view subview is showing. The detail view's frame should
+            // then exactly match the frame of the ScrollView/ImageView that was presented by the first part of the anumation.
+            self.toViewController.view.clipsToBounds = true
+            let frame = self.toViewController.view.frame
+            self.toViewController.view.frame = CGRect(x: frame.origin.x, y: frame.origin.y, width: frame.size.width, height: self.imageFrame.size.height)
+            context.containerView.addSubview(self.toViewController.view)
+
+            // Expand the Detail View's size to reveal its text subview.
+            UIView.animate(withDuration: self.transitionDuration(using: context) / 3, delay: 0, animations: { self.toViewController.view.frame = finalFrame }) { _ in
+                context.completeTransition(!context.transitionWasCancelled)
+            }
         }
     }
+
+    @objc func dismiss(_ gestureRecognizer: UITapGestureRecognizer) {
+        toViewController.dismiss(animated: true, completion: nil)
+    }
+
 }
 
 private class DismissingAnimator : NSObject, UIViewControllerAnimatedTransitioning {
     
-    class InteractionController : UIPercentDrivenInteractiveTransition {
-        
-        var interactionInProgress = false
-        private var shouldCompleteTransition = false
-        private weak var targetController: UIViewController!
-        
-        init(targetController: UIViewController) {
-            super.init()
-            self.targetController = targetController
-            let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handleGesture(_:)))
-            targetController.view.addGestureRecognizer(recognizer)
-        }
-        
-        @objc func handleGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
-            let translation = gestureRecognizer.translation(in: gestureRecognizer.view!.superview!)
-            var progress = (translation.x / 200)
-            progress = CGFloat(fminf(fmaxf(Float(progress), 0.0), 1.0))
-            
-            switch gestureRecognizer.state {
-            case .began:
-                interactionInProgress = true
-                targetController.dismiss(animated: true, completion: nil)
-                report("Gesture began")
-            case .changed:
-                shouldCompleteTransition = progress > 0.5
-                update(progress)
-                report("Gesture changed")
-            case .cancelled:
-                interactionInProgress = false
-                cancel()
-                report("Gesture cancelled")
-            case .ended:
-                interactionInProgress = false
-                if shouldCompleteTransition { finish() }
-                else { cancel() }
-                report("Gesture ended")
-            default:
-                break
-            }
-        }
-        
-        func report(_ text: String) {
-            print("\(text)")
-        }
-    }
-    
-    private let endingRect: CGRect
-    
-    init(endingRect: CGRect) {
-        self.endingRect = endingRect
+    private let initiatingFrame: CGRect
+    private let imageFrame: CGRect
+
+    init(initiatingFrame: CGRect, imageFrame: CGRect) {
+        self.initiatingFrame = initiatingFrame
+        self.imageFrame = imageFrame
         super.init()
     }
     
     func transitionDuration(using: UIViewControllerContextTransitioning?) -> TimeInterval {
-        return 1
+        return 1.5
     }
     
     func animateTransition(using context: UIViewControllerContextTransitioning) {
         
         let fromViewController = context.viewController(forKey: UITransitionContextViewControllerKey.from)!
-        let containerView = context.containerView
-        
-        let snapshotView = fromViewController.view.snapshotView(afterScreenUpdates: false)!
-        containerView.addSubview(snapshotView)
-        fromViewController.view.removeFromSuperview()
-        
-        let animations = {
-            snapshotView.frame = fromViewController.view.frame.insetBy(dx: fromViewController.view.frame.size.width / 2, dy: fromViewController.view.frame.size.height / 2)
-        }
-        UIView.animate(withDuration: transitionDuration(using: context), animations: animations) { _ in
-            context.completeTransition(!context.transitionWasCancelled)
+
+        let frame = fromViewController.view.frame
+        let imageFrame = CGRect(x: frame.origin.x, y: frame.origin.y, width: frame.size.width, height: self.imageFrame.origin.y + self.imageFrame.size.height)
+        // Begin by rolling up the text view until only the image shows
+        UIView.animate(withDuration: transitionDuration(using: context) / 3, animations: { fromViewController.view.frame = imageFrame }) { _ in
+            // Remove the remainder (the image) of the detail view, thus revealing the scroll view that was created be the presenting animator
+            fromViewController.view.removeFromSuperview()
+            
+            let scrollView = context.containerView.subviews[0] as! UIScrollView
+            let imageView = scrollView.subviews[0] as! UIImageView
+            let animations = {
+                // Now move the scroll view back to the initiating frame.
+                UIView.addKeyframe(withRelativeStartTime: 0,   relativeDuration: 1/2) {
+                    scrollView.frame = self.initiatingFrame
+                    let size = aspectFillSize(for: imageView.image!, in: self.initiatingFrame.size)
+                    imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+                }
+                // Finally fade the scroll view to transparent so as to reveal the initiating frame.
+                UIView.addKeyframe(withRelativeStartTime: 1/2, relativeDuration: 1/2) { scrollView.alpha = 0  }
+            }
+            UIView.animateKeyframes(withDuration: self.transitionDuration(using: context) * 2 / 3, delay: 0, animations: animations) { _ in
+                context.completeTransition(!context.transitionWasCancelled)
+            }
         }
     }
 }
 
+private func aspectFillSize(for: UIImage, in: CGSize) -> CGSize {
+    var width = `in`.width
+    var height = (`for`.size.height / `for`.size.width) * width
+    if height < `in`.height {
+        height = `in`.height
+        width = (`for`.size.width / `for`.size.height) * height
+    }
+    return CGSize(width: width, height: height)
+}
 
 private class TransitionController : NSObject, UIViewControllerTransitioningDelegate {
-    
+
+    private let initiatingFrame: CGRect
+    private let image: UIImage
+
+    private let targetController: DetailViewController
     private let presentingAnimator: UIViewControllerAnimatedTransitioning
     private let dismissingAnimator: UIViewControllerAnimatedTransitioning
-    private let targetController: DetailViewController
-    private let interactionController: DismissingAnimator.InteractionController? = nil
     
-    init(targetController: DetailViewController, initiatingRect: CGRect) {
+    init(targetController: DetailViewController, initiatingFrame: CGRect, imageFrame: CGRect, image: UIImage) {
         self.targetController = targetController
-        self.presentingAnimator = PresentingAnimator(startingRect: initiatingRect)
-        self.dismissingAnimator = DismissingAnimator(endingRect: initiatingRect)
+        self.initiatingFrame = initiatingFrame
+        self.image = image
+        self.presentingAnimator = PresentingAnimator(initiatingFrame: initiatingFrame, imageFrame: imageFrame, image: image)
+        self.dismissingAnimator = DismissingAnimator(initiatingFrame: initiatingFrame, imageFrame: imageFrame)
         super.init()
     }
-    
+
     private var setupNeeded = true
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         // At this point we can be sure that the target controller's view (the detail view) has been set and thus that we can add a gesture recognizer to it.
-        // If we were to perform this setup in the init method then we impose a condition upon the sequence of steps in the static present method.
+        // If we were to perform this setup in the init method then we would impose a condition upon the sequence of steps in the static present method.
         if setupNeeded {
             setupNeeded = false
-            
-            // There is a problem with the interaction controller: the gesture recognizer produces a begin event,
-            // immediately followed by a cancel event. I have not been able to understand why the cancel occurs.
-            // My code responds to begin event by dismissing the target view controller. If I comment out that
-            // line then the cancel does not occur.
-            //interactionController = DismissingAnimator.InteractionController(targetController: targetController)
-            
-            // Until I can work on the interaction controller, let's go with a tap to initiate the dismissal.
             targetController.view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapHandler(_:))))
         }
         
@@ -183,10 +168,6 @@ private class TransitionController : NSObject, UIViewControllerTransitioningDele
     
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return dismissingAnimator
-    }
-    
-    func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-        return interactionController
     }
     
     @objc func tapHandler(_ gestureRecognizer: UITapGestureRecognizer) {
@@ -204,6 +185,17 @@ private class DetailViewController : UIViewController {
     var detailView: DetailView! // Store a strong reference (since controller.transitioningDelegate is weak)
 }
 
+/*
+ 1) The image view mode will be aspect fill.
+ 2) The image view width will be set equal to the detail view's width
+    and the height will be set so as to maintain the aspect ratio.
+ 3) The image view will be contained by a scroll view whose size will
+    be equal the image view's size but with the restriction that the
+    height may not exceed 1/2 of the detail view's height
+ 4) Thus we will see all of the image's width and some or all of the
+    image's height
+*/
+
 class DetailView : UIView, AVPlayerViewControllerDelegate {
  
     static func present(poi: PointOfInterest, startingFrom: CGRect) {
@@ -215,17 +207,19 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         let controller = DetailViewController()
         //controller.view.backgroundColor = UIColor(white: 1, alpha: 0.5) // Allow the underlying view to be seen through a white haze.
 
-        controller.detailView = DetailView(poi: poi, controller: controller, barHeight: barHeight)
+        let detailView = DetailView(poi: poi, controller: controller, barHeight: barHeight)
 
-        let initiatingRect = startingFrom.offsetBy(dx: 0, dy: barHeight)
-        controller.transitionController = TransitionController(targetController: controller, initiatingRect: initiatingRect) // The target controller's view must have already been set
+        controller.detailView = detailView
 
-        controller.modalPresentationStyle = .custom
+        controller.transitionController = TransitionController(targetController: controller, initiatingFrame: startingFrom.offsetBy(dx: 0, dy: barHeight), imageFrame: detailView.imageViewFrame(), image: poi.image)
+
+        controller.modalPresentationStyle = .custom // TODO: reconsider the effect of this
         presenter.present(controller, animated: true, completion: nil)
     }
     
     private let poiId : String
-    private let imageView = UIImageView()
+    fileprivate let imageView = UIImageView()
+    fileprivate let scrollView = UIScrollView()
     private let movieButton = UIButton()
     private let textView = UITextView()
     private let learnMoreUrl: URL?
@@ -235,7 +229,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     private let movieUrl: URL?
     private let barHeight: CGFloat
     private let controller: UIViewController
-    private let imageViewHeightConstraint: NSLayoutConstraint
+    private let scrollViewHeightConstraint: NSLayoutConstraint
 
     private init(poi: PointOfInterest, controller: UIViewController, barHeight: CGFloat) {
         self.controller = controller
@@ -245,25 +239,27 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         movieUrl = poi.movieUrl
         learnMoreUrl = poi.meckncGovUrl
 
-        var frame = UIScreen.main.bounds
-        frame.size.height -= barHeight
-        frame.origin.y += barHeight
-        frame = frame.insetBy(dx: inset, dy: inset)
+        scrollViewHeightConstraint = scrollView.heightAnchor.constraint(equalToConstant: 0)
 
-       imageViewHeightConstraint = imageView.heightAnchor.constraint(equalToConstant: frame.size.height)
-
-        super.init(frame: frame)
-
+        super.init(frame: detailViewFrame())
         self.translatesAutoresizingMaskIntoConstraints = false
         controller.view.addSubview(self)
 
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(imageView)
+        update(using: poi)
+
+        let size = imageViewSize()
+        imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        imageView.contentMode = .scaleAspectFill
+        scrollView.addSubview(imageView)
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(scrollView)
 
         textView.isEditable = false
         textView.isSelectable = false
-        textView.textColor = UIColor.lightGray
-        textView.backgroundColor = UIColor(red: 248.0/255.0, green: 241.0/255.0, blue: 227.0/255.0, alpha: 1) // Safari's tan, reader view color.
+        //textView.textColor = UIColor.lightGray
+        //textView.backgroundColor = UIColor(red: 248.0/255.0, green: 241.0/255.0, blue: 227.0/255.0, alpha: 1) // Safari's tan, reader view color.
+        textView.textColor = .white
+        textView.backgroundColor = .lightGray
         textView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(textView)
 
@@ -281,6 +277,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         else { learnMoreButton.isHidden = true }
         learnMoreButton.translatesAutoresizingMaskIntoConstraints = false
         learnMoreButton.addTarget(self, action: #selector(learnMore(_:)), for: .touchUpInside)
+        learnMoreButton.setTitleColor(UIColor.tohTerracotaColor, for: .normal)
         addSubview(learnMoreButton)
 
         // TODO: Improve the shadow
@@ -299,29 +296,29 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         self.insertSubview(shadowView, at: 0)
         */
 
-        update(using: poi)
 
         NSLayoutConstraint.activate([
-            self.topAnchor.constraint(equalTo: controller.view.topAnchor, constant: barHeight),
+            // TODO: Understand why it is necessary to contrain the detail view itself (the first 4 constraints)
+            self.topAnchor.constraint(equalTo: controller.view.topAnchor, constant: barHeight + inset),
             self.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
             self.widthAnchor.constraint(equalToConstant: frame.width),
             self.heightAnchor.constraint(equalToConstant: frame.height),
             
-            imageView.topAnchor.constraint(equalTo: self.topAnchor),
-            imageView.leftAnchor.constraint(equalTo: self.leftAnchor),
-            imageView.rightAnchor.constraint(equalTo: self.rightAnchor),
-            imageViewHeightConstraint,
+            scrollView.topAnchor.constraint(equalTo: self.topAnchor),
+            scrollView.leftAnchor.constraint(equalTo: self.leftAnchor),
+            scrollView.rightAnchor.constraint(equalTo: self.rightAnchor),
+            scrollViewHeightConstraint,
             
             learnMoreButton.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             learnMoreButton.bottomAnchor.constraint(equalTo: self.bottomAnchor),
             
-            textView.topAnchor.constraint(equalTo: imageView.bottomAnchor),
-            textView.bottomAnchor.constraint(equalTo: learnMoreButton.bottomAnchor),
+            textView.topAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            textView.bottomAnchor.constraint(equalTo: learnMoreButton.topAnchor),
             textView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            textView.widthAnchor.constraint(equalTo: imageView.widthAnchor),
+            textView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-            movieButton.rightAnchor.constraint(equalTo: imageView.rightAnchor, constant: -8),
-            movieButton.bottomAnchor.constraint(equalTo: imageView.bottomAnchor, constant: -8),
+            movieButton.rightAnchor.constraint(equalTo: scrollView.rightAnchor, constant: -8),
+            movieButton.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -8),
             movieButton.widthAnchor.constraint(equalToConstant: 32),
             movieButton.heightAnchor.constraint(equalToConstant: 32),
             ])
@@ -357,11 +354,9 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     }
 
     public override func layoutSubviews() {
- 
-        // Set the image view's height constraint equal to the height to which the image will be scaled.
-        imageView.bounds = self.bounds
-        imageViewHeightConstraint.constant = imageView.contentMode == .scaleAspectFit ? imageView.aspectFitImageSize().height : imageView.aspectFillImageSize().height
-
+        let height = imageViewSize().height
+        let limit = detailViewFrame().size.height / 2
+        scrollViewHeightConstraint.constant = height > limit ? limit : height
         super.layoutSubviews()
     }
 
@@ -369,21 +364,22 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
         // AFAIK If no other action is taken then the image view will size itself to the image, even if this results in a size larger than the window.
         imageView.image = poi.image
-        imageView.contentMode = poi.image.size.width > self.bounds.size.width || poi.image.size.height > self.bounds.size.height ? .scaleAspectFit : .scaleAspectFill
 
         /*
          let textAttributes = [NSStrokeColorAttributeName : UIColor.black,
          NSForegroundColorAttributeName : UIColor.white,
          NSStrokeWidthAttributeName : -3.0] as [String : Any]
          */
-        let link = "Learn More ..."
-        let style = NSMutableParagraphStyle()
-        style.alignment = NSTextAlignment.center
-        let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)\n\n\(poi.meckncGovUrl == nil ? "" : link)", attributes: [
-            NSAttributedStringKey.font : UIFont(name: "Helvetica", size: 18)!,
-            NSAttributedStringKey.paragraphStyle : style
+        let justified = NSMutableParagraphStyle()
+        justified.alignment = NSTextAlignment.justified
+        let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)\n", attributes: [
+            NSAttributedStringKey.font : UIFont(name: "HoeflerText-Regular", size: 18)!,
+            NSAttributedStringKey.paragraphStyle : justified
             ])
-        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HelveticaNeue-Bold", size: 18)!], range: NSRange(location: 0, length: poi.name.count))
+        let centered = NSMutableParagraphStyle()
+        centered.alignment = NSTextAlignment.center
+        text.addAttributes([NSAttributedStringKey.font : UIFont(name: "HoeflerText-Black", size: 18)!], range: NSRange(location: 0, length: poi.name.count))
+        text.addAttributes([NSAttributedStringKey.paragraphStyle : centered], range: NSRange(location: 0, length: poi.name.count))
         textView.attributedText = text
     }
 
@@ -398,6 +394,25 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
     func playerViewController(_ playerViewController: AVPlayerViewController, failedToStartPictureInPictureWithError error: Error) {
         print("There was a playback error: \(error)")
+    }
+
+    func detailViewFrame() -> CGRect {
+        let size = UIScreen.main.bounds.size
+        let frame = CGRect(x: 0, y: barHeight, width: size.width, height: size.height - barHeight)
+        return frame.insetBy(dx: inset, dy: inset)
+    }
+
+    func imageViewSize() -> CGSize {
+        let imageSize = imageView.image!.size
+        let imageViewWidth = detailViewFrame().width
+        let imageViewHeight = (imageSize.height / imageSize.width) * imageViewWidth
+        return CGSize(width: imageViewWidth, height: imageViewHeight)
+    }
+    
+    func imageViewFrame() -> CGRect {
+        let frame = detailViewFrame()
+        let size = imageViewSize()
+        return CGRect(x: frame.origin.x, y: frame.origin.y, width: size.width, height: size.height)
     }
     
     private func describe(view: UIView, indent: String) {

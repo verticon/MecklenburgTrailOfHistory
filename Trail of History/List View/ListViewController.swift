@@ -109,7 +109,8 @@ class ListViewController: UICollectionViewController {
 
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: false)
-        DetailView.present(poi: pointsOfInterest[indexPath.item], startingFrom: collectionView.cellForItem(at: indexPath)!.frame)
+        let frame = collectionView.cellForItem(at: indexPath)!.frame
+        DetailView.present(poi: pointsOfInterest[indexPath.item], startingFrom: frame)
     }
 
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
