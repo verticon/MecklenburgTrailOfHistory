@@ -208,10 +208,11 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     }
     
     private let poiId : String
-    fileprivate let imageView = UIImageView()
-    fileprivate let scrollView = UIScrollView()
+    fileprivate let statueImageView = UIImageView()
+    fileprivate let imageScrollView = UIScrollView()
     private let movieButton = UIButton()
-    private let textView = UITextView()
+    private let nameLabel = UILabel()
+    private let descriptionTextView = UITextView()
     private let learnMoreUrl: URL?
     private let learnMoreButton = UIButton()
     private let inset: CGFloat = 16
@@ -229,7 +230,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         movieUrl = poi.movieUrl
         learnMoreUrl = poi.meckncGovUrl
 
-        scrollViewHeightConstraint = scrollView.heightAnchor.constraint(equalToConstant: 0)
+        scrollViewHeightConstraint = imageScrollView.heightAnchor.constraint(equalToConstant: 0)
 
         super.init(frame: detailViewFrame())
 
@@ -243,18 +244,29 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         update(using: poi)
 
         let size = imageViewSize()
-        imageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-        imageView.contentMode = .scaleAspectFill
-        scrollView.addSubview(imageView)
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(scrollView)
+        statueImageView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        statueImageView.contentMode = .scaleAspectFill
+        imageScrollView.addSubview(statueImageView)
+        imageScrollView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(imageScrollView)
 
-        textView.isEditable = false
-        textView.isSelectable = false
-        //textView.textColor = UIColor.tohTerracotaColor
-        textView.backgroundColor = UIColor.tohGreyishBrownTwoColor
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(textView)
+        nameLabel.textAlignment = .center
+        nameLabel.font = UIFont(name: "HoeflerText-Black", size: 18)!
+        nameLabel.font = descriptionTextView.font?.withSize(18) // Why is this line necessary? The size parameter to UIFont's initializer has no effect.
+        nameLabel.textColor = .tohTerracotaColor
+        nameLabel.backgroundColor = .tohGreyishBrownTwoColor
+        nameLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(nameLabel)
+
+        descriptionTextView.textAlignment = .justified
+        descriptionTextView.isEditable = false
+        descriptionTextView.isSelectable = false
+        descriptionTextView.font = UIFont(name: "HoeflerText-Regular", size: 18)!
+        descriptionTextView.font = descriptionTextView.font?.withSize(18) // Why is this line necessary? The size parameter to UIFont's initializer has no effect.
+        descriptionTextView.textColor = .white
+        descriptionTextView.backgroundColor = .tohGreyishBrownTwoColor
+        descriptionTextView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(descriptionTextView)
 
         if movieUrl != nil {
             movieButton.setImage(#imageLiteral(resourceName: "PlayMovieButton"), for: .normal)
@@ -298,21 +310,24 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
             self.widthAnchor.constraint(equalToConstant: frame.width),
             self.heightAnchor.constraint(equalToConstant: frame.height),
             
-            scrollView.topAnchor.constraint(equalTo: self.topAnchor),
-            scrollView.leftAnchor.constraint(equalTo: self.leftAnchor),
-            scrollView.rightAnchor.constraint(equalTo: self.rightAnchor),
+            imageScrollView.topAnchor.constraint(equalTo: self.topAnchor),
+            imageScrollView.leftAnchor.constraint(equalTo: self.leftAnchor),
+            imageScrollView.rightAnchor.constraint(equalTo: self.rightAnchor),
             scrollViewHeightConstraint,
             
             learnMoreButton.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             learnMoreButton.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+
+            nameLabel.topAnchor.constraint(equalTo: imageScrollView.bottomAnchor, constant: 4),
+            nameLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+
+            descriptionTextView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 4),
+            descriptionTextView.bottomAnchor.constraint(equalTo: learnMoreButton.topAnchor),
+            descriptionTextView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            descriptionTextView.widthAnchor.constraint(equalTo: imageScrollView.widthAnchor),
             
-            textView.topAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            textView.bottomAnchor.constraint(equalTo: learnMoreButton.topAnchor),
-            textView.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            textView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            
-            movieButton.rightAnchor.constraint(equalTo: scrollView.rightAnchor, constant: -8),
-            movieButton.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -8),
+            movieButton.rightAnchor.constraint(equalTo: imageScrollView.rightAnchor, constant: -8),
+            movieButton.bottomAnchor.constraint(equalTo: imageScrollView.bottomAnchor, constant: -8),
             movieButton.widthAnchor.constraint(equalToConstant: 32),
             movieButton.heightAnchor.constraint(equalToConstant: 32),
             ])
@@ -357,13 +372,11 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     private func update(using poi: PointOfInterest) {
 
         // AFAIK If no other action is taken then the image view will size itself to the image, even if this results in a size larger than the window.
-        imageView.image = poi.image
+        statueImageView.image = poi.image
+
+        nameLabel.text = poi.name
 
         /*
-         let textAttributes = [NSStrokeColorAttributeName : UIColor.black,
-         NSForegroundColorAttributeName : UIColor.white,
-         NSStrokeWidthAttributeName : -3.0] as [String : Any]
-         */
         let justified = NSMutableParagraphStyle()
         justified.alignment = NSTextAlignment.justified
         let text = NSMutableAttributedString(string: "\(poi.name)\n\n\(poi.description)\n", attributes: [
@@ -378,7 +391,10 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
             NSAttributedStringKey.paragraphStyle : centered,
             NSAttributedStringKey.foregroundColor : UIColor.tohTerracotaColor
             ], range: NSRange(location: 0, length: poi.name.count))
-        textView.attributedText = text
+        descriptionTextView.attributedText = text
+         */
+
+        descriptionTextView.text = poi.description
     }
 
     @objc private func playMovie() {
@@ -401,7 +417,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     }
 
     func imageViewSize() -> CGSize {
-        let imageSize = imageView.image!.size
+        let imageSize = statueImageView.image!.size
         let imageViewWidth = detailViewFrame().width
         let imageViewHeight = (imageSize.height / imageSize.width) * imageViewWidth
         return CGSize(width: imageViewWidth, height: imageViewHeight)
