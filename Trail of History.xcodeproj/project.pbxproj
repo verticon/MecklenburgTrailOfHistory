@@ -14,6 +14,8 @@
 		4D8B764C1C97944300A70B71 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8B764B1C97944300A70B71 /* AppDelegate.swift */; };
 		4D8B76561C97944300A70B71 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B76551C97944300A70B71 /* Assets.xcassets */; };
 		AFC8D1CE24F14651A7D54F8C /* libPods-Trail of HistoryUITests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1294D643F85DA3FD6135D9B1 /* libPods-Trail of HistoryUITests.a */; };
+		E10395D0201010CA00C01528 /* ListViewController2.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10395CF201010CA00C01528 /* ListViewController2.swift */; };
+		E10395D2201010F200C01528 /* List2.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E10395D1201010F200C01528 /* List2.storyboard */; };
 		E1110D461D83564E00CA5135 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1110D441D83564E00CA5135 /* OptionsViewController.swift */; };
 		E114C71E1D7B0D8500BE3984 /* PointOfInterestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E114C71D1D7B0D8500BE3984 /* PointOfInterestCard.swift */; };
 		E127C3282001304B002BA6DE /* Title.swift in Sources */ = {isa = PBXBuildFile; fileRef = E127C3272001304B002BA6DE /* Title.swift */; };
@@ -30,9 +32,7 @@
 		E1823A371E14635600498A92 /* AlertUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A361E14635600498A92 /* AlertUser.swift */; };
 		E1823A431E1548EC00498A92 /* PointOfInterestCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */; };
 		E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */; };
-		E1823A461E15500500498A92 /* List.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1823A451E15500500498A92 /* List.storyboard */; };
 		E1823A481E1550D100498A92 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1823A471E1550D100498A92 /* LaunchScreen.storyboard */; };
-		E1823A4A1E155C0D00498A92 /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A491E155C0D00498A92 /* ListViewController.swift */; };
 		E1823A4C1E15602F00498A92 /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A4B1E15602F00498A92 /* NavigationController.swift */; };
 		E1823A4E1E16BD4900498A92 /* UIWindowExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A4D1E16BD4900498A92 /* UIWindowExtensions.swift */; };
 		E1823A521E170BE100498A92 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A511E170BE100498A92 /* DetailView.swift */; };
@@ -92,6 +92,8 @@
 		663E40419345BFAA966D6C06 /* libPods-Trail of HistoryTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trail of HistoryTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D10F4F6240FDF5914D19411 /* libPods-Trail of History.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trail of History.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC7F45E7A9B75300AA3E164 /* Pods-Trail of History.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trail of History.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Trail of History/Pods-Trail of History.debug.xcconfig"; sourceTree = "<group>"; };
+		E10395CF201010CA00C01528 /* ListViewController2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ListViewController2.swift; path = "List View/ListViewController2.swift"; sourceTree = "<group>"; };
+		E10395D1201010F200C01528 /* List2.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = List2.storyboard; path = "List View/List2.storyboard"; sourceTree = "<group>"; };
 		E1110D441D83564E00CA5135 /* OptionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OptionsViewController.swift; path = "Map View/OptionsViewController.swift"; sourceTree = "<group>"; };
 		E114C71D1D7B0D8500BE3984 /* PointOfInterestCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCard.swift; path = "Map View/PointOfInterestCard.swift"; sourceTree = "<group>"; };
 		E127C3272001304B002BA6DE /* Title.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Title.swift; path = Common/Title.swift; sourceTree = "<group>"; };
@@ -107,9 +109,7 @@
 		E1823A361E14635600498A92 /* AlertUser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AlertUser.swift; path = Common/UI/AlertUser.swift; sourceTree = "<group>"; };
 		E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCell.swift; path = "List View/PointOfInterestCell.swift"; sourceTree = "<group>"; };
 		E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PointOfInterestCell.xib; path = "List View/PointOfInterestCell.xib"; sourceTree = "<group>"; };
-		E1823A451E15500500498A92 /* List.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = List.storyboard; path = "List View/List.storyboard"; sourceTree = "<group>"; };
 		E1823A471E1550D100498A92 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		E1823A491E155C0D00498A92 /* ListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ListViewController.swift; path = "List View/ListViewController.swift"; sourceTree = "<group>"; };
 		E1823A4B1E15602F00498A92 /* NavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationController.swift; sourceTree = "<group>"; };
 		E1823A4D1E16BD4900498A92 /* UIWindowExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UIWindowExtensions.swift; path = Common/UI/UIWindowExtensions.swift; sourceTree = "<group>"; };
 		E1823A511E170BE100498A92 /* DetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DetailView.swift; path = "Detail View/DetailView.swift"; sourceTree = "<group>"; };
@@ -280,8 +280,8 @@
 		E1823A3E1E1548D300498A92 /* List View */ = {
 			isa = PBXGroup;
 			children = (
-				E1823A451E15500500498A92 /* List.storyboard */,
-				E1823A491E155C0D00498A92 /* ListViewController.swift */,
+				E10395D1201010F200C01528 /* List2.storyboard */,
+				E10395CF201010CA00C01528 /* ListViewController2.swift */,
 				E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */,
 				E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */,
 			);
@@ -409,11 +409,11 @@
 				E14F8F281E044C7F004AB05D /* GoogleService-Info.plist in Resources */,
 				4D8B76561C97944300A70B71 /* Assets.xcassets in Resources */,
 				0C01F5131D63E0D1005C6284 /* Main.storyboard in Resources */,
+				E10395D2201010F200C01528 /* List2.storyboard in Resources */,
 				E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */,
 				E1C2383F1D6B29E900A718A8 /* PointOfInterestCard.xib in Resources */,
 				E1F984E31D6F692D00D28411 /* Title.xib in Resources */,
 				E13D493A1F9A4F8A007903E1 /* Path.json in Resources */,
-				E1823A461E15500500498A92 /* List.storyboard in Resources */,
 				E1DFEBB01D7663B9007359F4 /* DIN Condensed Bold.ttf in Resources */,
 				E1C2383C1D6B28C700A718A8 /* Map.storyboard in Resources */,
 				E1823A481E1550D100498A92 /* LaunchScreen.storyboard in Resources */,
@@ -589,11 +589,11 @@
 				E1823A371E14635600498A92 /* AlertUser.swift in Sources */,
 				E1823A4C1E15602F00498A92 /* NavigationController.swift in Sources */,
 				E1823A521E170BE100498A92 /* DetailView.swift in Sources */,
+				E10395D0201010CA00C01528 /* ListViewController2.swift in Sources */,
 				E13F30881E0D53CD009EBF74 /* PointOfInterest.swift in Sources */,
 				E1D6AA6F1D88D43B002987BA /* UIApplicationExtensions.swift in Sources */,
 				E127C3282001304B002BA6DE /* Title.swift in Sources */,
 				0C01F5171D63E163005C6284 /* UIColor+CustomColors.swift in Sources */,
-				E1823A4A1E155C0D00498A92 /* ListViewController.swift in Sources */,
 				4D8B764C1C97944300A70B71 /* AppDelegate.swift in Sources */,
 				E1C238461D6B6AFD00A718A8 /* MapViewController.swift in Sources */,
 				E1110D461D83564E00CA5135 /* OptionsViewController.swift in Sources */,

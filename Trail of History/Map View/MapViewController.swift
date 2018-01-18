@@ -92,6 +92,7 @@ class MapViewController: UIViewController {
 
         view.sendSubview(toBack: pageSwiper)
         pageSwiper.backgroundColor = UIColor.tohTerracotaColor
+        pageSwiper.direction = .right
 
         do {
             let userTrackingButton = UserTrackingButton(mapView: mapView, stateChangeHandler: setUserTracking(_:))
