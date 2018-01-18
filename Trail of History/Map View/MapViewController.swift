@@ -61,7 +61,6 @@ class MapViewController: UIViewController {
         }
     }
 
-
     // *****************************************************************************
 
     var pageViewController: PageViewController?
@@ -189,7 +188,6 @@ class MapViewController: UIViewController {
         //debugConsole = DebugLayer.add(to: view)
     }
 
-
     override func viewWillAppear(_ animated: Bool) {
         navigationItem.hidesBackButton = true
 
@@ -242,7 +240,7 @@ class MapViewController: UIViewController {
             if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
                 poiAnnotations[index].update(with: poi)
             }
-            else {
+            else { // TODO: Look into the log files
                 print("An unrecognized POI was updated: \(poi.name)")
             }
 
@@ -286,9 +284,9 @@ class MapViewController: UIViewController {
                 //let didZoom = mapView.region.zoomOut(to: new.coordinate)
                 //debugConsole?.update(line: 0, with: "\(didZoom ? "Did Zoom" : "Didn't Zoom")")
 
-                if poiAnnotations.count > 1, let index = poiAnnotations.index(of: new) {
-                    collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
-                }
+                //if poiAnnotations.count > 1, let index = poiAnnotations.index(of: new) {
+                //    collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
+                //}
 
                 setImagesFor(annotation: new, isCurrent: true)
             }
@@ -396,6 +394,12 @@ class MapViewController: UIViewController {
             break
         }
     }
+
+    fileprivate func showDetailForCell(at: IndexPath) {
+        let cell = collectionView.cellForItem(at: at)!
+        let frame = collectionView.convert(cell.frame, to: self.view)
+        DetailView.present(poi: poiAnnotations[at.item].poi, startingFrom: frame)
+    }
 }
 
 extension MapViewController : MKMapViewDelegate {
@@ -406,7 +410,6 @@ extension MapViewController : MKMapViewDelegate {
             mapView.region = 1.25 * tracker.polyline.boundingRegion
         }
     }
-    
 
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         
@@ -429,9 +432,18 @@ extension MapViewController : MKMapViewDelegate {
         return nil
     }
     
-    // Make the selected point of interest the new current POI
+    // For the selected POI: 1) Make it the current POI, 2) scroll the card collection, 3) show the detail
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        if let selected = view.annotation as? PoiAnnotation { currentPoi = selected }
+        if let selected = view.annotation as? PoiAnnotation {
+            currentPoi = selected
+            if let index = poiAnnotations.index(where: { $0.poi.id == selected.poi.id }) {
+                let path = IndexPath(row: index, section: 0)
+                collectionView.selectItem(at: path, animated: true, scrollPosition: .centeredHorizontally)
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) { // Wait for the scrolling to complete.
+                    self.showDetailForCell(at: path)
+                }
+            }
+        }
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -467,15 +479,16 @@ extension MapViewController : UICollectionViewDelegate {
         let centerPoint = CGPoint(x: collectionView.frame.width/2, y: collectionView.frame.height/2)
         if let indexOfCenterCell = self.collectionView.indexPathForItem(at: CGPoint(x: centerPoint.x + self.collectionView.contentOffset.x, y: centerPoint.y + self.collectionView.contentOffset.y)) {
             currentPoi = poiAnnotations[indexOfCenterCell.item]
+            mapView.setCenter(currentPoi!.coordinate, animated: true)
          }
 
         if !collectionView.isDragging && !collectionView.isDecelerating { timer.invalidate() }
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let cell = collectionView.cellForItem(at: indexPath)!
-        let frame = collectionView.convert(cell.frame, to: self.view)
-        DetailView.present(poi: poiAnnotations[indexPath.item].poi, startingFrom: frame)
+        if let current = currentPoi, let currentPoiIndex = poiAnnotations.index(where: { $0.poi.id == current.poi.id }), indexPath.item == currentPoiIndex {
+            showDetailForCell(at: indexPath)
+        }
     }
 }
 
@@ -496,8 +509,7 @@ extension MapViewController : UICollectionViewDelegateFlowLayout {
         let screenSize: CGRect = UIScreen.main.bounds
         return CGSize(width: screenSize.width * 0.1, height: 0)
     }
-    
-    
+
 //    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
 //        return CGSize(width: CGFloat(collectionView.bounds.size.width * 0.8), height: CGFloat(collectionView.bounds.size.height * 0.875))
 //    }
@@ -540,6 +552,7 @@ extension MapViewController : UICollectionViewDataSource {
 }
 
 extension MapViewController : OptionsViewControllerDelegate {
+
     var mapType: MKMapType {
         get {
             return mapView.mapType
