@@ -93,7 +93,7 @@
                                 </segue>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" image="list" id="DjC-nn-NjM" userLabel="Back to List View">
+                        <barButtonItem key="rightBarButtonItem" title="Segue to Map" image="list" id="DjC-nn-NjM" userLabel="Back to List View">
                             <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             <connections>
                                 <segue destination="bQf-DL-2yk" kind="unwind" identifier="Unwind Map" unwindAction="unwind:" id="4w1-Ou-wRG"/>

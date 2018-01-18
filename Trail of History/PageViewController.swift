@@ -22,7 +22,7 @@ class PageViewController: UIViewController {
         navigationItem.titleView = UIView.fromNib("Title")
         navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
 
-        let listStoryboard = UIStoryboard(name: "List2", bundle: nil)
+        let listStoryboard = UIStoryboard(name: "List", bundle: nil)
         listViewController = (listStoryboard.instantiateViewController(withIdentifier: "List View Controller") as! ListViewController)
         listViewController.pageViewController = self
 
