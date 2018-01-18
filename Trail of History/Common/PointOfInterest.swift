@@ -32,10 +32,10 @@ class PointOfInterest : Equatable {
     // Points of Interest are obtained via observers. Observwers will receive the
     // currently existing POIs and will be informed of additions, updates, or removals.
     static func addObserver(_ observer: @escaping Observer, dispatchQueue: DispatchQueue) -> ObserverToken {
-        return Database.ObserverToken(observer: Database.Observer(observer: observer, dispatchQueue: dispatchQueue))
+        return Firebase.ObserverToken(observer: Firebase.Observer(observer: observer, dispatchQueue: dispatchQueue))
     }
     static func removeObserver(token: ObserverToken) -> Bool {
-        if let token = token as? Database.ObserverToken {
+        if let token = token as? Firebase.ObserverToken {
             token.observer.cancel()
             token.observer = nil
             return true
@@ -81,9 +81,9 @@ class PointOfInterest : Equatable {
     //                                              Internal
     // **********************************************************************************************************************
 
-    private weak var observer: Database.Observer?
+    private weak var observer: Firebase.Observer?
 
-    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, movieUrl: URL?, meckncGovUrl: URL?, observer: Database.Observer) {
+    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, movieUrl: URL?, meckncGovUrl: URL?, observer: Firebase.Observer) {
         self.id = id
         self.name = name
         self.description = description
@@ -98,7 +98,7 @@ class PointOfInterest : Equatable {
     
     // **********************************************************************************************************************
 
-    private class Database {
+    private class Firebase {
 
         static let connection = Connection()
 
@@ -114,7 +114,7 @@ class PointOfInterest : Equatable {
                 case disconnected
             }
             
-            private let connectedRef: FIRDatabaseReference
+            private let connectedRef: DatabaseReference
             private var connectionState: ConnectionState = .initialCall
             
             init() {
@@ -123,7 +123,7 @@ class PointOfInterest : Equatable {
                 // network, Firebase server is up] is(is not) up and running. Thereafter the observer will be called
                 // once whenever the connection state changes.
                 
-                connectedRef = FIRDatabase.database().reference(withPath: Connection.magicPath)
+                connectedRef = Database.database().reference(withPath: Connection.magicPath)
                 connectedRef.observe(.value, with: {
                     var isConnected = false
                     if let connected = $0.value as? Bool, connected { isConnected = true }
@@ -166,7 +166,7 @@ class PointOfInterest : Equatable {
             
             private var observer: PointOfInterest.Observer
             private var dispatchQueue: DispatchQueue
-            private var reference: FIRDatabaseReference?
+            private var reference: DatabaseReference?
             private var childAddedObservationId: UInt = 0
             private var childChangedObservationId: UInt = 0
             private var childRemovedObservationId: UInt = 0
@@ -177,7 +177,7 @@ class PointOfInterest : Equatable {
                 
                 // Note: I tried using a single Observer of the event type .value but each event sent all of the poi records???
                 
-                reference = FIRDatabase.database().reference(withPath: "PointsOfInterest")
+                reference = Database.database().reference(withPath: "PointsOfInterest")
                 childAddedObservationId = reference!.observe(.childAdded,   with: { self.eventHandler(properties: $0.value as! [String: Any], event: .added) })
                 childChangedObservationId = reference!.observe(.childChanged, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .updated) })
                 childRemovedObservationId = reference!.observe(.childRemoved, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .removed) })
@@ -294,8 +294,8 @@ class PointOfInterest : Equatable {
         }
 
         class ObserverToken {
-            var observer: Database.Observer!
-            init(observer: Database.Observer) { self.observer = observer }
+            var observer: Firebase.Observer!
+            init(observer: Firebase.Observer) { self.observer = observer }
         }
     }
 }

@@ -108,52 +108,7 @@ class MapViewController: UIViewController {
         
         
         do {
-            
-            enum LoadStatus {
-                case success(UserTrackingPolyline)
-                case error(String)
-            }
-            
-            let loadStatus = { () -> LoadStatus in
-                
-                let bundledPolylinesFileName = "Path"
-                
-                guard let jsonFilePath = Bundle.main.path(forResource: bundledPolylinesFileName, ofType: "json") else {
-                    return .error("Cannot find \(bundledPolylinesFileName).json in bundle.")
-                }
-                
-                let jsonFileUrl = URL(fileURLWithPath: jsonFilePath)
-                
-                do {
-                    let jsonData = try Data(contentsOf: jsonFileUrl)
-                    let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
-                    
-                    if  let jsonCoordinates = jsonObject as? [String : [String : Double]] {
-                        
-                        guard jsonCoordinates.count >= 2 else {
-                            return .error("\(bundledPolylinesFileName).json has \(jsonCoordinates.count) coordinates; there need to be at least 2.")
-                        }
-                        
-                        var coordinates = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: jsonCoordinates.count)
-                        for (key, value) in jsonCoordinates {
-                            coordinates[Int(key)! - 1] = CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!)
-                        }
-                        
-                        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-                        polyline.title = "Trail Of History"
-                        
-                        return .success(UserTrackingPolyline(polyline: polyline, mapView: mapView))
-                    }
-                    else {
-                        return .error("The json object does not contain the expected types and/or keys:\n\(jsonObject)")
-                    }
-                }
-                catch {
-                    return .error("Error reading/parsing \(bundledPolylinesFileName).json: \(error)")
-                }
-            }()
-            
-            switch loadStatus {
+            switch LoadPath(mapView: mapView) {
             case .success(let tracker):
                 tracker.renderer.userIsOnColor = UIColor.tohTerracotaColor
                 tracker.renderer.userIsOffColor = UIColor.tohDullYellowColor
