@@ -332,7 +332,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
             movieButton.heightAnchor.constraint(equalToConstant: 32),
             ])
 
-        observerToken = PointOfInterest.addObserver(poiListener, dispatchQueue: DispatchQueue.main)
+        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
     }
 
     required public init?(coder aDecoder: NSCoder) {
@@ -347,8 +347,8 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         if let link = learnMoreUrl { UIApplication.shared.open(link) }
    }
 
-    func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
-        
+    func poiObserver(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
+
         if poi.id == poiId {
             switch event {
             case .updated:

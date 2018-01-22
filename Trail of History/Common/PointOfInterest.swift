@@ -12,44 +12,36 @@ import CoreLocation
 import VerticonsToolbox
 
 // TODO: More testing of realtime response to database updates.
-class PointOfInterest : Equatable {
+final class PointOfInterest : Equatable, Encoding {
 
     // **********************************************************************************************************************
-    //                                                  API
+    //                                                  Public
     // **********************************************************************************************************************
 
     static func == (lhs: PointOfInterest, rhs: PointOfInterest) -> Bool { return lhs.id == rhs.id }
 
-    enum Event {
-        case added
-        case updated
-        case removed
-    }
-    
-    typealias Observer = (PointOfInterest, Event) -> Void
-    typealias ObserverToken = Any
+    typealias FirebaseObserver = Firebase.DataObserver<PointOfInterest>
+    typealias FirebaseObserverToken = Any
 
     // Points of Interest are obtained via observers. Observwers will receive the
     // currently existing POIs and will be informed of additions, updates, or removals.
-    static func addObserver(_ observer: @escaping Observer, dispatchQueue: DispatchQueue) -> ObserverToken {
-        return Firebase.ObserverToken(observer: Firebase.Observer(observer: observer, dispatchQueue: dispatchQueue))
+    private class Token {
+        var observer: FirebaseObserver!
+        init(observer: FirebaseObserver) { self.observer = observer }
     }
-    static func removeObserver(token: ObserverToken) -> Bool {
-        if let token = token as? Firebase.ObserverToken {
+
+    static func addObserver(_ observer: @escaping FirebaseObserver.DataObserver, dispatchQueue: DispatchQueue) -> FirebaseObserverToken {
+        return Token(observer: Firebase.DataObserver(path: "PointsOfInterest", with: observer, dispatchingTo: dispatchQueue))
+    }
+
+    static func removeObserver(token: FirebaseObserverToken) -> Bool {
+        if let token = token as? Token {
             token.observer.cancel()
             token.observer = nil
             return true
         }
         return false
     }
-
-    let name: String
-    let description: String
-    let location: CLLocation
-    let image: UIImage
-    let id: String
-    let movieUrl: URL?
-    let meckncGovUrl: URL?
 
     var distanceToUser: Int? {
         guard let userLocation = UserLocation.instance.currentLocation else { return nil }
@@ -81,221 +73,122 @@ class PointOfInterest : Equatable {
     //                                              Internal
     // **********************************************************************************************************************
 
-    private weak var observer: Firebase.Observer?
+    private static let idKey = "uid"
+    private static let nameKey = "name"
+    private static let latitudeKey = "latitude"
+    private static let longitudeKey = "longitude"
+    private static let descriptionKey = "description"
+    private static let imageUrlKey = "imageUrl"
+    private static let movieUrlKey = "movieUrl"
+    private static let meckncGovUrlKey = "meckncGovUrl"
 
-    private init(id: String, name: String, latitude: Double, longitude: Double, description: String, image: UIImage, movieUrl: URL?, meckncGovUrl: URL?, observer: Firebase.Observer) {
+    let id: String
+    let name: String
+    let description: String
+    let location: CLLocation
+    let movieUrl: URL?
+    let meckncGovUrl: URL?
+    var image: UIImage!
+
+    private let imageUrl: URL
+
+    // TODO: How are the POIs views updating there distance to user?
+    //private weak var observer: Firebase.Observer?
+    //self.observer = observer // Inform the observer of location updates
+
+    public init?(_ properties: Properties?) {
+        guard
+            let properties = properties,
+            let id = properties[PointOfInterest.idKey] as? String,
+            let name = properties[PointOfInterest.nameKey] as? String,
+            let latitude = properties[PointOfInterest.latitudeKey] as? Double,
+            let longitude = properties[PointOfInterest.longitudeKey] as? Double,
+            let description = properties[PointOfInterest.descriptionKey] as? String,
+            let imageUrlString = properties[PointOfInterest.imageUrlKey] as? String,
+            let imageUrl = URL(string: imageUrlString)
+        else { return nil }
+
         self.id = id
         self.name = name
         self.description = description
-        self.image = image
-        self.movieUrl = movieUrl
-        self.meckncGovUrl = meckncGovUrl
+        self.imageUrl =  imageUrl
+        if let url = properties[PointOfInterest.movieUrlKey] as? String { self.movieUrl = URL(string: url) } else { self.movieUrl = nil }
+        if let url = properties[PointOfInterest.meckncGovUrlKey] as? String { self.meckncGovUrl = URL(string: url) } else { self.meckncGovUrl = nil }
 
         location = CLLocation(latitude: latitude, longitude: longitude)
-        
-        self.observer = observer // Inform the observer of location updates
     }
     
-    // **********************************************************************************************************************
+    func finish(event: FirebaseObserver.Event, key: FirebaseObserver.Key, observer: @escaping FirebaseObserver.DataObserver) {
 
-    private class Firebase {
-
-        static let connection = Connection()
-
-        class Connection {
-            
-            private static let magicPath = ".info/connected"
-            private static let alertTitle = "Trail of History"
-            
-            private enum ConnectionState {
-                case initialCall
-                case neverConnected
-                case connected
-                case disconnected
-            }
-            
-            private let connectedRef: DatabaseReference
-            private var connectionState: ConnectionState = .initialCall
-            
-            init() {
-                // At startup time the connection observer will be called twice. The first time with a value of false.
-                // The second time with a value of true(false) according to whether everything [Device is connected to the
-                // network, Firebase server is up] is(is not) up and running. Thereafter the observer will be called
-                // once whenever the connection state changes.
-                
-                connectedRef = Database.database().reference(withPath: Connection.magicPath)
-                connectedRef.observe(.value, with: {
-                    var isConnected = false
-                    if let connected = $0.value as? Bool, connected { isConnected = true }
-                    
-                    switch self.connectionState {
-                        
-                    case .initialCall:
-                        assert(!isConnected, "Our assumption that the observer's initial call will be with a value of false has been violated!")
-                        self.connectionState = .neverConnected
-                        
-                    case .neverConnected:
-                        if isConnected {
-                            self.connectionState = .connected
-                        } else {
-                            //TODO: It would be nice to only bother the user with an alert if we cannot connect and there is no locally cached data.
-                            // But when I tried to query Firebase under conditions of no connection and no local data my callback did not execute?
-                            self.connectionState = .disconnected
-                            alertUser(title: Connection.alertTitle, body: "A connection to the internet cannot be established. Trail of History will use the points of interest information that was obtained during the previous, successful internet connection. If you have never used the application while being connected to the internet then there will not be any information.")
-                        }
-                        
-                    case .connected:
-                        assert(!isConnected, "We are already connected. Why are we being called again with a value of true?")
-                        if !isConnected {
-                            self.connectionState = .disconnected
-                            //alertUser(title: self.alertTitle, body: "The connection to the database has been lost. The app will continue to work with the Points of Interest that have already been downloaded. You will not receive updates (which, anyway, are rare).")
-                        }
-                        
-                    case .disconnected:
-                        assert(isConnected, "We are already disconnected. Why are we being called again with a value of false?")
-                        if isConnected {
-                            self.connectionState = .connected
-                            //alertUser(title: self.alertTitle, body: "The connection to the database has been established.")
-                        }
-                    }
-                })
-            }
+        let imageUrlKey = "url:" + id
+        let imageDataKey = "image:" + id
+        
+        enum ImageRetrievalResult {
+            case success(Data)
+            case failure(String)
         }
         
-        class Observer {
+        func finish(result: ImageRetrievalResult) {
+            var image: UIImage!
             
-            private var observer: PointOfInterest.Observer
-            private var dispatchQueue: DispatchQueue
-            private var reference: DatabaseReference?
-            private var childAddedObservationId: UInt = 0
-            private var childChangedObservationId: UInt = 0
-            private var childRemovedObservationId: UInt = 0
-            
-            fileprivate init(observer: @escaping PointOfInterest.Observer, dispatchQueue: DispatchQueue) {
-                self.observer = observer
-                self.dispatchQueue = dispatchQueue
-                
-                // Note: I tried using a single Observer of the event type .value but each event sent all of the poi records???
-                
-                reference = Database.database().reference(withPath: "PointsOfInterest")
-                childAddedObservationId = reference!.observe(.childAdded,   with: { self.eventHandler(properties: $0.value as! [String: Any], event: .added) })
-                childChangedObservationId = reference!.observe(.childChanged, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .updated) })
-                childRemovedObservationId = reference!.observe(.childRemoved, with: { self.eventHandler(properties: $0.value as! [String: Any], event: .removed) })
-            }
-            
-            deinit {
-                cancel()
-            }
-            
-            fileprivate func cancel() {
-                if let ref = reference {
-                    ref.removeObserver(withHandle: childAddedObservationId)
-                    ref.removeObserver(withHandle: childChangedObservationId)
-                    ref.removeObserver(withHandle: childRemovedObservationId)
-                    reference = nil
-                }
-            }
-            
-            private func eventHandler(properties: [String: Any], event: Event) {
-                guard
-                    let id = properties["uid"] as? String,
-                    let name = properties["name"] as? String,
-                    let latitude = properties["latitude"] as? Double,
-                    let longitude = properties["longitude"] as? Double,
-                    let description = properties["description"] as? String,
-                    let imageUrlString = properties["imageUrl"] as? String,
-                    let imageUrl = URL(string: imageUrlString)
-                else {
-                    print("Invalid POI data: \(properties)")
-                    return
-                }
-
-                var movieUrl: URL? = nil
-                if let movieUrlString = properties["movieUrl"] as? String {
-                    movieUrl = URL(string: movieUrlString)
-                }
-                
-                var meckncGovUrl: URL? = nil
-                if let meckncGovString = properties["meckncGovUrl"] as? String {
-                    meckncGovUrl = URL(string: meckncGovString)
-                }
-                
-                let imageUrlKey = "url:" + id
-                let imageDataKey = "image:" + id
-
-                enum ImageRetrievalResult {
-                    case success(Data)
-                    case failure(String)
-                }
-    
-                func finish(result: ImageRetrievalResult) {
-                    var image: UIImage!
-
-                    switch result {
-                    case .success(let imageData):
-                        image = UIImage(data: imageData)
-                        if image != nil {
-                            UserDefaults.standard.set(imageUrl, forKey: imageUrlKey)
-                            UserDefaults.standard.set(imageData, forKey: imageDataKey)
-                        }
-                        else {
-                            image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: "The image data is corrupt")
-                        }
-                    case .failure(let errorText):
-                        image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: errorText)
-                    }
-
-                    let poi = PointOfInterest(id: id, name: name, latitude: latitude, longitude: longitude, description: description, image: image, movieUrl: movieUrl, meckncGovUrl: meckncGovUrl, observer: self)
-                    self.notify(poi: poi, event: event)
-                }
-
-
-                // If the image URL has not changed then use the locally stored image. Else download the image from the remote database
-                if let prevImageUrl = UserDefaults.standard.url(forKey: imageUrlKey), prevImageUrl == imageUrl {
-                    guard let imageData = UserDefaults.standard.data(forKey: imageDataKey) else {
-                        fatalError("User defaults has an image url but no image data???")
-                    }
-
-                    finish(result: ImageRetrievalResult.success(imageData))
+            switch result {
+            case .success(let imageData):
+                image = UIImage(data: imageData)
+                if image != nil {
+                    UserDefaults.standard.set(imageUrl, forKey: imageUrlKey)
+                    UserDefaults.standard.set(imageData, forKey: imageDataKey)
                 }
                 else {
-                    let session = URLSession(configuration: .default)
-                    let imageDownloadTask = session.dataTask(with: imageUrl) { (data, response, error) in
-                        
-                        if let error = error {
-                            finish(result: ImageRetrievalResult.failure("URLSession data task error: \(error)"))
-                        }
-                        else {
-                            if let response = response as? HTTPURLResponse {
-                                if response.statusCode == 200 {
-                                    if let imageData = data {
-                                        finish(result: ImageRetrievalResult.success(imageData))
-                                    }
-                                    else {
-                                        finish(result: ImageRetrievalResult.failure("Image data is nil"))
-                                    }
-                                }
-                                else {
-                                    finish(result: ImageRetrievalResult.failure("HTTP response error: \(response.statusCode)"))
-                                }
+                    image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: "The image data is corrupt")
+                }
+            case .failure(let errorText):
+                image = UIImage.createFailureIndication(ofSize: CGSize(width: 1920, height: 1080), withText: errorText)
+            }
+
+            self.image = image
+            observer(event, key, self)
+        }
+        
+        
+        // If the image URL has not changed then use the locally stored image. Else download the image from the remote database
+        if let prevImageUrl = UserDefaults.standard.url(forKey: imageUrlKey), prevImageUrl == imageUrl {
+            guard let imageData = UserDefaults.standard.data(forKey: imageDataKey) else {
+                fatalError("User defaults has an image url but no image data???")
+            }
+            
+            finish(result: ImageRetrievalResult.success(imageData))
+        }
+        else {
+            let session = URLSession(configuration: .default)
+            let imageDownloadTask = session.dataTask(with: imageUrl) { (data, response, error) in
+                
+                if let error = error {
+                    finish(result: ImageRetrievalResult.failure("URLSession data task error: \(error)"))
+                }
+                else {
+                    if let response = response as? HTTPURLResponse {
+                        if response.statusCode == 200 {
+                            if let imageData = data {
+                                finish(result: ImageRetrievalResult.success(imageData))
                             }
                             else {
-                                finish(result: ImageRetrievalResult.failure("Response type is \(type(of: response)); expected HTTPURLResponse"))
+                                finish(result: ImageRetrievalResult.failure("Image data is nil"))
                             }
                         }
+                        else {
+                            finish(result: ImageRetrievalResult.failure("HTTP response error: \(response.statusCode)"))
+                        }
                     }
-                    imageDownloadTask.resume()
+                    else {
+                        finish(result: ImageRetrievalResult.failure("Response type is \(type(of: response)); expected HTTPURLResponse"))
+                    }
                 }
             }
-            
-            fileprivate func notify(poi: PointOfInterest, event: Event) {
-                dispatchQueue.async { self.observer(poi, event) }
-            }
+            imageDownloadTask.resume()
         }
-
-        class ObserverToken {
-            var observer: Firebase.Observer!
-            init(observer: Firebase.Observer) { self.observer = observer }
-        }
+    }
+    
+    public func encode() -> Properties {
+        fatalError("Encode is not implememnted") // We don't need to encode points of interest; the app does not update the database.
     }
 }

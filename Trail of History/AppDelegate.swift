@@ -19,9 +19,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         print("\(applicationName) started")
+
+        //_ = Firebase.connection.addListener(self, handlerClassMethod: AppDelegate.firebaseConnectionEventHandler)
+
         //listFonts()
-        FirebaseApp.configure()
-        Database.database().isPersistenceEnabled = true
 
         return true
     }
@@ -60,7 +61,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         print(list)
     }
+
+    private func firebaseConnectionEventHandler(event: Firebase.ConnectionEvent) {
+        switch event {
+        case .established:
+            alertUser(title: applicationName, body: "A database connection has been established.")
+        case .failed:
+            alertUser(title: applicationName, body: "A database connection could not be established; locally cached data, if any, will be used")
+            break
+        case .lost:
+            alertUser(title: applicationName, body: "The database connection has been lost.")
+            break
+        }
+    }
+    
+    // **************************************************************************************************************************
     // MARK: - Core Data stack
+    // **************************************************************************************************************************
 
     lazy var applicationDocumentsDirectory: URL = {
         // The directory the application uses to store the Core Data store file. This code uses a directory named "com.cltmobile.Trail_of_History" in the application's documents Application Support directory.

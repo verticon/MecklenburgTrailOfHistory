@@ -178,7 +178,7 @@ class MapViewController: UIViewController {
         }
     }
 
-    func poiObserver(poi: PointOfInterest, event: PointOfInterest.Event) {
+    func poiObserver(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
 
         switch event {
 

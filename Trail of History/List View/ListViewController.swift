@@ -34,7 +34,7 @@ class ListViewController : UIViewController {
         let poiCellNib: UINib? = UINib(nibName: "PointOfInterestCell", bundle: nil)
         collectionView?.register(poiCellNib, forCellWithReuseIdentifier: poiCellReuseIdentifier)
 
-        observerToken = PointOfInterest.addObserver(poiListener, dispatchQueue: DispatchQueue.main)
+        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
 
         let doubleTapRecognizer: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(didDoubleTapCollectionView))
         doubleTapRecognizer.numberOfTapsRequired = 2
@@ -70,7 +70,7 @@ class ListViewController : UIViewController {
         }
     }
 
-    func poiListener(poi: PointOfInterest, event: PointOfInterest.Event) {
+    func poiObserver(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
 
         switch event {
         case .added:
