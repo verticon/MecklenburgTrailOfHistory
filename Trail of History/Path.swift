@@ -15,18 +15,17 @@ enum LoadStatus {
     case error(String)
 }
 
-func LoadPath(mapView: MKMapView) -> LoadStatus {
-
-    let bundledPolylinesFileName = "Path"
+func LoadPath(mapView: MKMapView, completionHandler: @escaping  (LoadStatus) -> ()) {
     
-    if let jsonFilePath = Bundle.main.path(forResource: bundledPolylinesFileName, ofType: "json") {
-        return LoadPath(jsonFilePath: jsonFilePath, mapView: mapView)
+    if let jsonFilePath = Bundle.main.path(forResource: "TrailOfHistory", ofType: "json") {
+        FromFile(mapView: mapView, completionHandler: completionHandler, jsonFilePath: jsonFilePath)
     }
-
-    return .error("Cannot find \(bundledPolylinesFileName).json in bundle.")
+    else {
+        FromDatabase(mapView: mapView, completionHandler: completionHandler)
+    }
 }
 
-private func LoadPath(jsonFilePath: String, mapView: MKMapView)  -> LoadStatus {
+private func FromFile(mapView: MKMapView, completionHandler: (LoadStatus) -> (), jsonFilePath: String) {
     let jsonFileUrl = URL(fileURLWithPath: jsonFilePath)
     
     do {
@@ -36,7 +35,8 @@ private func LoadPath(jsonFilePath: String, mapView: MKMapView)  -> LoadStatus {
         if  let jsonCoordinates = jsonObject as? [String : [String : Double]] {
             
             guard jsonCoordinates.count >= 2 else {
-                return .error("\(jsonFilePath) has \(jsonCoordinates.count) coordinates; there need to be at least 2.")
+                completionHandler(.error("\(jsonFilePath) has \(jsonCoordinates.count) coordinates; there need to be at least 2."))
+                return
             }
             
             var coordinates = Array<CLLocationCoordinate2D>(repeating: CLLocationCoordinate2D(), count: jsonCoordinates.count)
@@ -47,15 +47,62 @@ private func LoadPath(jsonFilePath: String, mapView: MKMapView)  -> LoadStatus {
             let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
             polyline.title = "Trail Of History"
             
-            return .success(UserTrackingPolyline(polyline: polyline, mapView: mapView))
+            completionHandler(.success(UserTrackingPolyline(polyline: polyline, mapView: mapView)))
         }
         else {
-            return .error("The json object does not contain the expected types and/or keys:\n\(jsonObject)")
+            completionHandler(.error("The json object does not contain the expected types and/or keys:\n\(jsonObject)"))
         }
     }
     catch {
-        return .error("Error reading/parsing \(jsonFilePath): \(error)")
+        completionHandler(.error("Error reading/parsing \(jsonFilePath): \(error)"))
     }
+}
+
+private func FromDatabase(mapView: MKMapView, completionHandler: @escaping  (LoadStatus) -> ()) {
+
+    class Loader {
+        private let mapView: MKMapView
+        private let completionHandler: (LoadStatus) -> ()
+        private var observer: Firebase.Observer? = nil
+        private var previousCount = 0
+        private var coordinates = [CLLocationCoordinate2D]()
+        
+        init(mapView: MKMapView, completionHandler: @escaping (LoadStatus) -> ()) {
+            self.mapView = mapView
+            self.completionHandler = completionHandler
+
+            observer = Firebase.Observer(path: "TrailCoordinates", with: { event, key, properties in
+                self.coordinates.append(CLLocationCoordinate2D(latitude: properties["latitude"] as! Double, longitude: properties["longitude"] as! Double))
+            }, dispatchingTo: DispatchQueue.main)
+        }
+        
+        @objc func timerCallback(_ timer: Timer) {
+            let currentCount = coordinates.count
+            if currentCount > previousCount { // Are coordinates still coming?
+                previousCount = currentCount
+                return
+            }
+            
+            // We're done
+            
+            observer?.cancel()
+            timer.invalidate()
+            
+            if coordinates.count > 1 {
+                let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+                polyline.title = "Trail Of History"
+                completionHandler(.success(UserTrackingPolyline(polyline: polyline, mapView: mapView)))
+            }
+            else {
+                completionHandler(.error("The database sent \(coordinates.count) coordinates; there need to be at least 2."))
+            }
+        }
+    }
+
+    // Firebase doesn't give us a way to obtain the count so we resort to a timer to detect that no more is coming.
+    let detector = Loader(mapView: mapView, completionHandler: completionHandler)
+    let timer = Timer(timeInterval: 0.25, target: detector, selector: #selector(Loader.timerCallback(_:)), userInfo: nil, repeats: true)
+    RunLoop.main.add(timer, forMode: RunLoopMode.commonModes)
 }
 
 /*

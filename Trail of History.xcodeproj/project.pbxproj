@@ -22,7 +22,6 @@
 		E127C32C20025037002BA6DE /* VerticonsToolbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E127C32A20025037002BA6DE /* VerticonsToolbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E1377F4B1F62E73600C95F39 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1377F491F62E73600C95F39 /* PageViewController.swift */; };
 		E139E73B1D9BE6FA0057F20D /* CardCollectionLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = E139E73A1D9BE6FA0057F20D /* CardCollectionLayout.swift */; };
-		E13D493A1F9A4F8A007903E1 /* Path.json in Resources */ = {isa = PBXBuildFile; fileRef = E13D49391F9A4F8A007903E1 /* Path.json */; };
 		E13F30881E0D53CD009EBF74 /* PointOfInterest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */; };
 		E14F8F281E044C7F004AB05D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */; };
 		E150ED441D763903006C40AF /* Archer-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = E150ED421D763903006C40AF /* Archer-Medium.otf */; };
@@ -98,7 +97,6 @@
 		E127C32A20025037002BA6DE /* VerticonsToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = VerticonsToolbox.framework; sourceTree = "<group>"; };
 		E1377F491F62E73600C95F39 /* PageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 		E139E73A1D9BE6FA0057F20D /* CardCollectionLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CardCollectionLayout.swift; path = "Map View/CardCollectionLayout.swift"; sourceTree = "<group>"; };
-		E13D49391F9A4F8A007903E1 /* Path.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = Path.json; path = Resources/Path.json; sourceTree = "<group>"; };
 		E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterest.swift; path = Common/PointOfInterest.swift; sourceTree = "<group>"; };
 		E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Resources/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		E150ED421D763903006C40AF /* Archer-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Archer-Medium.otf"; path = "Resources/Archer-Medium.otf"; sourceTree = "<group>"; };
@@ -153,7 +151,6 @@
 		0C01F50A1D63DDCB005C6284 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				E13D49391F9A4F8A007903E1 /* Path.json */,
 				E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */,
 				4D8B76551C97944300A70B71 /* Assets.xcassets */,
 				E150ED421D763903006C40AF /* Archer-Medium.otf */,
@@ -399,7 +396,6 @@
 				E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */,
 				E1C2383F1D6B29E900A718A8 /* PointOfInterestCard.xib in Resources */,
 				E1F984E31D6F692D00D28411 /* Title.xib in Resources */,
-				E13D493A1F9A4F8A007903E1 /* Path.json in Resources */,
 				E1DFEBB01D7663B9007359F4 /* DIN Condensed Bold.ttf in Resources */,
 				E1C2383C1D6B28C700A718A8 /* Map.storyboard in Resources */,
 				E1823A481E1550D100498A92 /* LaunchScreen.storyboard in Resources */,

@@ -26,8 +26,6 @@ import VerticonsToolbox
  * of the title view). The Options controller allows the user to set various features and to perform various actions.
  */
 
-// TODO: When swiping the cards causes the current poi to change, pan the map so as to see the new, current poi
-
 class MapViewController: UIViewController {
 
     class PoiAnnotation: NSObject, MKAnnotation {
@@ -69,13 +67,13 @@ class MapViewController: UIViewController {
 
     @IBOutlet fileprivate weak var mapView: MKMapView!
 
+    private var poiObserverToken: Any!
     fileprivate var poiAnnotations = [PoiAnnotation]()
 
     @IBOutlet fileprivate weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
 
-    private var poiObserverToken: Any!
-
+    private var pathLoaded = false
     private var userTrackingPolyline: UserTrackingPolyline?
     private let polylineWidth = 4.0 // meters
     
@@ -106,24 +104,7 @@ class MapViewController: UIViewController {
             trackingUser = userTrackingButton.trackingUser
         }
         
-        
         do {
-            switch LoadPath(mapView: mapView) {
-            case .success(let tracker):
-                tracker.renderer.userIsOnColor = UIColor.tohTerracotaColor
-                tracker.renderer.userIsOffColor = UIColor.tohDullYellowColor
-                self.userTrackingPolyline = tracker
-                userIsOnAnnotation.title = mapView.userLocation.title
-                _ = tracker.addListener(self, handlerClassMethod: MapViewController.trackngPolylineEventHandler)
-                
-            case .error(let error):
-                print(error)
-            }
-        }
-
-        do {
-            //navigationItem.titleView = UIView.fromNib("Title")
-            //navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
             navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
             navigationItem.leftBarButtonItem?.tintColor = UIColor.tohTerracotaColor
         }
@@ -360,9 +341,24 @@ class MapViewController: UIViewController {
 extension MapViewController : MKMapViewDelegate {
 
     func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-        if let tracker = self.userTrackingPolyline, mapView.overlays.count == 0 {
-            mapView.add(tracker.polyline)
-            mapView.region = 1.25 * tracker.polyline.boundingRegion
+        if !pathLoaded {
+            LoadPath(mapView: mapView) {
+                switch $0 {
+                case .success(let trackingPolyline):
+                    trackingPolyline.renderer.userIsOnColor = UIColor.tohTerracotaColor
+                    trackingPolyline.renderer.userIsOffColor = UIColor.tohDullYellowColor
+                    self.userTrackingPolyline = trackingPolyline
+                    self.userIsOnAnnotation.title = mapView.userLocation.title
+                    mapView.add(trackingPolyline.polyline)
+                    _ = trackingPolyline.addListener(self, handlerClassMethod: MapViewController.trackngPolylineEventHandler)
+                    self.zoomToTrail()
+
+                case .error(let error):
+                    alertUser(title: "\(applicationName) Error", body: "The map data needed to plot the trail of history could not be obtained. Reason: \(error)")
+                }
+            }
+            zoomToTrail()
+            pathLoaded = true
         }
     }
 
@@ -519,26 +515,32 @@ extension MapViewController : OptionsViewControllerDelegate {
 
     func zoomToTrail() {
         if let tracker = userTrackingPolyline {
-            mapView.region = tracker.polyline.boundingRegion
+            mapView.region = 1.25 * tracker.polyline.boundingRegion
+        }
+        else if poiAnnotations.count > 0 {
+            let center = poiAnnotations[0].poi.location.coordinate
+            let span = MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+            let userRect = makeRect(center: center, span: span)
+            mapView.region = MKCoordinateRegionForMapRect(userRect)
+        }
+        else {
+            zoomToUser()
         }
     }
 
     func zoomToUser() {
-        if let tracker = userTrackingPolyline {
-            let userRect = makeRect(center: mapView.userLocation.coordinate, span: tracker.polyline.boundingRegion.span)
-            mapView.region = MKCoordinateRegionForMapRect(userRect)
-        }
+        let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let userRect = makeRect(center: mapView.userLocation.coordinate, span: span)
+        mapView.region = MKCoordinateRegionForMapRect(userRect)
     }
 
     func zoomToBoth() {
-        if let tracker = userTrackingPolyline {
-            mapView.region = tracker.polyline.boundingRegion
-            if !mapView.isUserLocationVisible {
-                let trailRect = makeRect(center: tracker.polyline.boundingRegion.center, span: tracker.polyline.boundingRegion.span)
-                let userRect = makeRect(center: mapView.userLocation.coordinate, span: tracker.polyline.boundingRegion.span)
-                let combinedRect = MKMapRectUnion(trailRect, userRect)
-                mapView.region = MKCoordinateRegionForMapRect(combinedRect)
-            }
+        zoomToTrail()
+        if !mapView.isUserLocationVisible {
+            let trailRect = makeRect(center: mapView.region.center, span: mapView.region.span)
+            let userRect = makeRect(center: mapView.userLocation.coordinate, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+            let combinedRect = MKMapRectUnion(trailRect, userRect)
+            mapView.region = MKCoordinateRegionForMapRect(combinedRect)
         }
     }
 }
