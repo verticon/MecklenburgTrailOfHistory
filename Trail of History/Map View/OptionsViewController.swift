@@ -81,6 +81,26 @@ class OptionsViewController: UITableViewController {
         default:
             break
         }
+
+        tableView.backgroundColor = UIColor.tohGreyishBrownTwoColor
+        tableView.tableHeaderView?.backgroundColor = UIColor.tohTerracotaColor
+        if let count = tableView.tableHeaderView?.subviews.count, count > 0, let button = tableView.tableHeaderView?.subviews[0] as? UIButton {
+            button.setTitleColor(UIColor.tohGreyishBrownTwoColor, for: .normal)
+            button.borderColor = UIColor.tohGreyishBrownTwoColor
+        }
+    }
+
+    override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+        if let header = view as? UITableViewHeaderFooterView {
+            header.backgroundView?.backgroundColor = UIColor.tohGreyishBrownTwoColor
+            header.textLabel?.backgroundColor = UIColor.clear
+            header.textLabel?.textColor = UIColor.tohTerracotaColor
+        }
+    }
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        cell.backgroundColor = UIColor.tohDullYellowColor
+        cell.tintColor = UIColor.tohTerracotaColor
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

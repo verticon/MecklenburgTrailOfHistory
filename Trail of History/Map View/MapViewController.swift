@@ -88,7 +88,7 @@ class MapViewController: UIViewController {
         super.viewDidLoad()
 
         view.sendSubview(toBack: pageSwiper)
-        pageSwiper.backgroundColor = UIColor.tohTerracotaColor
+        pageSwiper.backgroundColor = UIColor.tohGreyishBrownTwoColor
         pageSwiper.direction = .right
 
         do {

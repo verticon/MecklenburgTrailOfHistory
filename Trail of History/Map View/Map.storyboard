@@ -63,7 +63,7 @@
                             </collectionView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="IgZ-gz-X3w" customClass="PageSwiper" customModule="Trail_of_History" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="20" width="8" height="647"/>
-                                <color key="backgroundColor" red="0.93480329949999996" green="0.50043116080000005" blue="0.12721355570000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" red="0.50196081400000003" green="0.25098040700000002" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="8" id="Ma1-3N-00G"/>
                                 </constraints>

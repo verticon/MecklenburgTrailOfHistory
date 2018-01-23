@@ -23,7 +23,7 @@ class ListViewController : UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        pageSwiper.backgroundColor = UIColor.tohTerracotaColor
+        pageSwiper.backgroundColor = UIColor.tohGreyishBrownTwoColor
         pageSwiper.direction = .left
 
         // Hide the left button. It is only there to keep the title in the same position as on the Map View (which has left and right buttons).

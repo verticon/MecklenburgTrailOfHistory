@@ -32,8 +32,7 @@ class PageSwiper: UIView {
             x += direction == .left ? 2 : -2
             deltaY += 3
         }
-        if let color = backgroundColor { context.setStrokeColor(color.darken().cgColor) }
-        else { context.setStrokeColor(UIColor.black.cgColor) }
+        context.setStrokeColor(UIColor.tohTerracotaColor.cgColor)
         context.setLineWidth(1)
         context.strokePath()
     }
