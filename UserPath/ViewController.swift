@@ -16,6 +16,8 @@ class Marker : NSObject, MKAnnotation {
     static private var counter = 1
 
     var viewObservation: NSKeyValueObservation?
+    var viewPositionUpdateTime: Date?
+    var viewVelocity: Double?
     var viewPosition: CGPoint? {
         didSet {
             let now = Date()
@@ -29,8 +31,6 @@ class Marker : NSObject, MKAnnotation {
             viewPositionUpdateTime = now
         }
     }
-    var viewPositionUpdateTime: Date?
-    var viewVelocity: Double?
 
     var title: String?
     var subtitle: String?
@@ -359,21 +359,10 @@ extension ViewController : MKMapViewDelegate {
             pinView.canShowCallout = false
             pinView.isDraggable = true
 
-            //let gesture = UIPanGestureRecognizer(target: self, action: #selector(pinGesture))
-            //pinView.addGestureRecognizer(gesture)
-
             return pinView
         }
 
         return nil
-    }
-
-    @objc func pinGesture(recognizer: UIGestureRecognizer) {
-        if recognizer.state == .began, let markerView = recognizer.view as? MKAnnotationView, let marker = markerView.annotation as? Marker {
-            print("Pin gesture recognized")
-            recognizer.isEnabled = false
-            mapView.removeAnnotation(marker)
-        }
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
