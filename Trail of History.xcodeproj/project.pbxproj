@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0C01F5131D63E0D1005C6284 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0C01F5121D63E0D1005C6284 /* Main.storyboard */; };
-		0C01F5171D63E163005C6284 /* CustomColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C01F5161D63E163005C6284 /* CustomColors.swift */; };
 		4788A494C604CD94289A6A21 /* Pods_Trail_of_History.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86310C71E7E0CC7ED11182A3 /* Pods_Trail_of_History.framework */; };
 		4D8B764C1C97944300A70B71 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8B764B1C97944300A70B71 /* AppDelegate.swift */; };
 		4D8B76561C97944300A70B71 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B76551C97944300A70B71 /* Assets.xcassets */; };
@@ -26,6 +25,7 @@
 		E14F8F281E044C7F004AB05D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */; };
 		E150ED441D763903006C40AF /* Archer-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = E150ED421D763903006C40AF /* Archer-Medium.otf */; };
 		E15B51481F8D50F6009B8E38 /* Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15B51471F8D50F6009B8E38 /* Path.swift */; };
+		E1731608201E39EF0011CB40 /* CustomColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1731607201E39EE0011CB40 /* CustomColors.swift */; };
 		E180FF38200FD2EB00206C66 /* PageSwiper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E180FF37200FD2EB00206C66 /* PageSwiper.swift */; };
 		E1823A431E1548EC00498A92 /* PointOfInterestCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */; };
 		E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */; };
@@ -73,7 +73,6 @@
 
 /* Begin PBXFileReference section */
 		0C01F5121D63E0D1005C6284 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		0C01F5161D63E163005C6284 /* CustomColors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CustomColors.swift; path = Common/UI/CustomColors.swift; sourceTree = "<group>"; };
 		1294D643F85DA3FD6135D9B1 /* libPods-Trail of HistoryUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trail of HistoryUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D8B76481C97944300A70B71 /* Trail of History.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Trail of History.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D8B764B1C97944300A70B71 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -97,6 +96,7 @@
 		E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Resources/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		E150ED421D763903006C40AF /* Archer-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Archer-Medium.otf"; path = "Resources/Archer-Medium.otf"; sourceTree = "<group>"; };
 		E15B51471F8D50F6009B8E38 /* Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Path.swift; sourceTree = "<group>"; };
+		E1731607201E39EE0011CB40 /* CustomColors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CustomColors.swift; path = Common/CustomColors.swift; sourceTree = "<group>"; };
 		E180FF37200FD2EB00206C66 /* PageSwiper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSwiper.swift; sourceTree = "<group>"; };
 		E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCell.swift; path = "List View/PointOfInterestCell.swift"; sourceTree = "<group>"; };
 		E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PointOfInterestCell.xib; path = "List View/PointOfInterestCell.xib"; sourceTree = "<group>"; };
@@ -176,22 +176,14 @@
 		0C01F5141D63E135005C6284 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				E1731607201E39EE0011CB40 /* CustomColors.swift */,
 				E10395DC201108AB00C01528 /* Firebase.swift */,
 				E180FF37200FD2EB00206C66 /* PageSwiper.swift */,
 				E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */,
 				E127C3272001304B002BA6DE /* Title.swift */,
 				E1F984E21D6F692D00D28411 /* Title.xib */,
-				0C01F5151D63E144005C6284 /* UI */,
 			);
 			name = Common;
-			sourceTree = "<group>";
-		};
-		0C01F5151D63E144005C6284 /* UI */ = {
-			isa = PBXGroup;
-			children = (
-				0C01F5161D63E163005C6284 /* CustomColors.swift */,
-			);
-			name = UI;
 			sourceTree = "<group>";
 		};
 		20D82087A7E17A0C89BC7141 /* Pods */ = {
@@ -496,7 +488,7 @@
 				E10395DD201108AB00C01528 /* Firebase.swift in Sources */,
 				E13F30881E0D53CD009EBF74 /* PointOfInterest.swift in Sources */,
 				E127C3282001304B002BA6DE /* Title.swift in Sources */,
-				0C01F5171D63E163005C6284 /* CustomColors.swift in Sources */,
+				E1731608201E39EF0011CB40 /* CustomColors.swift in Sources */,
 				4D8B764C1C97944300A70B71 /* AppDelegate.swift in Sources */,
 				E1C238461D6B6AFD00A718A8 /* MapViewController.swift in Sources */,
 				E1110D461D83564E00CA5135 /* OptionsViewController.swift in Sources */,
