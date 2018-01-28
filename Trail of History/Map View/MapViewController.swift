@@ -346,7 +346,7 @@ extension MapViewController : MKMapViewDelegate {
                 switch $0 {
                 case .success(let trackingPolyline):
                     trackingPolyline.renderer.userIsOnColor = UIColor.tohTerracotaColor
-                    trackingPolyline.renderer.userIsOffColor = UIColor.tohDullYellowColor
+                    trackingPolyline.renderer.userIsOffColor = UIColor.tohAdobeColor
                     self.userTrackingPolyline = trackingPolyline
                     self.userIsOnAnnotation.title = mapView.userLocation.title
                     mapView.add(trackingPolyline.polyline)

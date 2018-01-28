@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import VerticonsToolbox
 
 class PageViewController: UIViewController {
 
@@ -19,7 +20,7 @@ class PageViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        navigationItem.titleView = UIView.fromNib("Title")
+        navigationItem.titleView = Bundle.main.loadNibNamed("Title", owner: nil)?[0] as? UIView
         navigationItem.titleView?.backgroundColor = UIColor.clear // It was set to an opaque color in the NIB so that the white, text images would be visible in the Interface Builder.
 
         let listStoryboard = UIStoryboard(name: "List", bundle: nil)
