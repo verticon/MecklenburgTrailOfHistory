@@ -67,7 +67,8 @@ class OptionsViewController: UITableViewController {
     }
 
     weak var delegate: OptionsViewControllerDelegate!
-
+    private let alpha: CGFloat = 0.5
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -82,8 +83,10 @@ class OptionsViewController: UITableViewController {
             break
         }
 
-        tableView.backgroundColor = UIColor.tohGreyishBrownTwoColor
-        tableView.tableHeaderView?.backgroundColor = UIColor.tohTerracotaColor
+        view.backgroundColor = UIColor.clear
+
+        //tableView.backgroundColor = UIColor.tohGreyishBrownTwoColor.withAlphaComponent(alpha)
+        tableView.tableHeaderView?.backgroundColor = UIColor.tohTerracotaColor.withAlphaComponent(alpha)
         if let count = tableView.tableHeaderView?.subviews.count, count > 0, let button = tableView.tableHeaderView?.subviews[0] as? UIButton {
             button.setTitleColor(UIColor.tohGreyishBrownTwoColor, for: .normal)
             button.borderColor = UIColor.tohGreyishBrownTwoColor
@@ -91,16 +94,25 @@ class OptionsViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
-        if let header = view as? UITableViewHeaderFooterView {
-            header.backgroundView?.backgroundColor = UIColor.tohGreyishBrownTwoColor
-            header.textLabel?.backgroundColor = UIColor.clear
-            header.textLabel?.textColor = UIColor.tohTerracotaColor
+        if let headerFooter = view as? UITableViewHeaderFooterView {
+            headerFooter.backgroundView?.backgroundColor = UIColor.tohGreyishBrownTwoColor.withAlphaComponent(0.8)
+            headerFooter.textLabel?.backgroundColor = UIColor.clear
+            headerFooter.textLabel?.textColor = UIColor.tohDullYellowColor
         }
     }
     
+    override func tableView(_ tableView: UITableView, willDisplayFooterView view: UIView, forSection section: Int) {
+        if let headerFooter = view as? UITableViewHeaderFooterView {
+            headerFooter.backgroundView?.backgroundColor = UIColor.tohGreyishBrownTwoColor.withAlphaComponent(0.8)
+            headerFooter.textLabel?.backgroundColor = UIColor.clear
+            headerFooter.textLabel?.text = ""
+        }
+    }
+
     override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        cell.backgroundColor = UIColor.tohDullYellowColor
-        cell.tintColor = UIColor.tohTerracotaColor
+        cell.backgroundColor = UIColor.tohDullYellowColor.withAlphaComponent(alpha)
+        cell.textLabel?.backgroundColor = UIColor.clear
+        cell.tintColor = UIColor.tohTerracotaColor.withAlphaComponent(alpha)
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -132,7 +144,9 @@ class OptionsViewController: UITableViewController {
             delegate.zoomToBoth()
         }
         
-        cell.isSelected = false // Don't leave it highlighted
+        // Don't leave it highlighted
+        //cell.isSelected = false  // If the cell is scrolled out of sight (off top or bottom) and then back into view, then its appearence changes back to highlighted???
+        tableView.deselectRow(at: indexPath, animated: false) // This works as desired.
     }
 
     @IBAction func dismiss(_ sender: UIButton) {
@@ -145,7 +159,12 @@ extension OptionsViewController: UIPopoverPresentationControllerDelegate {
     func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
         return .none
     }
-/*
+
+    func prepareForPopoverPresentation(_ popoverPresentationController: UIPopoverPresentationController) {
+        popoverPresentationController.backgroundColor = UIColor.clear
+    }
+
+    /*
     func presentationController(controller: UIPresentationController, viewControllerForAdaptivePresentationStyle style: UIModalPresentationStyle) -> UIViewController? {
         let navigationController = UINavigationController(rootViewController: controller.presentedViewController)
         let doneButton = UIBarButtonItem(title: "Done", style: .Done, target: self, action: #selector(dismiss))
@@ -156,5 +175,5 @@ extension OptionsViewController: UIPopoverPresentationControllerDelegate {
     func dismiss() {
         self.dismissViewControllerAnimated(true, completion: nil)
     }
-*/
+     */
 }
