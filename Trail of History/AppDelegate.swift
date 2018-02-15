@@ -12,6 +12,8 @@ import Firebase
 import FirebaseDatabase
 import VerticonsToolbox
 
+let tohFileName = "TrailOfHistory" // Extension is json
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 

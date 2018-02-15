@@ -102,6 +102,7 @@ class MapViewController: UIViewController {
                 userTrackingButton.widthAnchor.constraint(equalToConstant: 32)])
             
             trackingUser = userTrackingButton.trackingUser
+            mapView.showsCompass = false
         }
         
         do {
@@ -114,14 +115,14 @@ class MapViewController: UIViewController {
             collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)
             collectionView.decelerationRate = UIScrollViewDecelerationRateFast
 
-            poiObserverToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
+            poiObserverToken = PointOfInterest.addObserver(poiObserver)
         }
     
         _ = UserLocation.instance.addListener(self, handlerClassMethod: MapViewController.userLocationEventHandler)
 
         OptionsViewController.initialize(delegate: self)
 
-        //debugConsole = DebugLayer.add(to: view)
+        debugConsole = DebugLayer.add(to: view)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -218,7 +219,6 @@ class MapViewController: UIViewController {
 
             if let new = _currentPoi {
                 //let didZoom = mapView.region.zoomOut(to: new.coordinate)
-                //debugConsole?.update(line: 0, with: "\(didZoom ? "Did Zoom" : "Didn't Zoom")")
 
                 //if poiAnnotations.count > 1, let index = poiAnnotations.index(of: new) {
                 //    collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
@@ -240,18 +240,26 @@ class MapViewController: UIViewController {
 
         switch event {
         case .locationUpdate(let location):
+            collectionView.reloadData()
             mapView.userLocation.subtitle = location.coordinate.description
-            if location.horizontalAccuracy < 20 { userTrackingPolyline?.enableTracking(withTolerence: polylineWidth) }
+            if location.horizontalAccuracy < 20 { userTrackingPolyline?.enableTracking(withTolerence: 2*polylineWidth) }
             if trackingUser { self.mapView.setCenter(location.coordinate, animated: false) }
             
-            if let data = userTrackingPolyline?.userTrackingData { debugConsole?.update(line: 6, with: String(format: "Distance = %.1f meters", data.distance)) }
-            debugConsole?.update(line: 7, with: String(format: "Accuracy = %.1f meters", location.horizontalAccuracy))
         case .headingUpdate(let heading):
             if trackingUser { self.mapView.camera.heading = heading.trueHeading }
         default:
             break
         }
 
+        /*
+        if let tracker = userTrackingPolyline {
+            var state = "???"
+            if let isOn = tracker.userIsOn { state = isOn  ? "On" : "Off" }
+            var distance = "???"
+            if let dist = tracker.userTrackingData?.distance { distance = String(format: "%.1f", dist) }
+            debugConsole?.update(line: 1, with: "\(state), dist = \(distance)")
+        }
+        */
 
         if let isOn = userTrackingPolyline?.userIsOn, isOn { // If the user is on the trail then set the current POI to the next one that he/she will encounter.
 
@@ -296,8 +304,6 @@ class MapViewController: UIViewController {
         guard let userLocation = UserLocation.instance.currentLocation, let userIsOn = userTrackingPolyline?.userIsOn, let trackingData = userTrackingPolyline?.userTrackingData else {
             fatalError("User Location and/or Polyline Tracking data is nil. Huh?! How did the event handler even get called?")
         }
-        
-        debugConsole?.update(line: 5, with: "\(userIsOn ? "On" : "Off"), tol. = \(String(format: "%.1f", userTrackingPolyline?.trackingTolerence ?? 0))")
         
         switch event {
             
@@ -368,21 +374,54 @@ extension MapViewController : MKMapViewDelegate {
             
             let reuseId = "PoiAnnotation"
             var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId)
-            if annotationView == nil  {
-                annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            }
-            
+            if annotationView == nil  { annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseId) }
             annotationView!.image = annotation == currentPoi  ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
+            annotationView!.centerOffset = CGPoint(x: 0, y: -annotationView!.bounds.height / 2);
             return annotationView
         }
         
+        if annotation === userIsOnAnnotation {
+            let reuseID = "UserView"
+            var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseID)
+            if annotationView == nil {
+                annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
+                annotationView!.image = UIImage(named: "UserLocation")
+                annotationView!.bounds.size = CGSize(width: 32, height: 32)
+                annotationView!.centerOffset = CGPoint(x: 0, y: -annotationView!.bounds.height / 2);
+                annotationView!.canShowCallout = true
+            }
+            return annotationView
+        }
+
         if let userLocation = annotation as? MKUserLocation {
             userLocation.subtitle = userLocation.coordinate.description
         }
         
         return nil
     }
+
+    func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
+        views.forEach() { view in
+            guard   let annotation = view.annotation as? MKPointAnnotation,
+                    annotation === userIsOnAnnotation,
+                    userIsOnAnnotationAnimator != nil,
+                    let data = userTrackingPolyline?.userTrackingData
+            else { return }
+            
+            // Animate the user location annotation's position from its
+            // current, actual user postion to the closest point on the polyline.
+            
+            let finalCoordinate = MKCoordinateForMapPoint(data.point)
+            userIsOnAnnotationAnimator!.addAnimations { annotation.coordinate = finalCoordinate }
+            userIsOnAnnotationAnimator!.addCompletion() { position in
+                self.userIsOnAnnotationAnimator = nil
+                annotation.subtitle = finalCoordinate.description
+            }
+            userIsOnAnnotationAnimator!.startAnimation()
+        }
+    }
     
+
     // For the selected POI: 1) Make it the current POI, 2) scroll the card collection, 3) show the detail
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         if let selected = view.annotation as? PoiAnnotation {
@@ -398,20 +437,25 @@ extension MapViewController : MKMapViewDelegate {
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        let renderer : MKOverlayPathRenderer
-        if overlay is MKPolygon {
-            renderer = MKPolygonRenderer(polygon: overlay as! MKPolygon)
+
+        switch overlay {
+
+        case is MKPolygon:
+            let renderer = MKPolygonRenderer(polygon: overlay as! MKPolygon)
             renderer.lineWidth = 2
             renderer.strokeColor = .red
-        }
-        else if let tracker = userTrackingPolyline {
-            renderer = tracker.renderer
-            tracker.renderer.width = polylineWidth
-        }
-        else {
+            return renderer
+            
+        case is MKPolyline:
+            if let tracker = userTrackingPolyline {
+                tracker.renderer.width = polylineWidth
+                return tracker.renderer
+            }
+            fatalError("Have polyline overlay but no user tracker??")
+            
+        default:
             fatalError("Unsupported orvelay: \(overlay)")
         }
-        return renderer
     }
 }
 

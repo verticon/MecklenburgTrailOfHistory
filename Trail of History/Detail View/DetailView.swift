@@ -332,7 +332,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
             movieButton.heightAnchor.constraint(equalToConstant: 32),
             ])
 
-        observerToken = PointOfInterest.addObserver(poiObserver, dispatchQueue: DispatchQueue.main)
+        observerToken = PointOfInterest.addObserver(poiObserver)
     }
 
     required public init?(coder aDecoder: NSCoder) {

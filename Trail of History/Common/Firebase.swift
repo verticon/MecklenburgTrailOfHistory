@@ -114,17 +114,15 @@ class Firebase {
         typealias Observer = (Event, Key, [String: Any]) -> Void
         
         private var observer: Observer
-        private var dispatchQueue: DispatchQueue
         private var reference: DatabaseReference?
         private var childAddedObservationId: UInt = 0
         private var childChangedObservationId: UInt = 0
         private var childRemovedObservationId: UInt = 0
         
-        init(path: String, with: @escaping Observer, dispatchingTo: DispatchQueue) {
+        init(path: String, with: @escaping Observer) {
             _ = connection // Ensure that the setup has occurred
 
             self.observer = with
-            self.dispatchQueue = dispatchingTo
             
             // Note: I tried using a single Observer of the event type .value but each event sent all of the records???
             
@@ -148,7 +146,7 @@ class Firebase {
         }
         
         private func eventHandler(event: Event, key: String, properties: [String: Any]) {
-            dispatchQueue.async { self.observer(event, key, properties) }
+            self.observer(event, key, properties)
         }
     }
     
@@ -158,9 +156,9 @@ class Firebase {
         
         private var observer: DataObserver
 
-        init(path: String, with: @escaping DataObserver, dispatchingTo: DispatchQueue) {
+        init(path: String, with: @escaping DataObserver) {
             self.observer = with
-            super.init(path: path, with: eventHandler, dispatchingTo: dispatchingTo)
+            super.init(path: path, with: eventHandler)
         }
         
         func eventHandler(event: Event, key: String, properties: [String: Any]) {

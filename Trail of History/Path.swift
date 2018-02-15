@@ -15,9 +15,11 @@ enum LoadStatus {
     case error(String)
 }
 
+private let coordinatesPath = "TrailCoordinates"
+
 func LoadPath(mapView: MKMapView, completionHandler: @escaping  (LoadStatus) -> ()) {
     
-    if let jsonFilePath = Bundle.main.path(forResource: "TrailOfHistory", ofType: "json") {
+    if let jsonFilePath = Bundle.main.path(forResource: tohFileName, ofType: "json") {
         FromFile(mapView: mapView, completionHandler: completionHandler, jsonFilePath: jsonFilePath)
     }
     else {
@@ -32,8 +34,9 @@ private func FromFile(mapView: MKMapView, completionHandler: (LoadStatus) -> (),
         let jsonData = try Data(contentsOf: jsonFileUrl)
         let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
         
-        if  let jsonCoordinates = jsonObject as? [String : [String : Double]] {
-            
+        if  let jsonData = jsonObject as? [String : Any],
+            let jsonCoordinates = jsonData[coordinatesPath] as? [String : [String : Double]] {
+
             guard jsonCoordinates.count >= 2 else {
                 completionHandler(.error("\(jsonFilePath) has \(jsonCoordinates.count) coordinates; there need to be at least 2."))
                 return
@@ -45,7 +48,7 @@ private func FromFile(mapView: MKMapView, completionHandler: (LoadStatus) -> (),
             }
             
             let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
-            polyline.title = "Trail Of History"
+            polyline.title = tohFileName
             
             completionHandler(.success(UserTrackingPolyline(polyline: polyline, mapView: mapView)))
         }
@@ -71,9 +74,9 @@ private func FromDatabase(mapView: MKMapView, completionHandler: @escaping  (Loa
             self.mapView = mapView
             self.completionHandler = completionHandler
 
-            observer = Firebase.Observer(path: "TrailCoordinates", with: { event, key, properties in
+            observer = Firebase.Observer(path: coordinatesPath) { event, key, properties in
                 self.coordinates.append(CLLocationCoordinate2D(latitude: properties["latitude"] as! Double, longitude: properties["longitude"] as! Double))
-            }, dispatchingTo: DispatchQueue.main)
+            }
         }
         
         @objc func timerCallback(_ timer: Timer) {

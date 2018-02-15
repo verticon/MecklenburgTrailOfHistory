@@ -14,6 +14,7 @@
 		E10395D0201010CA00C01528 /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10395CF201010CA00C01528 /* ListViewController.swift */; };
 		E10395D2201010F200C01528 /* List.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E10395D1201010F200C01528 /* List.storyboard */; };
 		E10395DD201108AB00C01528 /* Firebase.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10395DC201108AB00C01528 /* Firebase.swift */; };
+		E10BA25D202A67AE00A10C3D /* TrailOfHistory.json in Resources */ = {isa = PBXBuildFile; fileRef = E10BA25C202A67AE00A10C3D /* TrailOfHistory.json */; };
 		E1110D461D83564E00CA5135 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1110D441D83564E00CA5135 /* OptionsViewController.swift */; };
 		E114C71E1D7B0D8500BE3984 /* PointOfInterestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E114C71D1D7B0D8500BE3984 /* PointOfInterestCard.swift */; };
 		E127C3282001304B002BA6DE /* Title.swift in Sources */ = {isa = PBXBuildFile; fileRef = E127C3272001304B002BA6DE /* Title.swift */; };
@@ -86,6 +87,7 @@
 		E10395CF201010CA00C01528 /* ListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ListViewController.swift; path = "List View/ListViewController.swift"; sourceTree = "<group>"; };
 		E10395D1201010F200C01528 /* List.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = List.storyboard; path = "List View/List.storyboard"; sourceTree = "<group>"; };
 		E10395DC201108AB00C01528 /* Firebase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Firebase.swift; path = Common/Firebase.swift; sourceTree = "<group>"; };
+		E10BA25C202A67AE00A10C3D /* TrailOfHistory.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = TrailOfHistory.json; sourceTree = "<group>"; };
 		E1110D441D83564E00CA5135 /* OptionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OptionsViewController.swift; path = "Map View/OptionsViewController.swift"; sourceTree = "<group>"; };
 		E114C71D1D7B0D8500BE3984 /* PointOfInterestCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCard.swift; path = "Map View/PointOfInterestCard.swift"; sourceTree = "<group>"; };
 		E127C3272001304B002BA6DE /* Title.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Title.swift; path = Common/Title.swift; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 		0C01F50A1D63DDCB005C6284 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				E10BA25C202A67AE00A10C3D /* TrailOfHistory.json */,
 				E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */,
 				4D8B76551C97944300A70B71 /* Assets.xcassets */,
 				E150ED421D763903006C40AF /* Archer-Medium.otf */,
@@ -375,6 +378,7 @@
 				E10395D2201010F200C01528 /* List.storyboard in Resources */,
 				E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */,
 				E1C2383F1D6B29E900A718A8 /* PointOfInterestCard.xib in Resources */,
+				E10BA25D202A67AE00A10C3D /* TrailOfHistory.json in Resources */,
 				E1F984E31D6F692D00D28411 /* Title.xib in Resources */,
 				E1DFEBB01D7663B9007359F4 /* DIN Condensed Bold.ttf in Resources */,
 				E1C2383C1D6B28C700A718A8 /* Map.storyboard in Resources */,
