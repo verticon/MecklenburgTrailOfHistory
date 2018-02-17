@@ -76,7 +76,9 @@ class MapViewController: UIViewController {
     private var pathLoaded = false
     private var userTrackingPolyline: UserTrackingPolyline?
     private let polylineWidth = 4.0 // meters
-    
+
+    private var userTrackingButton: UserTrackingButton!
+
     private var userIsOnAnnotation = MKPointAnnotation()
     private var userIsOnAnnotationAnimator: UIViewPropertyAnimator?
     
@@ -92,7 +94,7 @@ class MapViewController: UIViewController {
         pageSwiper.direction = .right
 
         do {
-            let userTrackingButton = UserTrackingButton(mapView: mapView, stateChangeHandler: setUserTracking(_:))
+            userTrackingButton = UserTrackingButton(mapView: mapView, stateChangeHandler: setUserTracking(_:))
             userTrackingButton.translatesAutoresizingMaskIntoConstraints = false
             mapView.addSubview(userTrackingButton)
             NSLayoutConstraint.activate([
@@ -246,7 +248,48 @@ class MapViewController: UIViewController {
             if trackingUser { self.mapView.setCenter(location.coordinate, animated: false) }
             
         case .headingUpdate(let heading):
-            if trackingUser { self.mapView.camera.heading = heading.trueHeading }
+            if trackingUser {
+                self.mapView.camera.heading = heading.trueHeading
+
+                //if let isOn = userTrackingPolyline?.userIsOn, isOn {
+                    
+                    func isInFront(_ poi: PointOfInterest) -> Bool {
+                        guard let angle = poi.angleWithUserHeading else {
+                            print("Warning: could not obtain the user -> poi angle???")
+                            return true // Include everthing
+                        }
+                        
+                        let cone = 90.0
+                        return angle <= cone/2.0 || angle > 360.0 - cone/2 // cone/2 degrees to either side of user's current heading
+                    }
+                    
+                    func compareDistances(_ poi1: PointOfInterest, _ poi2: PointOfInterest) -> Bool {
+                        guard let distance1 = poi1.distanceToUser, let distance2 = poi2.distanceToUser else {
+                            print("Warning: could not obtain the user -> poi distances???")
+                            return false // Don't sort
+                        }
+                        
+                        return distance1 < distance2
+                    }
+                    
+                    func compareAngles(_ poi1: PointOfInterest, _ poi2: PointOfInterest) -> Bool {
+                        guard var angle1 = poi1.angleWithUserHeading, var angle2 = poi2.angleWithUserHeading else {
+                            print("Warning: could not obtain the user -> poi angles???")
+                            return false // Don't sort
+                        }
+                        
+                        // -180 -> 180 instead of 0 -> 360
+                        if angle1 > 180 { angle1 = angle1 - 360 }
+                        if angle2 > 180 { angle2 = angle2 - 360 }
+
+                        return abs(angle1) < abs(angle2)
+                    }
+                    
+                    //currentPoi = poiAnnotations.filter{ isInFront($0.poi) }.sorted{ compareAngles($0.poi, $1.poi) }.first
+                    currentPoi = poiAnnotations.sorted{ compareAngles($0.poi, $1.poi) }.first
+                    if let poi = currentPoi { _ = scroll(collection: collectionView, to: poi) }
+                //}
+            }
         default:
             break
         }
@@ -261,29 +304,6 @@ class MapViewController: UIViewController {
         }
         */
 
-        if let isOn = userTrackingPolyline?.userIsOn, isOn { // If the user is on the trail then set the current POI to the next one that he/she will encounter.
-
-            func poiIsInFrontOfUser(_ poi: PointOfInterest) -> Bool {
-                guard let angle = poi.angleWithUserHeading else {
-                    print("Warning: could not obtain the user -> poi angle???")
-                    return true // Include everthing
-                }
-                
-                let cone = 90.0
-                return angle <= cone/2.0 || angle > 360.0 - cone/2 // cone/2 degrees to either side of user's current heading
-             }
-
-            func poiIsCloserToUser(_ poi1: PointOfInterest, _ poi2: PointOfInterest) -> Bool {
-                guard let distance1 = poi1.distanceToUser, let distance2 = poi2.distanceToUser else {
-                    print("Warning: could not obtain the user -> poi distance???")
-                    return false // Don't sort
-                }
-
-                return distance1 < distance2
-            }
-
-            currentPoi = poiAnnotations.filter{ poiIsInFrontOfUser($0.poi) }.sorted{ poiIsCloserToUser($0.poi, $1.poi) }.first
-        }
     }
 
     private func setUserTracking(_ state: Bool) {
@@ -422,18 +442,14 @@ extension MapViewController : MKMapViewDelegate {
     }
     
 
-    // For the selected POI: 1) Make it the current POI, 2) scroll the card collection, 3) show the detail
+    // For the selected POI: 1) Make it the current POI, 2) scroll the card collection
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         if let selected = view.annotation as? PoiAnnotation {
-            currentPoi = selected
-            if let index = poiAnnotations.index(where: { $0.poi.id == selected.poi.id }) {
-                let path = IndexPath(row: index, section: 0)
-                collectionView.selectItem(at: path, animated: true, scrollPosition: .centeredHorizontally)
-                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) { // Wait for the scrolling to complete.
-                    self.showDetailForCell(at: path)
-                }
-            }
-        }
+            userTrackingButton.trackingUser = false
+           currentPoi = selected
+            mapView.setCenter(currentPoi!.coordinate, animated: true)
+            _ = scroll(collection: collectionView, to: currentPoi!)
+       }
     }
 
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -465,7 +481,6 @@ extension MapViewController : UICollectionViewDelegate {
     // the current POI. We track the scrolling via a timer which will run for the duration of the scrolling.
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        //NSTimer.scheduledTimerWithTimeInterval(0.25, target: self, selector: #selector(currentPoiDetectionTimer), userInfo: nil, repeats: true)
         let timer = Timer(timeInterval: 0.25, target: self, selector: #selector(currentPoiDetectionTimer), userInfo: nil, repeats: true)
         RunLoop.main.add(timer, forMode: RunLoopMode.commonModes)
     }
@@ -473,6 +488,7 @@ extension MapViewController : UICollectionViewDelegate {
     @objc func currentPoiDetectionTimer(_ timer: Timer) {
         let centerPoint = CGPoint(x: collectionView.frame.width/2, y: collectionView.frame.height/2)
         if let indexOfCenterCell = self.collectionView.indexPathForItem(at: CGPoint(x: centerPoint.x + self.collectionView.contentOffset.x, y: centerPoint.y + self.collectionView.contentOffset.y)) {
+            userTrackingButton.trackingUser = false
             currentPoi = poiAnnotations[indexOfCenterCell.item]
             mapView.setCenter(currentPoi!.coordinate, animated: true)
          }
@@ -558,6 +574,8 @@ extension MapViewController : OptionsViewControllerDelegate {
     }
 
     func zoomToTrail() {
+        userTrackingButton.trackingUser = false
+
         if let tracker = userTrackingPolyline {
             mapView.region = 1.25 * tracker.polyline.boundingRegion
         }
@@ -573,12 +591,16 @@ extension MapViewController : OptionsViewControllerDelegate {
     }
 
     func zoomToUser() {
+        userTrackingButton.trackingUser = false
+        
         let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         let userRect = makeRect(center: mapView.userLocation.coordinate, span: span)
         mapView.region = MKCoordinateRegionForMapRect(userRect)
     }
 
     func zoomToBoth() {
+        userTrackingButton.trackingUser = false
+        
         zoomToTrail()
         if !mapView.isUserLocationVisible {
             let trailRect = makeRect(center: mapView.region.center, span: mapView.region.span)
@@ -602,6 +624,14 @@ extension MapViewController { // Utility Methods
             }
         }
         return centermost
+    }
+    
+    func scroll(collection: UICollectionView, to: PoiAnnotation) -> Bool {
+        guard let index = poiAnnotations.index(where: { $0.poi.id == to.poi.id }) else { return false }
+        
+        let path = IndexPath(row: index, section: 0)
+        collectionView.selectItem(at: path, animated: true, scrollPosition: .centeredHorizontally)
+        return true
     }
 }
 
