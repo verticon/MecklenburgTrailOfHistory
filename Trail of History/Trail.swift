@@ -17,7 +17,7 @@ enum LoadStatus {
 
 private let coordinatesPath = "TrailCoordinates"
 
-func LoadPath(mapView: MKMapView, completionHandler: @escaping  (LoadStatus) -> ()) {
+func LoadTrail(mapView: MKMapView, completionHandler: @escaping  (LoadStatus) -> ()) {
     
     if let jsonFilePath = Bundle.main.path(forResource: tohFileName, ofType: "json") {
         FromFile(mapView: mapView, completionHandler: completionHandler, jsonFilePath: jsonFilePath)

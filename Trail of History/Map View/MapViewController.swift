@@ -173,7 +173,7 @@ class MapViewController: UIViewController {
             poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.latitude > $1.poi.location.coordinate.latitude } // Northmost first
 
             mapView.addAnnotation(annotation)
-            currentPoi = annotation // TODO: Add a comment about why we do this each time. Something doesn't work properly if we choose only one, say the first one.
+            if currentPoi == nil { currentPoi = annotation }// TODO: Add a comment about why we do this each time. Something doesn't work properly if we choose only one, say the first one.
 
         case .updated:
             if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
@@ -195,6 +195,7 @@ class MapViewController: UIViewController {
         }
 
         collectionView.reloadData()
+        if currentPoi != nil { scroll(collection: collectionView, to: currentPoi!) }// TODO: Add a comment about why we do this each time. Something doesn't work properly if we choose only one, say the first one.
     }
 
     private var _currentPoi: PoiAnnotation?
@@ -368,7 +369,7 @@ extension MapViewController : MKMapViewDelegate {
 
     func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
         if !pathLoaded {
-            LoadPath(mapView: mapView) {
+            LoadTrail(mapView: mapView) {
                 switch $0 {
                 case .success(let trackingPolyline):
                     trackingPolyline.renderer.userIsOnColor = UIColor.tohTerracotaColor
@@ -490,6 +491,7 @@ extension MapViewController : UICollectionViewDelegate {
         if let indexOfCenterCell = self.collectionView.indexPathForItem(at: CGPoint(x: centerPoint.x + self.collectionView.contentOffset.x, y: centerPoint.y + self.collectionView.contentOffset.y)) {
             userTrackingButton.trackingUser = false
             currentPoi = poiAnnotations[indexOfCenterCell.item]
+            // TODO: Conside panning the map in correspondence to the scrolling of the collection.
             mapView.setCenter(currentPoi!.coordinate, animated: true)
          }
 
