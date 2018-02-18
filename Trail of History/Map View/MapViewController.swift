@@ -195,7 +195,7 @@ class MapViewController: UIViewController {
         }
 
         collectionView.reloadData()
-        if currentPoi != nil { scroll(collection: collectionView, to: currentPoi!) }// TODO: Add a comment about why we do this each time. Something doesn't work properly if we choose only one, say the first one.
+        if currentPoi != nil { _ = scroll(collection: collectionView, to: currentPoi!) }// TODO: Add a comment about why we do this each time. Something doesn't work properly if we choose only one, say the first one.
     }
 
     private var _currentPoi: PoiAnnotation?

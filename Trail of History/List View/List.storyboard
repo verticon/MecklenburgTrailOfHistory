@@ -55,7 +55,7 @@
                     </view>
                     <navigationItem key="navigationItem" title="Trail of History" id="PF6-ft-K2Z">
                         <barButtonItem key="leftBarButtonItem" title="Item" id="xp0-lq-87S"/>
-                        <barButtonItem key="rightBarButtonItem" title="Segue to Map" image="map" id="DEL-Cj-zc9">
+                        <barButtonItem key="rightBarButtonItem" image="map" id="DEL-Cj-zc9">
                             <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             <connections>
                                 <segue destination="hHc-sR-avr" kind="show" identifier="List to Map" id="cQU-JL-AGZ"/>
