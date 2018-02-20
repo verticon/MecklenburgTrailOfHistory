@@ -75,8 +75,6 @@ class Firebase {
                         self.connectionState = .connected
                         self.broadcast(.established)
                    } else {
-                        // TODO: It would be nice to only bother the user with an alert if we cannot connect and there is no locally cached data.
-                        // But when I tried to query Firebase under conditions of no connection and no local data my callback did not execute?
                         self.connectionState = .disconnected
                         self.broadcast(.failed)
                     }

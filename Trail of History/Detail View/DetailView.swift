@@ -203,7 +203,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
         controller.transitionController = TransitionController(targetController: controller, initiatingFrame: startingFrom.offsetBy(dx: 0, dy: barHeight), imageFrame: detailView.imageViewFrame(), image: poi.image)
 
-        controller.modalPresentationStyle = .custom // TODO: reconsider the effect of this
+        controller.modalPresentationStyle = .custom
         presenter.present(controller, animated: true, completion: nil)
     }
     
@@ -286,23 +286,6 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         learnMoreButton.backgroundColor = .tohGreyishBrownTwoColor
         addSubview(learnMoreButton)
 
-        // TODO: Improve the shadow
-        /*
-        let shadowView = UIView(frame: frame)
-        let radius: CGFloat = shadowView.frame.width / 2.0 //change it to .height if you need spread for height
-        let shadowPath = UIBezierPath(rect: CGRect(x: 0, y: 0, width: 2.1 * radius, height: shadowView.frame.height))
-        //Change 2.1 to amount of spread you need and for height replace the code for height
-        shadowView.layer.cornerRadius = 2
-        shadowView.layer.shadowColor = UIColor.black.cgColor
-        shadowView.layer.shadowOffset = CGSize(width: 0.5, height: 0.4)  //Here you control x and y
-        shadowView.layer.shadowOpacity = 0.5
-        shadowView.layer.shadowRadius = 5.0 // This controls the blur
-        shadowView.layer.masksToBounds =  false
-        shadowView.layer.shadowPath = shadowPath.cgPath
-        self.insertSubview(shadowView, at: 0)
-        */
-
-
         NSLayoutConstraint.activate([
             // TODO: Understand why it is necessary to contrain the detail view itself (the first 4 constraints)
             self.topAnchor.constraint(equalTo: controller.view.topAnchor, constant: barHeight + inset),
@@ -367,6 +350,12 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         let limit = detailViewFrame().size.height / 2
         scrollViewHeightConstraint.constant = height > limit ? limit : height
         super.layoutSubviews()
+ 
+        let lineHeight = descriptionTextView.font!.lineHeight
+        let totalHeight = descriptionTextView.bounds.height
+        let remainder = totalHeight.truncatingRemainder(dividingBy: lineHeight)
+        descriptionTextView.contentInset.top = lineHeight
+        descriptionTextView.setContentOffset(CGPoint(x: 0, y: -remainder/2), animated: false)
     }
 
     private func update(using poi: PointOfInterest) {

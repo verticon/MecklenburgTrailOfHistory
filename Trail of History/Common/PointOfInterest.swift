@@ -11,7 +11,6 @@ import Firebase
 import CoreLocation
 import VerticonsToolbox
 
-// TODO: More testing of realtime response to database updates.
 final class PointOfInterest : Equatable, Encoding {
 
     // **********************************************************************************************************************
@@ -123,10 +122,6 @@ final class PointOfInterest : Equatable, Encoding {
     var image: UIImage!
 
     private let imageUrl: URL
-
-    // TODO: How are the POIs views updating their distance to user?
-    //private weak var observer: Firebase.Observer?
-    //self.observer = observer // Inform the observer of location updates
 
     public init?(_ properties: Properties?) {
         guard

@@ -29,7 +29,7 @@ class ListViewController : UIViewController {
         // Hide the left button. It is only there to keep the title in the same position as on the Map View (which has left and right buttons).
         navigationItem.leftBarButtonItem?.tintColor = UIColor.tohGreyishBrownTwoColor // navigationController?.navigationBar.barTintColor
         navigationItem.leftBarButtonItem?.isEnabled = false
-        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor // TODO: We should be able to access the TOH custom colors in the Interface Builder
+        navigationItem.rightBarButtonItem?.tintColor = UIColor.tohTerracotaColor
 
         let poiCellNib: UINib? = UINib(nibName: "PointOfInterestCell", bundle: nil)
         collectionView?.register(poiCellNib, forCellWithReuseIdentifier: poiCellReuseIdentifier)
