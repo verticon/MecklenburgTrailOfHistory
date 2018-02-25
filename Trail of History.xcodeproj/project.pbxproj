@@ -17,8 +17,6 @@
 		E1110D461D83564E00CA5135 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1110D441D83564E00CA5135 /* OptionsViewController.swift */; };
 		E114C71E1D7B0D8500BE3984 /* PointOfInterestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E114C71D1D7B0D8500BE3984 /* PointOfInterestCard.swift */; };
 		E127C3282001304B002BA6DE /* Title.swift in Sources */ = {isa = PBXBuildFile; fileRef = E127C3272001304B002BA6DE /* Title.swift */; };
-		E127C32B20025037002BA6DE /* VerticonsToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E127C32A20025037002BA6DE /* VerticonsToolbox.framework */; };
-		E127C32C20025037002BA6DE /* VerticonsToolbox.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E127C32A20025037002BA6DE /* VerticonsToolbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E1377F4B1F62E73600C95F39 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1377F491F62E73600C95F39 /* PageViewController.swift */; };
 		E139E73B1D9BE6FA0057F20D /* CardCollectionLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = E139E73A1D9BE6FA0057F20D /* CardCollectionLayout.swift */; };
 		E13F30881E0D53CD009EBF74 /* PointOfInterest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */; };
@@ -64,7 +62,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E127C32C20025037002BA6DE /* VerticonsToolbox.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -89,7 +86,6 @@
 		E1110D441D83564E00CA5135 /* OptionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OptionsViewController.swift; path = "Map View/OptionsViewController.swift"; sourceTree = "<group>"; };
 		E114C71D1D7B0D8500BE3984 /* PointOfInterestCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCard.swift; path = "Map View/PointOfInterestCard.swift"; sourceTree = "<group>"; };
 		E127C3272001304B002BA6DE /* Title.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Title.swift; path = Common/Title.swift; sourceTree = "<group>"; };
-		E127C32A20025037002BA6DE /* VerticonsToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = VerticonsToolbox.framework; sourceTree = "<group>"; };
 		E1377F491F62E73600C95F39 /* PageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 		E139E73A1D9BE6FA0057F20D /* CardCollectionLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CardCollectionLayout.swift; path = "Map View/CardCollectionLayout.swift"; sourceTree = "<group>"; };
 		E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterest.swift; path = Common/PointOfInterest.swift; sourceTree = "<group>"; };
@@ -117,7 +113,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E127C32B20025037002BA6DE /* VerticonsToolbox.framework in Frameworks */,
 				E1C238661D6C9EF900A718A8 /* MapKit.framework in Frameworks */,
 				4788A494C604CD94289A6A21 /* Pods_Trail_of_History.framework in Frameworks */,
 			);
@@ -198,7 +193,6 @@
 		4D8B763F1C97944300A70B71 = {
 			isa = PBXGroup;
 			children = (
-				E127C32A20025037002BA6DE /* VerticonsToolbox.framework */,
 				4D8B764A1C97944300A70B71 /* Trail of History */,
 				4D8B76491C97944300A70B71 /* Products */,
 				20D82087A7E17A0C89BC7141 /* Pods */,
@@ -409,6 +403,7 @@
 				"${SRCROOT}/Pods/Target Support Files/Pods-Trail of History/Pods-Trail of History-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
 				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/VerticonsToolbox/VerticonsToolbox.framework",
 				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
 				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
 			);
@@ -416,6 +411,7 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/VerticonsToolbox.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
 			);
