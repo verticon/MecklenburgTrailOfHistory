@@ -140,6 +140,7 @@ extension ListViewController : UICollectionViewDelegate {
 
 extension ListViewController : UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: CGFloat(UIScreen.main.bounds.width), height: CGFloat(120))
+        let barHeight = navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
+        return CGSize(width: CGFloat(UIScreen.main.bounds.width), height: CGFloat((UIScreen.main.bounds.height - barHeight)/4))
     }
 }

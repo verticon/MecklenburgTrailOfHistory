@@ -115,8 +115,6 @@ class MapViewController: UIViewController {
             let poiCardNib = UINib(nibName: "PointOfInterestCard", bundle: nil)
             collectionView.register(poiCardNib, forCellWithReuseIdentifier: poiCardReuseIdentifier)
             collectionView.decelerationRate = UIScrollViewDecelerationRateFast
-
-            poiObserverToken = PointOfInterest.addObserver(poiObserver)
         }
     
         _ = UserLocation.instance.addListener(self, handlerClassMethod: MapViewController.userLocationEventHandler)
@@ -172,7 +170,10 @@ class MapViewController: UIViewController {
             poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.latitude > $1.poi.location.coordinate.latitude } // Northmost first
 
             mapView.addAnnotation(annotation)
-            if currentPoi == nil { currentPoi = annotation }// TODO: Add a comment about why we do this each time. Something doesn't work properly if we choose only one, say the first one.
+            if currentPoi == nil {
+                currentPoi = annotation
+                mapView.setCenter(currentPoi!.coordinate, animated: false)
+            }
 
         case .updated:
             if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
@@ -204,9 +205,9 @@ class MapViewController: UIViewController {
         }
         set {
 
-            func setImagesFor(annotation: PoiAnnotation, isCurrent: Bool) {
-                mapView.view(for: annotation)?.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
-                if let index = poiAnnotations.index(where: { $0.poi.id == annotation.poi.id }) {
+            func setImages(for: PoiAnnotation, isCurrent: Bool) {
+                mapView.view(for: `for`)?.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
+                if let index = poiAnnotations.index(where: { $0.poi.id == `for`.poi.id }) {
                     (collectionView.cellForItem(at: IndexPath(item: index, section: 0)) as? PointOfInterestCard)?.imageView.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
                 }
             }
@@ -214,7 +215,7 @@ class MapViewController: UIViewController {
             guard newValue != _currentPoi else { return }
 
             if let old = _currentPoi {
-                setImagesFor(annotation: old, isCurrent: false)
+                setImages(for: old, isCurrent: false)
             }
 
             _currentPoi = newValue
@@ -226,7 +227,7 @@ class MapViewController: UIViewController {
                 //    collectionView.scrollToItem(at: IndexPath(item: index, section: 0), at: .centeredHorizontally, animated: true)
                 //}
 
-                setImagesFor(annotation: new, isCurrent: true)
+                setImages(for: new, isCurrent: true)
             }
         }
     }
@@ -285,7 +286,6 @@ class MapViewController: UIViewController {
                         return abs(angle1) < abs(angle2)
                     }
                     
-                    //currentPoi = poiAnnotations.filter{ isInFront($0.poi) }.sorted{ compareAngles($0.poi, $1.poi) }.first
                     currentPoi = poiAnnotations.sorted{ compareAngles($0.poi, $1.poi) }.first
                     if let poi = currentPoi { _ = scroll(collection: collectionView, to: poi) }
                 //}
@@ -368,6 +368,8 @@ extension MapViewController : MKMapViewDelegate {
 
     func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
         if !pathLoaded {
+            pathLoaded = true
+
             LoadTrail(mapView: mapView) {
                 switch $0 {
                 case .success(let trackingPolyline):
@@ -377,14 +379,15 @@ extension MapViewController : MKMapViewDelegate {
                     self.userIsOnAnnotation.title = mapView.userLocation.title
                     mapView.add(trackingPolyline.polyline)
                     _ = trackingPolyline.addListener(self, handlerClassMethod: MapViewController.trackngPolylineEventHandler)
+  
                     self.zoomToTrail()
+
+                    self.poiObserverToken = PointOfInterest.addObserver(self.poiObserver)
 
                 case .error(let error):
                     alertUser(title: "\(applicationName) Error", body: "The map data needed to plot the trail of history could not be obtained. Reason: \(error)")
                 }
             }
-            zoomToTrail()
-            pathLoaded = true
         }
     }
 
