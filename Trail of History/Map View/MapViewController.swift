@@ -201,11 +201,14 @@ class MapViewController: UIViewController {
         case .added:
             let annotation = PoiAnnotation(poi: poi)
             poiAnnotations.append(annotation)
-            //poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.longitude < $1.poi.location.coordinate.longitude } // Westmost first
+
             poiAnnotations = poiAnnotations.sorted { $0.poi.location.coordinate.latitude > $1.poi.location.coordinate.latitude } // Northmost first
 
             mapView.addAnnotation(annotation)
-            if currentPoi == nil {
+
+            // The Captain Jack busy image collapses to the center when it is removed.
+            // Make Captain Jack the initial, current POI so that it is the point whereto the busy image collapses.
+            if annotation.poi.name == "Captain Jack" {
                 currentPoi = annotation
                 mapView.setCenter(currentPoi!.coordinate, animated: false)
             }
