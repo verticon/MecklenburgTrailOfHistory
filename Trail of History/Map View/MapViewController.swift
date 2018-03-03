@@ -62,6 +62,9 @@ class MapViewController: UIViewController {
 
     var pageViewController: PageViewController?
 
+    private var busyIndicator: UIActivityIndicatorView!
+    private var busyImage: UIImageView!
+
     @IBOutlet weak var pageSwiper: PageSwiper!
 
     @IBOutlet fileprivate weak var mapView: MKMapView!
@@ -72,7 +75,7 @@ class MapViewController: UIViewController {
     @IBOutlet fileprivate weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
 
-    private var pathLoaded = false
+    private var trailLoaded = false
     private var userTrackingPolyline: UserTrackingPolyline?
     private let polylineWidth = 4.0 // meters
 
@@ -88,6 +91,8 @@ class MapViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        startBusy()
+
         view.sendSubview(toBack: pageSwiper)
         pageSwiper.backgroundColor = UIColor.tohGreyishBrownTwoColor
         pageSwiper.direction = .right
@@ -100,7 +105,8 @@ class MapViewController: UIViewController {
                 userTrackingButton.topAnchor.constraint(equalTo: mapView.topAnchor, constant: 32),
                 userTrackingButton.leftAnchor.constraint(equalTo: mapView.leftAnchor, constant: 32),
                 userTrackingButton.heightAnchor.constraint(equalToConstant: 32),
-                userTrackingButton.widthAnchor.constraint(equalToConstant: 32)])
+                userTrackingButton.widthAnchor.constraint(equalToConstant: 32)
+            ])
             
             trackingUser = userTrackingButton.trackingUser
             mapView.showsCompass = false
@@ -119,9 +125,38 @@ class MapViewController: UIViewController {
     
         _ = UserLocation.instance.addListener(self, handlerClassMethod: MapViewController.userLocationEventHandler)
 
-        OptionsViewController.initialize(delegate: self)
+        //debugConsole = DebugLayer.add(to: view)
+    }
 
-        debugConsole = DebugLayer.add(to: view)
+    private func startBusy() {
+        busyImage = UIImageView(image: #imageLiteral(resourceName: "CaptainJack"))
+        busyImage.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(busyImage)
+        NSLayoutConstraint.activate([
+            busyImage.topAnchor.constraint(equalTo: view.topAnchor),
+            busyImage.leftAnchor.constraint(equalTo: view.leftAnchor),
+            busyImage.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            busyImage.rightAnchor.constraint(equalTo: view.rightAnchor)
+            ])
+        
+        busyIndicator = UIActivityIndicatorView()
+        busyIndicator.activityIndicatorViewStyle = .whiteLarge
+        busyIndicator.color = UIColor.tohTerracotaColor
+        busyIndicator.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(busyIndicator)
+        NSLayoutConstraint.activate([
+            busyIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            busyIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            ])
+        busyIndicator.hidesWhenStopped = true
+
+        busyIndicator.startAnimating()
+    }
+
+    private func stopBusy() {
+        busyIndicator.stopAnimating()
+        let animation = { self.busyImage.bounds.size = CGSize(width: 0, height: 0) }
+        UIView.animate(withDuration: 1, animations: animation) { _ in self.busyImage.removeFromSuperview() }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -294,15 +329,15 @@ class MapViewController: UIViewController {
             break
         }
 
-        /*
-        if let tracker = userTrackingPolyline {
+
+        if let console = debugConsole, let tracker = userTrackingPolyline {
             var state = "???"
             if let isOn = tracker.userIsOn { state = isOn  ? "On" : "Off" }
             var distance = "???"
             if let dist = tracker.userTrackingData?.distance { distance = String(format: "%.1f", dist) }
-            debugConsole?.update(line: 1, with: "\(state), dist = \(distance)")
+            console.update(line: 1, with: "\(state), dist = \(distance)")
         }
-        */
+
 
     }
 
@@ -366,9 +401,13 @@ class MapViewController: UIViewController {
 
 extension MapViewController : MKMapViewDelegate {
 
-    func mapViewDidFinishLoadingMap(_ mapView: MKMapView) {
-        if !pathLoaded {
-            pathLoaded = true
+    func mapViewDidFinishRenderingMap(_ mapView: MKMapView, fullyRendered: Bool) {
+        let mapType = OptionsViewController.getMapType()
+        if mapView.mapType != mapType {
+            mapView.mapType = mapType // Results in a render
+        }
+        else if !trailLoaded {
+            trailLoaded = true
 
             LoadTrail(mapView: mapView) {
                 switch $0 {
@@ -379,15 +418,17 @@ extension MapViewController : MKMapViewDelegate {
                     self.userIsOnAnnotation.title = mapView.userLocation.title
                     mapView.add(trackingPolyline.polyline)
                     _ = trackingPolyline.addListener(self, handlerClassMethod: MapViewController.trackngPolylineEventHandler)
-  
-                    self.zoomToTrail()
-
-                    self.poiObserverToken = PointOfInterest.addObserver(self.poiObserver)
-
+                    
                 case .error(let error):
                     alertUser(title: "\(applicationName) Error", body: "The map data needed to plot the trail of history could not be obtained. Reason: \(error)")
                 }
+                
+                self.zoomToTrail() // Results in a render
+                self.poiObserverToken = PointOfInterest.addObserver(self.poiObserver)
             }
+        }
+        else {
+            self.stopBusy()
         }
     }
 
@@ -597,7 +638,7 @@ extension MapViewController : OptionsViewControllerDelegate {
     func zoomToUser() {
         userTrackingButton.trackingUser = false
         
-        let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        let span = MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
         let userRect = makeRect(center: mapView.userLocation.coordinate, span: span)
         mapView.region = MKCoordinateRegionForMapRect(userRect)
     }

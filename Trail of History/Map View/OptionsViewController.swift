@@ -58,12 +58,11 @@ class OptionsViewController: UITableViewController {
         case callouts
     }
 
-    static func initialize(delegate: OptionsViewControllerDelegate) {
-        let userDefaults = UserDefaults.standard
-        
-        if let mapTypeName = userDefaults.string(forKey: UserDefaultsKey.mapType.rawValue), let mapType = CellIdentifier(rawValue: mapTypeName)?.mapType {
-            delegate.mapType = mapType
-        }
+    static func getMapType() -> MKMapType {
+        guard   let mapTypeName = UserDefaults.standard.string(forKey: UserDefaultsKey.mapType.rawValue),
+                let mapType = CellIdentifier(rawValue: mapTypeName)?.mapType else { return MKMapType.standard }
+
+        return mapType
     }
 
     weak var delegate: OptionsViewControllerDelegate!
