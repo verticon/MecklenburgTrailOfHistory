@@ -85,7 +85,6 @@
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Trail of History" id="ugj-J8-1UX">
                         <barButtonItem key="leftBarButtonItem" image="DropDown" id="NV8-Rb-mmg" userLabel="Show Options">
-                            <inset key="imageInsets" minX="0.0" minY="16" maxX="2" maxY="0.0"/>
                             <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             <connections>
                                 <segue destination="cnU-hy-0dD" kind="popoverPresentation" identifier="Show Options" popoverAnchorBarButtonItem="NV8-Rb-mmg" id="gxE-pU-u7X">
@@ -280,7 +279,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="DropDown" width="16" height="12"/>
+        <image name="DropDown" width="24" height="18"/>
         <image name="list" width="22" height="22"/>
     </resources>
 </document>
