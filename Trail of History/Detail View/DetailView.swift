@@ -417,13 +417,4 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         let size = imageViewSize()
         return CGRect(x: frame.origin.x, y: frame.origin.y, width: size.width, height: size.height)
     }
-    
-    private func describe(view: UIView, indent: String) {
-        func describe(_ view: UIView, _ indent: String) {
-            print("\(indent)\(view)")
-            view.subviews.forEach() { describe($0, indent + "\t") }
-        }
-        print("\n")
-        describe(view, indent)
-    }
 }
