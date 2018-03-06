@@ -19,17 +19,18 @@ final class PointOfInterest : Equatable, Encoding {
 
     static func == (lhs: PointOfInterest, rhs: PointOfInterest) -> Bool { return lhs.id == rhs.id }
 
-    typealias FirebaseObserver = Firebase.DataObserver<PointOfInterest>
-    typealias ObserverToken = Any
+    typealias ListenerToken = Any
 
-    // Points of Interest are obtained via observers. Observwers will receive the
-    // currently existing POIs and will be informed of additions, updates, or removals.
     private class Token {
-        var observer: FirebaseObserver?
-        init(observer: FirebaseObserver?) { self.observer = observer }
+        var observer: Firebase.TypeObserver<PointOfInterest>?
+        init(observer: Firebase.TypeObserver<PointOfInterest>?) { self.observer = observer }
     }
 
-    static func addObserver(_ observer: @escaping FirebaseObserver.DataObserver) -> ObserverToken {
+    // Points of Interest are obtained via listener. Observers will receive the
+    // currently existing POIs and will be informed of additions, updates, or removals.
+    // It is possible for the listener to be called before addListener returns
+    static func addListener(_ listener: @escaping Firebase.TypeObserver<PointOfInterest>.TypeListener) -> ListenerToken {
+
         let poiPath = "PointsOfInterest"
         
         func load(from: String) {
@@ -42,7 +43,7 @@ final class PointOfInterest : Equatable, Encoding {
                 if  let jsonData = jsonObject as? [String : Any],
                     let pointsOfInterest = jsonData[poiPath] as? [String : Properties] {
                     for (key, properties) in pointsOfInterest {
-                        if let poi = PointOfInterest(properties) { poi.finish(event: .added, key: key, observer: observer) }
+                        if let poi = PointOfInterest(properties) { poi.finish(event: .added, key: key, listener: listener) }
                         else { print("Invalid POI properties: \(properties)") }
                     }
                 }
@@ -55,17 +56,14 @@ final class PointOfInterest : Equatable, Encoding {
             }
         }
 
-        if let jsonFilePath = Bundle.main.path(forResource: tohFileName, ofType: "json") {
-            load(from: jsonFilePath)
-            return Token(observer: nil)
-        }
-        else {
-            return Token(observer: Firebase.DataObserver(path: poiPath, with: observer))
-        }
+        var observer: Firebase.TypeObserver<PointOfInterest>? = nil
+        if let jsonFilePath = Bundle.main.path(forResource: tohFileName, ofType: "json") { load(from: jsonFilePath) }
+        else { observer = Firebase.TypeObserver(path: poiPath, with: listener) }
+        return Token(observer: observer)
     }
     
 
-    static func removeObserver(token: ObserverToken) -> Bool {
+    static func removeListener(token: ListenerToken) -> Bool {
         if let token = token as? Token {
             token.observer?.cancel()
             token.observer = nil
@@ -145,7 +143,7 @@ final class PointOfInterest : Equatable, Encoding {
         location = CLLocation(latitude: latitude, longitude: longitude)
     }
     
-    func finish(event: FirebaseObserver.Event, key: FirebaseObserver.Key, observer: @escaping FirebaseObserver.DataObserver) {
+    func finish(event: Firebase.TypeObserver<PointOfInterest>.Event, key: Firebase.TypeObserver<PointOfInterest>.Key, listener: @escaping Firebase.TypeObserver<PointOfInterest>.TypeListener) {
 
         let imageUrlKey = "url:" + id
         let imageDataKey = "image:" + id
@@ -174,7 +172,7 @@ final class PointOfInterest : Equatable, Encoding {
 
             self.image = image
 
-            DispatchQueue.main.async { observer(event, key, self) }
+            DispatchQueue.main.async { listener(event, key, self) }
         }
         
         DispatchQueue.global().async {

@@ -18,7 +18,7 @@ class ListViewController : UIViewController {
 
     fileprivate let poiCellReuseIdentifier = "PointOfInterestCell"
     fileprivate var pointsOfInterest = [PointOfInterest]()
-    private var observerToken: Any!
+    private var listenerToken: PointOfInterest.ListenerToken!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,7 +34,7 @@ class ListViewController : UIViewController {
         let poiCellNib: UINib? = UINib(nibName: "PointOfInterestCell", bundle: nil)
         collectionView?.register(poiCellNib, forCellWithReuseIdentifier: poiCellReuseIdentifier)
 
-        observerToken = PointOfInterest.addObserver(poiObserver)
+        listenerToken = PointOfInterest.addListener(poiListener)
 
         let doubleTapRecognizer: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(didDoubleTapCollectionView))
         doubleTapRecognizer.numberOfTapsRequired = 2
@@ -70,7 +70,7 @@ class ListViewController : UIViewController {
         }
     }
 
-    func poiObserver(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
+    func poiListener(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
         guard Thread.current.isMainThread else { fatalError("Poi observer not on main thread: \(Thread.current)") }
         switch event {
         case .added:

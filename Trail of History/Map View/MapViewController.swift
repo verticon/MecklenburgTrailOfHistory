@@ -69,7 +69,7 @@ class MapViewController: UIViewController {
 
     @IBOutlet fileprivate weak var mapView: MKMapView!
 
-    private var poiObserverToken: Any!
+    private var listenerToken: PointOfInterest.ListenerToken!
     fileprivate var poiAnnotations = [PoiAnnotation]()
 
     @IBOutlet fileprivate weak var collectionView : UICollectionView!
@@ -194,7 +194,7 @@ class MapViewController: UIViewController {
         }
     }
 
-    func poiObserver(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
+    func poiListener(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
 
         switch event {
 
@@ -429,7 +429,7 @@ extension MapViewController : MKMapViewDelegate {
                 }
                 
                 self.zoomToTrail() // Results in a render
-                self.poiObserverToken = PointOfInterest.addObserver(self.poiObserver)
+                self.listenerToken = PointOfInterest.addListener(self.poiListener)
             }
         }
         else {

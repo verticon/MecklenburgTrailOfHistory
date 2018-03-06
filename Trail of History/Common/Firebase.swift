@@ -11,15 +11,15 @@ import Firebase
 import FirebaseDatabase
 import VerticonsToolbox
 
-// This protocol is used by the Firebase.Observer<Data> class. The data type being observered
-// might need to perform additional initializations before the observer is notified. For example:
+// The Encoding protocol is used by the Firebase.Observer<Type> class. The type being observered
+// might need to perform additional initializations before the listener is notified. For example:
 // network fetches that were not feasable to be performed by the initializer might be needed.
-// Firebase.Observer<Data> makes the data instance responsible for calling the observer. In this
+// Firebase.Observer<Type> makes the data instance responsible for calling the listener. In this
 // way the data type being observed as an oppurtunity to perform those additional initialization
-// step if needed
+// steps if needed.
 protocol Encoding : VerticonsToolbox.Encodable {
     typealias T = Firebase.Observer
-    func finish(event: T.Event, key: T.Key, observer: @escaping (T.Event, T.Key, Self) -> ())
+    func finish(event: T.Event, key: T.Key, listener: @escaping (T.Event, T.Key, Self) -> ())
 }
 
 
@@ -109,18 +109,18 @@ class Firebase {
         }
         
         typealias Key = String
-        typealias Observer = (Event, Key, [String: Any]) -> Void
+        typealias Listener = (Event, Key, [String: Any]) -> Void
         
-        private var observer: Observer
+        private var listener: Listener
         private var reference: DatabaseReference?
         private var childAddedObservationId: UInt = 0
         private var childChangedObservationId: UInt = 0
         private var childRemovedObservationId: UInt = 0
         
-        init(path: String, with: @escaping Observer) {
+        init(path: String, with: @escaping Listener) {
             _ = connection // Ensure that the setup has occurred
 
-            self.observer = with
+            self.listener = with
             
             // Note: I tried using a single Observer of the event type .value but each event sent all of the records???
             
@@ -144,24 +144,24 @@ class Firebase {
         }
         
         private func eventHandler(event: Event, key: String, properties: [String: Any]) {
-            self.observer(event, key, properties)
+            self.listener(event, key, properties)
         }
     }
     
-    class DataObserver<Data:Encoding> : Observer {
+    class TypeObserver<Type:Encoding> : Observer {
         
-        typealias DataObserver = (Event, Key, Data) -> Void
+        typealias TypeListener = (Event, Key, Type) -> Void
         
-        private var observer: DataObserver
+        private var typeListener: TypeListener
 
-        init(path: String, with: @escaping DataObserver) {
-            self.observer = with
+        init(path: String, with: @escaping TypeListener) {
+            self.typeListener = with
             super.init(path: path, with: eventHandler)
         }
         
-        func eventHandler(event: Event, key: String, properties: [String: Any]) {
-            guard let data = Data(properties) else { fatalError("Cannot initialize \(Data.self) using \(properties)") }
-            data.finish(event: event, key: key, observer: observer)
+        private func eventHandler(event: Event, key: String, properties: [String: Any]) {
+            guard let data = Type(properties) else { fatalError("Cannot initialize \(Type.self) using \(properties)") }
+            data.finish(event: event, key: key, listener: typeListener)
         }
     }
 }
