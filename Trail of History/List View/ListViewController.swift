@@ -36,29 +36,7 @@ class ListViewController : UIViewController {
 
         listenerToken = PointOfInterest.addListener(poiListener)
 
-        let doubleTapRecognizer: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(didDoubleTapCollectionView))
-        doubleTapRecognizer.numberOfTapsRequired = 2
-        doubleTapRecognizer.numberOfTouchesRequired = 1
-        doubleTapRecognizer.delaysTouchesBegan = true
-        //collectionView?.addGestureRecognizer(doubleTapRecognizer)
-    }
-
-    @objc func didDoubleTapCollectionView(recognizer: UITapGestureRecognizer) {
-        if recognizer.state == .ended {
-            let doubleTapPoint = recognizer.location(in: collectionView)
-            if  let path = collectionView?.indexPathForItem(at: doubleTapPoint),
-                let doubleTappedCell = collectionView?.cellForItem(at: path) as? PointOfInterestCell,
-                let imageView = doubleTappedCell.backgroundView as? UIImageView {
-                switch imageView.contentMode {
-                case .scaleToFill:
-                    imageView.contentMode = .scaleAspectFit
-                case .scaleAspectFit:
-                    imageView.contentMode = .scaleAspectFill
-                default:
-                    imageView.contentMode = .scaleToFill
-                }
-            }
-        }
+        _ = UserLocation.instance.addListener(self, handlerClassMethod: ListViewController.userLocationEventHandler)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -84,6 +62,14 @@ class ListViewController : UIViewController {
         }
 
         collectionView?.reloadData()
+    }
+
+    private func userLocationEventHandler(event: UserLocationEvent) {
+        
+        switch event {
+        case .locationUpdate: collectionView.reloadData()
+        default: break
+        }
     }
 
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
