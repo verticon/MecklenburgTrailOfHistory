@@ -42,7 +42,7 @@ PODS:
     - nanopb/encode (= 0.3.8)
   - nanopb/decode (0.3.8)
   - nanopb/encode (0.3.8)
-  - VerticonsToolbox (0.0.7)
+  - VerticonsToolbox (0.0.8)
 
 DEPENDENCIES:
   - Firebase/Auth
@@ -61,7 +61,7 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: 390ea358e5a0d0133153806f744662dad933d06b
   leveldb-library: 08cba283675b7ed2d99629a4bc5fd052cd2bb6a5
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
-  VerticonsToolbox: 304d0fc499de3791e9281326a86662548e55599a
+  VerticonsToolbox: 9661c264fb928e6abd8d3a8ada5018d19d951e48
 
 PODFILE CHECKSUM: d259f65408bf8ddbe2c1bf9958bf05eada9eeebd
 

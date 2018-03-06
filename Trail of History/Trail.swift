@@ -79,15 +79,10 @@ private func FromDatabase(mapView: MKMapView, completionHandler: @escaping  (Loa
             }
         }
         
-        @objc func timerCallback(_ timer: Timer) {
-            let currentCount = coordinates.count
-            if currentCount > previousCount { // Are coordinates still coming?
-                previousCount = currentCount
-                return
-            }
-            
+        @objc func detectCompletion(_ timer: Timer) {
+            guard coordinates.count == previousCount else { previousCount = coordinates.count; return }
+           
             // We're done
-            
             observer?.cancel()
             timer.invalidate()
             
@@ -103,8 +98,8 @@ private func FromDatabase(mapView: MKMapView, completionHandler: @escaping  (Loa
     }
 
     // Firebase doesn't give us a way to obtain the count so we resort to a timer to detect that no more is coming.
-    let detector = Loader(mapView: mapView, completionHandler: completionHandler)
-    let timer = Timer(timeInterval: 0.25, target: detector, selector: #selector(Loader.timerCallback(_:)), userInfo: nil, repeats: true)
+    let loader = Loader(mapView: mapView, completionHandler: completionHandler)
+    let timer = Timer(timeInterval: 0.25, target: loader, selector: #selector(Loader.detectCompletion(_:)), userInfo: nil, repeats: true)
     RunLoop.main.add(timer, forMode: RunLoopMode.commonModes)
 }
 

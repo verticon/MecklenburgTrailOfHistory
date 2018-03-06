@@ -20,6 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        print("\(applicationName) started - \(LocalTime.text)")
 
         //_ = Firebase.connection.addListener(self, handlerClassMethod: AppDelegate.firebaseConnectionEventHandler)
 

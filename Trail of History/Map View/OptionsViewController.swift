@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import VerticonsToolbox
 
 protocol OptionsViewControllerDelegate: class {
     var mapType: MKMapType { get set }
@@ -29,6 +30,8 @@ class OptionsViewController: UITableViewController {
         case ZoomToTrail
         case ZoomToUser
         case ZoomToBoth
+
+        case EmailLogFiles
 
         var mapType: MKMapType? {
             get {
@@ -67,7 +70,10 @@ class OptionsViewController: UITableViewController {
 
     weak var delegate: OptionsViewControllerDelegate!
     private let alpha: CGFloat = 0.5
-    
+
+    private var emailAddress: String?
+    private var observer: Firebase.Observer? = nil
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -84,11 +90,15 @@ class OptionsViewController: UITableViewController {
 
         view.backgroundColor = UIColor.clear
 
-        //tableView.backgroundColor = UIColor.tohGreyishBrownTwoColor.withAlphaComponent(alpha)
         tableView.tableHeaderView?.backgroundColor = UIColor.tohTerracotaColor.withAlphaComponent(alpha)
         if let count = tableView.tableHeaderView?.subviews.count, count > 0, let button = tableView.tableHeaderView?.subviews[0] as? UIButton {
             button.setTitleColor(UIColor.tohGreyishBrownTwoColor, for: .normal)
             button.borderColor = UIColor.tohGreyishBrownTwoColor
+        }
+
+        observer = Firebase.Observer(path: "Support") { event, key, properties in
+            self.emailAddress = (properties["emailAddress"] as! String)
+            self.observer?.cancel()
         }
     }
 
@@ -124,7 +134,7 @@ class OptionsViewController: UITableViewController {
         case .Standard: fallthrough
         case .Satellite: fallthrough
         case .Hybrid:
-            if cell.accessoryType == .none { // Only take action if the user taps one other than the one that is currently
+            if cell.accessoryType == .none { // Only take action if the user taps one other than the one that is currently checked
                 // Check the selected cell and uncheck the others.
                 cell.accessoryType = .checkmark
                 for id in [CellIdentifier.Standard, CellIdentifier.Satellite, CellIdentifier.Hybrid] where id != identifier {
@@ -141,11 +151,15 @@ class OptionsViewController: UITableViewController {
             delegate.zoomToUser()
         case .ZoomToBoth:
             delegate.zoomToBoth()
+
+        case .EmailLogFiles:
+            _ = Email.sender.send(to: [emailAddress ?? ""], subject: "\(applicationName) Log Files", message: "", attachments: FileLogger.instance?.package() ?? [:], presenter: self)
         }
         
         // Don't leave it highlighted
         //cell.isSelected = false  // If the cell is scrolled out of sight (off top or bottom) and then back into view, then its appearence changes back to highlighted???
         tableView.deselectRow(at: indexPath, animated: false) // This works as desired.
+        self.dismiss(animated: true, completion: nil)
     }
 
     @IBAction func dismiss(_ sender: UIButton) {

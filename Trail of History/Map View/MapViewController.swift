@@ -423,7 +423,9 @@ extension MapViewController : MKMapViewDelegate {
                     _ = trackingPolyline.addListener(self, handlerClassMethod: MapViewController.trackngPolylineEventHandler)
                     
                 case .error(let error):
-                    alertUser(title: "\(applicationName) Error", body: "The map data needed to plot the trail of history could not be obtained. Reason: \(error)")
+                    let message = "The map data needed to plot the trail of history could not be obtained. Reason: \(error)"
+                    alertUser(title: "\(applicationName) Error", body: message)
+                    print(message)
                 }
                 
                 self.zoomToTrail() // Results in a render
