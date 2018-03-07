@@ -129,6 +129,8 @@ class MapViewController: UIViewController {
     }
 
     private func startBusy() {
+        print("Map View: starting busy")
+
         busyImage = UIImageView(image: #imageLiteral(resourceName: "CaptainJack"))
         busyImage.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(busyImage)
@@ -154,6 +156,8 @@ class MapViewController: UIViewController {
     }
 
     private func stopBusy() {
+        print("Map View: stopping busy")
+
         busyIndicator.stopAnimating()
         let animation = { self.busyImage.bounds.size = CGSize(width: 0, height: 0) }
         UIView.animate(withDuration: 1, animations: animation) { _ in self.busyImage.removeFromSuperview() }
@@ -199,6 +203,8 @@ class MapViewController: UIViewController {
         switch event {
 
         case .added:
+            print("Map View: added \(poi.name)")
+    
             let annotation = PoiAnnotation(poi: poi)
             poiAnnotations.append(annotation)
 
@@ -366,6 +372,7 @@ class MapViewController: UIViewController {
         switch event {
             
         case .userIsOnChanged:
+            print("Map View: User is \(userIsOn ? "on" : "off") trail.")
             userIsOnAnnotationAnimator = UIViewPropertyAnimator(duration: 2, curve: .linear, animations: nil)
             if userIsOn {
                 userIsOnAnnotation.coordinate = userLocation.coordinate

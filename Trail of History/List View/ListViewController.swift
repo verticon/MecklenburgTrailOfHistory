@@ -52,6 +52,7 @@ class ListViewController : UIViewController {
         guard Thread.current.isMainThread else { fatalError("Poi observer not on main thread: \(Thread.current)") }
         switch event {
         case .added:
+            print("List View: added \(poi.name)")
             pointsOfInterest.append(poi)
             pointsOfInterest = pointsOfInterest.sorted { $0.location.coordinate.latitude > $1.location.coordinate.latitude } // northmost first
         case .updated:

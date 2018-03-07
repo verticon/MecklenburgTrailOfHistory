@@ -99,6 +99,7 @@ class OptionsViewController: UITableViewController {
         observer = Firebase.Observer(path: "Support") { event, key, properties in
             self.emailAddress = (properties["emailAddress"] as! String)
             self.observer?.cancel()
+            print("Options View: support email address is \(self.emailAddress ?? "<unknown>")")
         }
     }
 

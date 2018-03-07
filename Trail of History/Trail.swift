@@ -46,6 +46,7 @@ private func FromFile(mapView: MKMapView, completionHandler: (LoadStatus) -> (),
             for (key, value) in jsonCoordinates {
                 coordinates[Int(key)! - 1] = CLLocationCoordinate2D(latitude: value["latitude"]!, longitude: value["longitude"]!)
             }
+            print("Trail: loaded \(coordinates.count) coordinates from \(jsonFilePath)")
             
             let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
             polyline.title = tohFileName
@@ -87,7 +88,8 @@ private func FromDatabase(mapView: MKMapView, completionHandler: @escaping  (Loa
             timer.invalidate()
             
             if coordinates.count > 1 {
-                let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+                print("Trail: loaded \(coordinates.count) coordinates from the database.")
+               let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
                 polyline.title = "Trail Of History"
                 completionHandler(.success(UserTrackingPolyline(polyline: polyline, mapView: mapView)))
             }
