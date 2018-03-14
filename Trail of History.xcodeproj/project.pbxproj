@@ -24,6 +24,7 @@
 		E150ED441D763903006C40AF /* Archer-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = E150ED421D763903006C40AF /* Archer-Medium.otf */; };
 		E15B51481F8D50F6009B8E38 /* Trail.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15B51471F8D50F6009B8E38 /* Trail.swift */; };
 		E1731608201E39EF0011CB40 /* CustomColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1731607201E39EE0011CB40 /* CustomColors.swift */; };
+		E17D99BF20595CAB0069E98B /* Trail.gpx in Resources */ = {isa = PBXBuildFile; fileRef = E17D99BE20595CAB0069E98B /* Trail.gpx */; };
 		E180FF38200FD2EB00206C66 /* PageSwiper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E180FF37200FD2EB00206C66 /* PageSwiper.swift */; };
 		E1823A431E1548EC00498A92 /* PointOfInterestCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */; };
 		E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */; };
@@ -91,8 +92,9 @@
 		E13F30871E0D53CD009EBF74 /* PointOfInterest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterest.swift; path = Common/PointOfInterest.swift; sourceTree = "<group>"; };
 		E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Resources/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		E150ED421D763903006C40AF /* Archer-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Archer-Medium.otf"; path = "Resources/Archer-Medium.otf"; sourceTree = "<group>"; };
-		E15B51471F8D50F6009B8E38 /* Trail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Trail.swift; sourceTree = "<group>"; };
+		E15B51471F8D50F6009B8E38 /* Trail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Trail.swift; path = "Map View/Trail.swift"; sourceTree = "<group>"; };
 		E1731607201E39EE0011CB40 /* CustomColors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CustomColors.swift; path = Common/CustomColors.swift; sourceTree = "<group>"; };
+		E17D99BE20595CAB0069E98B /* Trail.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = Trail.gpx; path = Resources/Trail.gpx; sourceTree = "<group>"; };
 		E180FF37200FD2EB00206C66 /* PageSwiper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSwiper.swift; sourceTree = "<group>"; };
 		E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCell.swift; path = "List View/PointOfInterestCell.swift"; sourceTree = "<group>"; };
 		E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PointOfInterestCell.xib; path = "List View/PointOfInterestCell.xib"; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 		0C01F50A1D63DDCB005C6284 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				E17D99BE20595CAB0069E98B /* Trail.gpx */,
 				E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */,
 				4D8B76551C97944300A70B71 /* Assets.xcassets */,
 				E150ED421D763903006C40AF /* Archer-Medium.otf */,
@@ -369,6 +372,7 @@
 				E10395D2201010F200C01528 /* List.storyboard in Resources */,
 				E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */,
 				E1C2383F1D6B29E900A718A8 /* PointOfInterestCard.xib in Resources */,
+				E17D99BF20595CAB0069E98B /* Trail.gpx in Resources */,
 				E1F984E31D6F692D00D28411 /* Title.xib in Resources */,
 				E1DFEBB01D7663B9007359F4 /* DIN Condensed Bold.ttf in Resources */,
 				E1C2383C1D6B28C700A718A8 /* Map.storyboard in Resources */,
