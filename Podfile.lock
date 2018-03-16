@@ -1,4 +1,6 @@
 PODS:
+  - Firebase (4.9.0):
+    - Firebase/Core (= 4.9.0)
   - Firebase/Auth (4.9.0):
     - Firebase/Core
     - FirebaseAuth (= 4.4.3)
@@ -45,6 +47,7 @@ PODS:
   - VerticonsToolbox (0.0.8)
 
 DEPENDENCIES:
+  - Firebase
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
@@ -63,6 +66,6 @@ SPEC CHECKSUMS:
   nanopb: 5601e6bca2dbf1ed831b519092ec110f66982ca3
   VerticonsToolbox: 9661c264fb928e6abd8d3a8ada5018d19d951e48
 
-PODFILE CHECKSUM: d259f65408bf8ddbe2c1bf9958bf05eada9eeebd
+PODFILE CHECKSUM: 6237fcbba965f669e31afcfc5fd5dcd1e4904b8c
 
 COCOAPODS: 1.4.0

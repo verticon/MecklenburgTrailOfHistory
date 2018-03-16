@@ -11,8 +11,16 @@ target 'Trail of History' do
     pod 'Firebase/Core'
     pod 'Firebase/Database'
     pod 'Firebase/Auth'
-
     pod 'VerticonsToolbox'
+
+    target 'Trail of History Tests' do
+
+        inherit! :search_paths
+        pod 'Firebase'
+        pod 'VerticonsToolbox'
+
+    end
+
 end
 
 target 'UserPath' do
@@ -20,5 +28,6 @@ target 'UserPath' do
     project './UserPath.xcodeproj'
 
     pod 'VerticonsToolbox'
+
 end
 

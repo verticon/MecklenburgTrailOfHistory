@@ -11,6 +11,7 @@
 		4788A494C604CD94289A6A21 /* Pods_Trail_of_History.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86310C71E7E0CC7ED11182A3 /* Pods_Trail_of_History.framework */; };
 		4D8B764C1C97944300A70B71 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8B764B1C97944300A70B71 /* AppDelegate.swift */; };
 		4D8B76561C97944300A70B71 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B76551C97944300A70B71 /* Assets.xcassets */; };
+		D8131ABBE49B03273220BB1D /* Pods_Trail_of_History_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F202D95542273403561C87BC /* Pods_Trail_of_History_Tests.framework */; };
 		E10395D0201010CA00C01528 /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10395CF201010CA00C01528 /* ListViewController.swift */; };
 		E10395D2201010F200C01528 /* List.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E10395D1201010F200C01528 /* List.storyboard */; };
 		E10395DD201108AB00C01528 /* Firebase.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10395DC201108AB00C01528 /* Firebase.swift */; };
@@ -24,13 +25,14 @@
 		E150ED441D763903006C40AF /* Archer-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = E150ED421D763903006C40AF /* Archer-Medium.otf */; };
 		E15B51481F8D50F6009B8E38 /* Trail.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15B51471F8D50F6009B8E38 /* Trail.swift */; };
 		E1731608201E39EF0011CB40 /* CustomColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1731607201E39EE0011CB40 /* CustomColors.swift */; };
-		E17D99BF20595CAB0069E98B /* Trail.gpx in Resources */ = {isa = PBXBuildFile; fileRef = E17D99BE20595CAB0069E98B /* Trail.gpx */; };
+		E17D99BF20595CAB0069E98B /* TrailOfHistory.gpx in Resources */ = {isa = PBXBuildFile; fileRef = E17D99BE20595CAB0069E98B /* TrailOfHistory.gpx */; };
 		E180FF38200FD2EB00206C66 /* PageSwiper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E180FF37200FD2EB00206C66 /* PageSwiper.swift */; };
 		E1823A431E1548EC00498A92 /* PointOfInterestCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */; };
 		E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */; };
 		E1823A481E1550D100498A92 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1823A471E1550D100498A92 /* LaunchScreen.storyboard */; };
 		E1823A4C1E15602F00498A92 /* NavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A4B1E15602F00498A92 /* NavigationController.swift */; };
 		E1823A521E170BE100498A92 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1823A511E170BE100498A92 /* DetailView.swift */; };
+		E18378BE20597A87006BEA14 /* Trail_of_History_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18378BD20597A87006BEA14 /* Trail_of_History_Tests.swift */; };
 		E1C2383C1D6B28C700A718A8 /* Map.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E1C2383B1D6B28C700A718A8 /* Map.storyboard */; };
 		E1C2383F1D6B29E900A718A8 /* PointOfInterestCard.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1C2383D1D6B29E900A718A8 /* PointOfInterestCard.xib */; };
 		E1C238461D6B6AFD00A718A8 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C238451D6B6AFD00A718A8 /* MapViewController.swift */; };
@@ -40,14 +42,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		4D8B76601C97944300A70B71 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D8B76401C97944300A70B71 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 4D8B76471C97944300A70B71;
-			remoteInfo = "Trail of History";
-		};
-		4D8B766B1C97944300A70B71 /* PBXContainerItemProxy */ = {
+		E18378C020597A87006BEA14 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D8B76401C97944300A70B71 /* Project object */;
 			proxyType = 1;
@@ -71,13 +66,12 @@
 
 /* Begin PBXFileReference section */
 		0C01F5121D63E0D1005C6284 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		1137ED282B76BE7C67C5AECB /* Pods-Trail of History Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trail of History Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-Trail of History Tests/Pods-Trail of History Tests.release.xcconfig"; sourceTree = "<group>"; };
 		1294D643F85DA3FD6135D9B1 /* libPods-Trail of HistoryUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trail of HistoryUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D8B76481C97944300A70B71 /* Trail of History.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Trail of History.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D8B764B1C97944300A70B71 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4D8B76551C97944300A70B71 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4D8B765A1C97944300A70B71 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4D8B765F1C97944300A70B71 /* Trail of HistoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Trail of HistoryTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		4D8B766A1C97944300A70B71 /* Trail of HistoryUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Trail of HistoryUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		663E40419345BFAA966D6C06 /* libPods-Trail of HistoryTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Trail of HistoryTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC7F45E7A9B75300AA3E164 /* Pods-Trail of History.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trail of History.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Trail of History/Pods-Trail of History.debug.xcconfig"; sourceTree = "<group>"; };
 		86310C71E7E0CC7ED11182A3 /* Pods_Trail_of_History.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Trail_of_History.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -94,20 +88,25 @@
 		E150ED421D763903006C40AF /* Archer-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Archer-Medium.otf"; path = "Resources/Archer-Medium.otf"; sourceTree = "<group>"; };
 		E15B51471F8D50F6009B8E38 /* Trail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Trail.swift; path = "Map View/Trail.swift"; sourceTree = "<group>"; };
 		E1731607201E39EE0011CB40 /* CustomColors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CustomColors.swift; path = Common/CustomColors.swift; sourceTree = "<group>"; };
-		E17D99BE20595CAB0069E98B /* Trail.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = Trail.gpx; path = Resources/Trail.gpx; sourceTree = "<group>"; };
+		E17D99BE20595CAB0069E98B /* TrailOfHistory.gpx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = TrailOfHistory.gpx; path = Resources/TrailOfHistory.gpx; sourceTree = "<group>"; };
 		E180FF37200FD2EB00206C66 /* PageSwiper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSwiper.swift; sourceTree = "<group>"; };
 		E1823A401E1548EC00498A92 /* PointOfInterestCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PointOfInterestCell.swift; path = "List View/PointOfInterestCell.swift"; sourceTree = "<group>"; };
 		E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PointOfInterestCell.xib; path = "List View/PointOfInterestCell.xib"; sourceTree = "<group>"; };
 		E1823A471E1550D100498A92 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E1823A4B1E15602F00498A92 /* NavigationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationController.swift; sourceTree = "<group>"; };
 		E1823A511E170BE100498A92 /* DetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DetailView.swift; path = "Detail View/DetailView.swift"; sourceTree = "<group>"; };
+		E18378BB20597A87006BEA14 /* Trail of History Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Trail of History Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E18378BD20597A87006BEA14 /* Trail_of_History_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trail_of_History_Tests.swift; sourceTree = "<group>"; };
+		E18378BF20597A87006BEA14 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E1C2383B1D6B28C700A718A8 /* Map.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Map.storyboard; path = "Map View/Map.storyboard"; sourceTree = "<group>"; };
 		E1C2383D1D6B29E900A718A8 /* PointOfInterestCard.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PointOfInterestCard.xib; path = "Map View/PointOfInterestCard.xib"; sourceTree = "<group>"; };
 		E1C238451D6B6AFD00A718A8 /* MapViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MapViewController.swift; path = "Map View/MapViewController.swift"; sourceTree = "<group>"; };
 		E1C238651D6C9EF900A718A8 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		E1DFEBAF1D7663B9007359F4 /* DIN Condensed Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "DIN Condensed Bold.ttf"; path = "Resources/DIN Condensed Bold.ttf"; sourceTree = "<group>"; };
 		E1F984E21D6F692D00D28411 /* Title.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Title.xib; path = Common/Title.xib; sourceTree = "<group>"; };
+		F202D95542273403561C87BC /* Pods_Trail_of_History_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Trail_of_History_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5EAD61089994794A61D00C3 /* Pods-Trail of History.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trail of History.release.xcconfig"; path = "Pods/Target Support Files/Pods-Trail of History/Pods-Trail of History.release.xcconfig"; sourceTree = "<group>"; };
+		F9D76E590266AB7D8403CDBA /* Pods-Trail of History Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Trail of History Tests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Trail of History Tests/Pods-Trail of History Tests.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,17 +119,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4D8B765C1C97944300A70B71 /* Frameworks */ = {
+		E18378B820597A87006BEA14 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4D8B76671C97944300A70B71 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				D8131ABBE49B03273220BB1D /* Pods_Trail_of_History_Tests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -140,7 +133,7 @@
 		0C01F50A1D63DDCB005C6284 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				E17D99BE20595CAB0069E98B /* Trail.gpx */,
+				E17D99BE20595CAB0069E98B /* TrailOfHistory.gpx */,
 				E14F8F271E044C7F004AB05D /* GoogleService-Info.plist */,
 				4D8B76551C97944300A70B71 /* Assets.xcassets */,
 				E150ED421D763903006C40AF /* Archer-Medium.otf */,
@@ -189,6 +182,8 @@
 			children = (
 				6FC7F45E7A9B75300AA3E164 /* Pods-Trail of History.debug.xcconfig */,
 				F5EAD61089994794A61D00C3 /* Pods-Trail of History.release.xcconfig */,
+				F9D76E590266AB7D8403CDBA /* Pods-Trail of History Tests.debug.xcconfig */,
+				1137ED282B76BE7C67C5AECB /* Pods-Trail of History Tests.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -197,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				4D8B764A1C97944300A70B71 /* Trail of History */,
+				E18378BC20597A87006BEA14 /* Trail of History Tests */,
 				4D8B76491C97944300A70B71 /* Products */,
 				20D82087A7E17A0C89BC7141 /* Pods */,
 				896E85D2910027162145AD8E /* Frameworks */,
@@ -207,8 +203,7 @@
 			isa = PBXGroup;
 			children = (
 				4D8B76481C97944300A70B71 /* Trail of History.app */,
-				4D8B765F1C97944300A70B71 /* Trail of HistoryTests.xctest */,
-				4D8B766A1C97944300A70B71 /* Trail of HistoryUITests.xctest */,
+				E18378BB20597A87006BEA14 /* Trail of History Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -238,6 +233,7 @@
 				663E40419345BFAA966D6C06 /* libPods-Trail of HistoryTests.a */,
 				1294D643F85DA3FD6135D9B1 /* libPods-Trail of HistoryUITests.a */,
 				86310C71E7E0CC7ED11182A3 /* Pods_Trail_of_History.framework */,
+				F202D95542273403561C87BC /* Pods_Trail_of_History_Tests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -251,6 +247,15 @@
 				E1823A411E1548EC00498A92 /* PointOfInterestCell.xib */,
 			);
 			name = "List View";
+			sourceTree = "<group>";
+		};
+		E18378BC20597A87006BEA14 /* Trail of History Tests */ = {
+			isa = PBXGroup;
+			children = (
+				E18378BD20597A87006BEA14 /* Trail_of_History_Tests.swift */,
+				E18378BF20597A87006BEA14 /* Info.plist */,
+			);
+			path = "Trail of History Tests";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -278,41 +283,26 @@
 			productReference = 4D8B76481C97944300A70B71 /* Trail of History.app */;
 			productType = "com.apple.product-type.application";
 		};
-		4D8B765E1C97944300A70B71 /* Trail of HistoryTests */ = {
+		E18378BA20597A87006BEA14 /* Trail of History Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4D8B76761C97944300A70B71 /* Build configuration list for PBXNativeTarget "Trail of HistoryTests" */;
+			buildConfigurationList = E18378C420597A87006BEA14 /* Build configuration list for PBXNativeTarget "Trail of History Tests" */;
 			buildPhases = (
-				4D8B765B1C97944300A70B71 /* Sources */,
-				4D8B765C1C97944300A70B71 /* Frameworks */,
-				4D8B765D1C97944300A70B71 /* Resources */,
+				184FF41F4EFC8BF688DA7CBF /* [CP] Check Pods Manifest.lock */,
+				E18378B720597A87006BEA14 /* Sources */,
+				E18378B820597A87006BEA14 /* Frameworks */,
+				E18378B920597A87006BEA14 /* Resources */,
+				C21065CB68283BB93D2616C6 /* [CP] Embed Pods Frameworks */,
+				17FB97222C7989F1526020DA /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				4D8B76611C97944300A70B71 /* PBXTargetDependency */,
+				E18378C120597A87006BEA14 /* PBXTargetDependency */,
 			);
-			name = "Trail of HistoryTests";
-			productName = "Trail of HistoryTests";
-			productReference = 4D8B765F1C97944300A70B71 /* Trail of HistoryTests.xctest */;
+			name = "Trail of History Tests";
+			productName = "Trail of History Tests";
+			productReference = E18378BB20597A87006BEA14 /* Trail of History Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		4D8B76691C97944300A70B71 /* Trail of HistoryUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 4D8B76791C97944300A70B71 /* Build configuration list for PBXNativeTarget "Trail of HistoryUITests" */;
-			buildPhases = (
-				4D8B76661C97944300A70B71 /* Sources */,
-				4D8B76671C97944300A70B71 /* Frameworks */,
-				4D8B76681C97944300A70B71 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				4D8B766C1C97944300A70B71 /* PBXTargetDependency */,
-			);
-			name = "Trail of HistoryUITests";
-			productName = "Trail of HistoryUITests";
-			productReference = 4D8B766A1C97944300A70B71 /* Trail of HistoryUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -320,7 +310,7 @@
 		4D8B76401C97944300A70B71 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0720;
+				LastSwiftUpdateCheck = 0920;
 				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = rvaessen.com;
 				TargetAttributes = {
@@ -329,14 +319,9 @@
 						DevelopmentTeam = UR6MRM7GRB;
 						LastSwiftMigration = 0900;
 					};
-					4D8B765E1C97944300A70B71 = {
-						CreatedOnToolsVersion = 7.2.1;
-						LastSwiftMigration = 0900;
-						TestTargetID = 4D8B76471C97944300A70B71;
-					};
-					4D8B76691C97944300A70B71 = {
-						CreatedOnToolsVersion = 7.2.1;
-						LastSwiftMigration = 0900;
+					E18378BA20597A87006BEA14 = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
 						TestTargetID = 4D8B76471C97944300A70B71;
 					};
 				};
@@ -355,8 +340,7 @@
 			projectRoot = "";
 			targets = (
 				4D8B76471C97944300A70B71 /* Trail of History */,
-				4D8B765E1C97944300A70B71 /* Trail of HistoryTests */,
-				4D8B76691C97944300A70B71 /* Trail of HistoryUITests */,
+				E18378BA20597A87006BEA14 /* Trail of History Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -372,7 +356,7 @@
 				E10395D2201010F200C01528 /* List.storyboard in Resources */,
 				E1823A441E1548EC00498A92 /* PointOfInterestCell.xib in Resources */,
 				E1C2383F1D6B29E900A718A8 /* PointOfInterestCard.xib in Resources */,
-				E17D99BF20595CAB0069E98B /* Trail.gpx in Resources */,
+				E17D99BF20595CAB0069E98B /* TrailOfHistory.gpx in Resources */,
 				E1F984E31D6F692D00D28411 /* Title.xib in Resources */,
 				E1DFEBB01D7663B9007359F4 /* DIN Condensed Bold.ttf in Resources */,
 				E1C2383C1D6B28C700A718A8 /* Map.storyboard in Resources */,
@@ -381,14 +365,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4D8B765D1C97944300A70B71 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4D8B76681C97944300A70B71 /* Resources */ = {
+		E18378B920597A87006BEA14 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -406,7 +383,7 @@
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-Trail of History/Pods-Trail of History-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
-				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac-f0850809/GoogleToolboxForMac.framework",
 				"${BUILT_PRODUCTS_DIR}/VerticonsToolbox/VerticonsToolbox.framework",
 				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
 				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
@@ -422,6 +399,39 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Trail of History/Pods-Trail of History-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		17FB97222C7989F1526020DA /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Trail of History Tests/Pods-Trail of History Tests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		184FF41F4EFC8BF688DA7CBF /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Trail of History Tests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		AF57DBF56DC8F390E826E88A /* [CP] Copy Pods Resources */ = {
@@ -455,6 +465,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C21065CB68283BB93D2616C6 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-Trail of History Tests/Pods-Trail of History Tests-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac-Defines-NSData+zlib/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/VerticonsToolbox/VerticonsToolbox.framework",
+				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/VerticonsToolbox.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Trail of History Tests/Pods-Trail of History Tests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		E10395D72010D46900C01528 /* ToDos & FixMes */ = {
@@ -497,32 +529,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4D8B765B1C97944300A70B71 /* Sources */ = {
+		E18378B720597A87006BEA14 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4D8B76661C97944300A70B71 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				E18378BE20597A87006BEA14 /* Trail_of_History_Tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4D8B76611C97944300A70B71 /* PBXTargetDependency */ = {
+		E18378C120597A87006BEA14 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4D8B76471C97944300A70B71 /* Trail of History */;
-			targetProxy = 4D8B76601C97944300A70B71 /* PBXContainerItemProxy */;
-		};
-		4D8B766C1C97944300A70B71 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 4D8B76471C97944300A70B71 /* Trail of History */;
-			targetProxy = 4D8B766B1C97944300A70B71 /* PBXContainerItemProxy */;
+			targetProxy = E18378C020597A87006BEA14 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -674,59 +695,54 @@
 			};
 			name = Release;
 		};
-		4D8B76771C97944300A70B71 /* Debug */ = {
+		E18378C220597A87006BEA14 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F9D76E590266AB7D8403CDBA /* Pods-Trail of History Tests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				INFOPLIST_FILE = "Trail of HistoryTests/Info.plist";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UR6MRM7GRB;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = "Trail of History Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.cltmobile.Trail-of-HistoryTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rvaessen.Trail-of-History-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Trail of History.app/Trail of History";
 			};
 			name = Debug;
 		};
-		4D8B76781C97944300A70B71 /* Release */ = {
+		E18378C320597A87006BEA14 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1137ED282B76BE7C67C5AECB /* Pods-Trail of History Tests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				INFOPLIST_FILE = "Trail of HistoryTests/Info.plist";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UR6MRM7GRB;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = "Trail of History Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.cltmobile.Trail-of-HistoryTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rvaessen.Trail-of-History-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Trail of History.app/Trail of History";
-			};
-			name = Release;
-		};
-		4D8B767A1C97944300A70B71 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				INFOPLIST_FILE = "Trail of HistoryUITests/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.cltmobile.Trail-of-HistoryUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_SWIFT3_OBJC_INFERENCE = On;
-				SWIFT_VERSION = 4.0;
-				TEST_TARGET_NAME = "Trail of History";
-				USES_XCTRUNNER = YES;
-			};
-			name = Debug;
-		};
-		4D8B767B1C97944300A70B71 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				INFOPLIST_FILE = "Trail of HistoryUITests/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.cltmobile.Trail-of-HistoryUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_SWIFT3_OBJC_INFERENCE = On;
-				SWIFT_VERSION = 4.0;
-				TEST_TARGET_NAME = "Trail of History";
-				USES_XCTRUNNER = YES;
 			};
 			name = Release;
 		};
@@ -751,20 +767,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4D8B76761C97944300A70B71 /* Build configuration list for PBXNativeTarget "Trail of HistoryTests" */ = {
+		E18378C420597A87006BEA14 /* Build configuration list for PBXNativeTarget "Trail of History Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4D8B76771C97944300A70B71 /* Debug */,
-				4D8B76781C97944300A70B71 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		4D8B76791C97944300A70B71 /* Build configuration list for PBXNativeTarget "Trail of HistoryUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				4D8B767A1C97944300A70B71 /* Debug */,
-				4D8B767B1C97944300A70B71 /* Release */,
+				E18378C220597A87006BEA14 /* Debug */,
+				E18378C320597A87006BEA14 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

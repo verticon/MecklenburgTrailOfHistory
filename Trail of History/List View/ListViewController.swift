@@ -66,7 +66,6 @@ class ListViewController : UIViewController {
     }
 
     private func userLocationEventHandler(event: UserLocationEvent) {
-        
         switch event {
         case .locationUpdate: collectionView.reloadData()
         default: break
@@ -128,6 +127,6 @@ extension ListViewController : UICollectionViewDelegate {
 extension ListViewController : UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let barHeight = navigationController?.navigationBar.frame.maxY ?? UIApplication.shared.statusBarFrame.height
-        return CGSize(width: CGFloat(UIScreen.main.bounds.width), height: CGFloat((UIScreen.main.bounds.height - barHeight)/4))
+        return CGSize(width: collectionView.bounds.size.width, height: CGFloat((UIScreen.main.bounds.height - barHeight)/4))
     }
 }
