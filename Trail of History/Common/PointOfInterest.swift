@@ -57,8 +57,18 @@ final class PointOfInterest : Equatable, Encoding {
         }
 
         var observer: Firebase.TypeObserver<PointOfInterest>? = nil
-        if let jsonFilePath = Bundle.main.path(forResource: tohFileName, ofType: "json") { load(from: jsonFilePath) }
-        else { observer = Firebase.TypeObserver(path: poiPath, with: listener) }
+        if let fileName = tohFileName {
+            if let jsonFilePath = Bundle.main.path(forResource: fileName, ofType: "json") {
+                load(from: jsonFilePath)
+            }
+            else {
+                alertUser(title: "Cannot Load Points of Interest", body: "Could not find the bundled file \(fileName).json")
+            }
+       }
+        else {
+            observer = Firebase.TypeObserver(path: poiPath, with: listener)
+            
+        }
         return Token(observer: observer)
     }
     

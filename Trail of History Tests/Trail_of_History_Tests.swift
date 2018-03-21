@@ -8,6 +8,7 @@
 
 import XCTest
 import VerticonsToolbox
+@testable import Trail_of_History
 
 class Trail_of_History_Tests: XCTestCase {
     
@@ -30,6 +31,14 @@ class Trail_of_History_Tests: XCTestCase {
         waitForExpectations(timeout: 200, handler: nil)
     }
     
+    func testAppAccess() {
+        if let pageVC = UIApplication.shared.keyWindow?.rootViewController?.childViewControllers[0] as? PageViewController {
+            print(pageVC.listViewController)
+            print(pageVC.mapViewController)
+        }
+        else { print("Could not obtain Trail of History app's page view controller") }
+    }
+
     func testPerformanceExample() {
         // This is an example of a performance test case.
         self.measure {
@@ -43,7 +52,7 @@ class Trail_of_History_Tests: XCTestCase {
         case .locationUpdate(let location):
             print("Test \(positionUpdatesCounter) - lat \(location.coordinate.latitude). lon \(location.coordinate.longitude)")
             positionUpdatesCounter += 1
-            if (positionUpdatesCounter == 187) { trailTraversalCompleted?.fulfill() }
+            if (positionUpdatesCounter == 20) { trailTraversalCompleted?.fulfill() }
 
         default:
             break

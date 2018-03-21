@@ -19,8 +19,13 @@ private let coordinatesPath = "TrailCoordinates"
 
 func LoadTrail(mapView: MKMapView, completionHandler: @escaping  (LoadStatus) -> ()) {
     
-    if let jsonFilePath = Bundle.main.path(forResource: tohFileName, ofType: "json") {
-        FromFile(mapView: mapView, completionHandler: completionHandler, jsonFilePath: jsonFilePath)
+    if let fileName = tohFileName {
+        if let jsonFilePath = Bundle.main.path(forResource: fileName, ofType: "json") {
+            FromFile(mapView: mapView, completionHandler: completionHandler, jsonFilePath: jsonFilePath)
+        }
+        else {
+            completionHandler(.error("Could not find the bundled file \(fileName).json"))
+        }
     }
     else {
         FromDatabase(mapView: mapView, completionHandler: completionHandler)

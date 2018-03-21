@@ -431,7 +431,7 @@ extension MapViewController : MKMapViewDelegate {
                     
                 case .error(let error):
                     let message = "The map data needed to plot the trail of history could not be obtained. Reason: \(error)"
-                    alertUser(title: "\(applicationName) Error", body: message)
+                    alertUser(title: "Cannot Plot The Trail", body: message)
                     print(message)
                 }
                 

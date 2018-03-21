@@ -12,7 +12,9 @@ import Firebase
 import FirebaseDatabase
 import VerticonsToolbox
 
-let tohFileName = "TrailOfHistory" // Extension is json
+let tohFileName: String? = { // Extension is json
+    return UserDefaults.standard.string(forKey: "TohFileName")
+}()
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -25,6 +27,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //_ = Firebase.connection.addListener(self, handlerClassMethod: AppDelegate.firebaseConnectionEventHandler)
 
         //listFonts()
+
+        //printInfo()
 
         return true
     }
@@ -61,6 +65,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         print(list)
+    }
+
+    private func printInfo() {
+        print("Stdout = \(stdout)")
+        print("Trail of history file name = \(String(describing: tohFileName))")
     }
 
     private func firebaseConnectionEventHandler(event: Firebase.ConnectionEvent) {
