@@ -67,17 +67,17 @@ class MapViewController: UIViewController {
 
     @IBOutlet weak var pageSwiper: PageSwiper!
 
-    @IBOutlet fileprivate weak var mapView: MKMapView!
+    @IBOutlet weak var mapView: MKMapView!
 
     private var listenerToken: PointOfInterest.ListenerToken!
-    fileprivate var poiAnnotations = [PoiAnnotation]()
+    var poiAnnotations = [PoiAnnotation]()
 
-    @IBOutlet fileprivate weak var collectionView : UICollectionView!
+    @IBOutlet weak var collectionView : UICollectionView!
     fileprivate let poiCardReuseIdentifier = "PointOfInterestCard"
 
-    private var trailLoaded = false
-    private var userTrackingPolyline: UserTrackingPolyline?
-    private let polylineWidth = 4.0 // meters
+    var trailLoaded = false
+    var userTrackingPolyline: UserTrackingPolyline?
+    let polylineWidth = 4.0 // meters
 
     private var userTrackingButton: UserTrackingButton!
 
@@ -128,6 +128,7 @@ class MapViewController: UIViewController {
         //debugConsole = DebugLayer.add(to: view)
     }
 
+    private(set) var isBusy: Bool = true
     private func startBusy() {
         print("Map View: starting busy")
 
@@ -161,6 +162,7 @@ class MapViewController: UIViewController {
         busyIndicator.stopAnimating()
         let animation = { self.busyImage.bounds.size = CGSize(width: 0, height: 0) }
         UIView.animate(withDuration: 1, animations: animation) { _ in self.busyImage.removeFromSuperview() }
+        isBusy = false
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -419,9 +421,12 @@ extension MapViewController : MKMapViewDelegate {
         else if !trailLoaded {
             trailLoaded = true
 
-            LoadTrail(mapView: mapView) {
+            loadTrail() {
                 switch $0 {
-                case .success(let trackingPolyline):
+                case .success(let coordinates):
+                    let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+                    polyline.title = tohFileName
+                    let trackingPolyline = UserTrackingPolyline(polyline: polyline, mapView: mapView)
                     trackingPolyline.renderer.userIsOnColor = UIColor.tohTerracotaColor
                     trackingPolyline.renderer.userIsOffColor = UIColor.tohAdobeColor
                     self.userTrackingPolyline = trackingPolyline

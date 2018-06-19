@@ -12,9 +12,6 @@ import Firebase
 import FirebaseDatabase
 import VerticonsToolbox
 
-let tohFileName: String? = { // Extension is json
-    return UserDefaults.standard.string(forKey: "TohFileName")
-}()
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

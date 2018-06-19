@@ -11,6 +11,12 @@ import Firebase
 import CoreLocation
 import VerticonsToolbox
 
+enum PoiLoadStatus {
+    case success
+    case error(String)
+}
+
+
 final class PointOfInterest : Equatable, Encoding {
 
     // **********************************************************************************************************************
@@ -26,52 +32,59 @@ final class PointOfInterest : Equatable, Encoding {
         init(observer: Firebase.TypeObserver<PointOfInterest>?) { self.observer = observer }
     }
 
-    // Points of Interest are obtained via listener. Observers will receive the
-    // currently existing POIs and will be informed of additions, updates, or removals.
-    // It is possible for the listener to be called before addListener returns
-    static func addListener(_ listener: @escaping Firebase.TypeObserver<PointOfInterest>.TypeListener) -> ListenerToken {
+    private static let poiPath = "PointsOfInterest"
 
-        let poiPath = "PointsOfInterest"
-        
-        func load(from: String) {
-            let jsonFileUrl = URL(fileURLWithPath: from)
-            
-            do {
-                let jsonData = try Data(contentsOf: jsonFileUrl)
-                let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
-                
-                if  let jsonData = jsonObject as? [String : Any],
-                    let pointsOfInterest = jsonData[poiPath] as? [String : Properties] {
-                    for (key, properties) in pointsOfInterest {
-                        if let poi = PointOfInterest(properties) { poi.finish(event: .added, key: key, listener: listener) }
-                        else { print("Invalid POI properties: \(properties)") }
-                    }
-                }
-                else {
-                    print("The json object does not contain the expected types and/or keys:\n\(jsonObject)")
-                }
-            }
-            catch {
-                print("Error reading/parsing \(from): \(error)")
-            }
-        }
+    // Points of Interest are obtained via a listener. Listeners will receive the
+    // currently existing POIs and will be informed of additions, updates, or removals.
+    // Currently (03/22/18) there are two scenarios:
+    //      1)  The POIs are being obtained from a bundles file. In this case the listener will
+    //          be called for each POI  before the addListener method returns and there will be
+    //          no future invocations.
+    //      2)  The POIs are being obtained from a database. In this case the listener will
+    //          called in the future, asynchronously, as the POIs arive from the database.
+    //          If the database is subsequently updated then the listener will be called again
+    // Each listener receives its own copies of the POIs
+    static func addListener(_ listener: @escaping Firebase.TypeObserver<PointOfInterest>.TypeListener) -> ListenerToken {
 
         var observer: Firebase.TypeObserver<PointOfInterest>? = nil
         if let fileName = tohFileName {
-            if let jsonFilePath = Bundle.main.path(forResource: fileName, ofType: "json") {
-                load(from: jsonFilePath)
+            if case .error(let message) = loadFrom(fileName: fileName, listener: listener) {
+                alertUser(title: "Cannot Load Points of Interest", body: message)
             }
-            else {
-                alertUser(title: "Cannot Load Points of Interest", body: "Could not find the bundled file \(fileName).json")
-            }
-       }
+        }
         else {
             observer = Firebase.TypeObserver(path: poiPath, with: listener)
-            
         }
         return Token(observer: observer)
     }
     
+    static func loadFrom(fileName: String, listener: @escaping Firebase.TypeObserver<PointOfInterest>.TypeListener) -> PoiLoadStatus {
+        guard let jsonFilePath = Bundle.main.path(forResource: fileName, ofType: "json")
+            else { return .error("Could not find the bundled file \(fileName).json") }
+        
+        let jsonFileUrl = URL(fileURLWithPath: jsonFilePath)
+        
+        do {
+            let jsonData = try Data(contentsOf: jsonFileUrl)
+            let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
+            
+            if  let jsonData = jsonObject as? [String : Any],
+                let pointsOfInterest = jsonData[poiPath] as? [String : Properties] {
+                for (key, properties) in pointsOfInterest {
+                    if let poi = PointOfInterest(properties) { poi.finish(event: .added, key: key, listener: listener) }
+                    else { print("Invalid POI properties: \(properties)") }
+                }
+            }
+            else {
+                return .error("The json object does not contain the expected types and/or keys:\n\(jsonObject)")
+            }
+        }
+        catch {
+            return .error("Cannot read/parse \(fileName): \(error)")
+        }
+        
+        return .success
+    }
 
     static func removeListener(token: ListenerToken) -> Bool {
         if let token = token as? Token {

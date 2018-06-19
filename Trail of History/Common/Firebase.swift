@@ -111,7 +111,7 @@ class Firebase {
         typealias Key = String
         typealias Listener = (Event, Key, [String: Any]) -> Void
         
-        private var listener: Listener
+        private var listener: Listener?
         private var reference: DatabaseReference?
         private var childAddedObservationId: UInt = 0
         private var childChangedObservationId: UInt = 0
@@ -119,8 +119,19 @@ class Firebase {
         
         init(path: String, with: @escaping Listener) {
             _ = connection // Ensure that the setup has occurred
-
+            
             self.listener = with
+            
+            // Note: I tried using a single Observer of the event type .value but each event sent all of the records???
+            
+            reference = Database.database().reference(withPath: path)
+            childAddedObservationId = reference!.observe(.childAdded,   with: { self.eventHandler(event: .added, key: $0.key, properties: $0.value as! [String : Any]) })
+            childChangedObservationId = reference!.observe(.childChanged, with: { self.eventHandler(event: .updated, key: $0.key, properties: $0.value as! [String : Any]) })
+            childRemovedObservationId = reference!.observe(.childRemoved, with: { self.eventHandler(event: .removed, key: $0.key, properties: $0.value as! [String : Any]) })
+        }
+        
+        fileprivate init(path: String) {
+            _ = connection // Ensure that the setup has occurred
             
             // Note: I tried using a single Observer of the event type .value but each event sent all of the records???
             
@@ -143,8 +154,9 @@ class Firebase {
             }
         }
         
-        private func eventHandler(event: Event, key: String, properties: [String: Any]) {
-            self.listener(event, key, properties)
+        fileprivate func eventHandler(event: Event, key: String, properties: [String: Any]) {
+            guard let listener = listener else { fatalError("There is not a listener") }
+            listener(event, key, properties)
         }
     }
     
@@ -156,10 +168,10 @@ class Firebase {
 
         init(path: String, with: @escaping TypeListener) {
             self.typeListener = with
-            super.init(path: path, with: eventHandler)
+            super.init(path: path)
         }
-        
-        private func eventHandler(event: Event, key: String, properties: [String: Any]) {
+
+        fileprivate override func eventHandler(event: Event, key: String, properties: [String: Any]) {
             guard let data = Type(properties) else { fatalError("Cannot initialize \(Type.self) using \(properties)") }
             data.finish(event: event, key: key, listener: typeListener)
         }

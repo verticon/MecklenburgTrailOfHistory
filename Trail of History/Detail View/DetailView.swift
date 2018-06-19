@@ -207,6 +207,15 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         presenter.present(controller, animated: true, completion: nil)
     }
     
+    private static let inset: CGFloat = 16
+
+    private static func detailViewFrame(barHeight: CGFloat) -> CGRect {
+        let size = UIScreen.main.bounds.size
+        let frame = CGRect(x: 0, y: barHeight, width: size.width, height: size.height - barHeight)
+        return frame.insetBy(dx: DetailView.inset, dy: DetailView.inset)
+    }
+    
+
     private let poiId : String
     fileprivate let statueImageView = UIImageView()
     fileprivate let imageScrollView = UIScrollView()
@@ -215,7 +224,6 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     private let descriptionTextView = UITextView()
     private let learnMoreUrl: URL?
     private let learnMoreButton = UIButton()
-    private let inset: CGFloat = 16
     private var listenerToken: PointOfInterest.ListenerToken!
     private let movieUrl: URL?
     private let barHeight: CGFloat
@@ -232,7 +240,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
         scrollViewHeightConstraint = imageScrollView.heightAnchor.constraint(equalToConstant: 0)
 
-        super.init(frame: detailViewFrame())
+        super.init(frame: DetailView.detailViewFrame(barHeight: barHeight))
 
         self.borderWidth = 1
         self.cornerRadius = 4
@@ -288,7 +296,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
         NSLayoutConstraint.activate([
             // TODO: Understand why it is necessary to contrain the detail view itself (the first 4 constraints)
-            self.topAnchor.constraint(equalTo: controller.view.topAnchor, constant: barHeight + inset),
+            self.topAnchor.constraint(equalTo: controller.view.topAnchor, constant: barHeight + DetailView.inset),
             self.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
             self.widthAnchor.constraint(equalToConstant: frame.width),
             self.heightAnchor.constraint(equalToConstant: frame.height),
@@ -347,7 +355,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
     public override func layoutSubviews() {
         let height = imageViewSize().height
-        let limit = detailViewFrame().size.height / 2
+        let limit = DetailView.detailViewFrame(barHeight: barHeight).size.height / 2
         scrollViewHeightConstraint.constant = height > limit ? limit : height
         super.layoutSubviews()
  
@@ -399,21 +407,15 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         print("There was a playback error: \(error)")
     }
 
-    func detailViewFrame() -> CGRect {
-        let size = UIScreen.main.bounds.size
-        let frame = CGRect(x: 0, y: barHeight, width: size.width, height: size.height - barHeight)
-        return frame.insetBy(dx: inset, dy: inset)
-    }
-
     func imageViewSize() -> CGSize {
         let imageSize = statueImageView.image!.size
-        let imageViewWidth = detailViewFrame().width
+        let imageViewWidth = DetailView.detailViewFrame(barHeight: barHeight).width
         let imageViewHeight = (imageSize.height / imageSize.width) * imageViewWidth
         return CGSize(width: imageViewWidth, height: imageViewHeight)
     }
     
     func imageViewFrame() -> CGRect {
-        let frame = detailViewFrame()
+        let frame = DetailView.detailViewFrame(barHeight: barHeight)
         let size = imageViewSize()
         return CGRect(x: frame.origin.x, y: frame.origin.y, width: size.width, height: size.height)
     }
