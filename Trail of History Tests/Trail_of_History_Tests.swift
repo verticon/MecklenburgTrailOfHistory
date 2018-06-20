@@ -117,7 +117,7 @@ class Trail_of_History_Tests: XCTestCase {
             return completed
         }
         check(condition: hasTrailTraversalCompleted, every: 0.5, withInitialDelay: 2.0)
-        print("Start location simulation\n")
+        print("Please initiate location simulation\n")
         waitForExpectations(timeout: 200, handler: nil)
         locationListener = nil
     }

@@ -14,7 +14,7 @@ enum TrailLoadStatus {
 }
 
 let tohFileName: String? = { // Name only; extension is assumed to be json
-    return UserDefaults.standard.string(forKey: "TohFileName")
+    return Bundle.main.infoDictionary?["TOH File Name"] as? String
 }()
 
 private let coordinatesPath = "TrailCoordinates"
@@ -74,20 +74,22 @@ func loadTrailFromDatabase(completionHandler: @escaping  (TrailLoadStatus) -> ()
         }
         
         @objc func detectCompletion(_ timer: Timer) {
-            guard coordinates.count == previousCount else { previousCount = coordinates.count; return }
-           
-            // We're done
-            observer?.cancel()
-            timer.invalidate()
-            
-            if coordinates.count > 1 { completionHandler(.success(coordinates)) }
-            else { completionHandler(.error("The database sent \(coordinates.count) coordinates; there need to be at least 2.")) }
-        }
+            if coordinates.count == previousCount {  // If the count is the same (i.e. no new records have arrived) then we are done.
+                observer?.cancel()
+                timer.invalidate()
+                
+                if coordinates.count > 1 { completionHandler(.success(coordinates)) }
+                else { completionHandler(.error("The database sent \(coordinates.count) coordinates; there need to be at least 2.")) }
+            }
+            else {
+                previousCount = coordinates.count
+            }
+         }
     }
 
     // Firebase doesn't give us a way to obtain the count so we resort to a timer to detect that no more is coming.
     let loader = Loader(completionHandler: completionHandler)
-    let timer = Timer(timeInterval: 0.25, target: loader, selector: #selector(Loader.detectCompletion(_:)), userInfo: nil, repeats: true)
+    let timer = Timer(fireAt: Date().addingTimeInterval(1), interval: 0.25, target: loader, selector: #selector(Loader.detectCompletion(_:)), userInfo: nil, repeats: true)
     RunLoop.main.add(timer, forMode: RunLoopMode.commonModes)
 }
 
