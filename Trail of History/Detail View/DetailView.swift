@@ -216,7 +216,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
     }
     
 
-    private let poiId : String
+    private let poiName : String
     fileprivate let statueImageView = UIImageView()
     fileprivate let imageScrollView = UIScrollView()
     private let movieButton = UIButton()
@@ -234,7 +234,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
         self.controller = controller
         self.barHeight = barHeight
 
-        poiId = poi.id
+        poiName = poi.name
         movieUrl = poi.movieUrl
         learnMoreUrl = poi.meckncGovUrl
 
@@ -340,7 +340,7 @@ class DetailView : UIView, AVPlayerViewControllerDelegate {
 
     func poiListener(event: Firebase.Observer.Event, key: Firebase.Observer.Key, poi: PointOfInterest) {
 
-        if poi.id == poiId {
+        if poi.name == poiName {
             switch event {
             case .updated:
                 update(using: poi)

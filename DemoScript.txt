@@ -1,0 +1,25 @@
+1) Launch the app without location simulation
+
+2) There are two views, List & Map:
+    a. Switch between them using the button or the swiper.
+
+3) List:
+    a. As more are added we will scroll up from the bottom
+    b. Click to how details, click again to dismiss
+    c. Scroll nthe detail text.
+    d. Click the Learn More link
+    e. Play a movie.
+
+4) Map:
+    a. Points of interest are marked on the map and are described by the cards
+    b. Scrolling the cards causes the map to respond correspondingly
+    c. Tapping a marker on the map causes the cards to respond correspondingly
+    d. Tapping on a card brings up the detail view
+    e. The map provides options
+
+5) Relaunch the app with location simulation
+
+6) Demonstrate the distance to statue feature.
+
+7) Demonstrate the center on  user and azmith features
+

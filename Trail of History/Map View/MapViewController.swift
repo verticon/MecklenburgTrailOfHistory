@@ -222,7 +222,7 @@ class MapViewController: UIViewController {
             }
 
         case .updated:
-            if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
+            if let index = poiAnnotations.index(where: { $0.poi.name == poi.name }) {
                 poiAnnotations[index].update(with: poi)
             }
             else { // TODO: Look into the log files
@@ -230,7 +230,7 @@ class MapViewController: UIViewController {
             }
 
         case .removed:
-            if let index = poiAnnotations.index(where: { $0.poi.id == poi.id }) {
+            if let index = poiAnnotations.index(where: { $0.poi.name == poi.name }) {
                 let removed = poiAnnotations.remove(at: index)
                 mapView.removeAnnotation(removed)
                 if poiAnnotations.count == 0 { currentPoi = nil }
@@ -253,7 +253,7 @@ class MapViewController: UIViewController {
 
             func setImages(for: PoiAnnotation, isCurrent: Bool) {
                 mapView.view(for: `for`)?.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
-                if let index = poiAnnotations.index(where: { $0.poi.id == `for`.poi.id }) {
+                if let index = poiAnnotations.index(where: { $0.poi.name == `for`.poi.name }) {
                     (collectionView.cellForItem(at: IndexPath(item: index, section: 0)) as? PointOfInterestCard)?.imageView.image = isCurrent ? #imageLiteral(resourceName: "CurrentPoiAnnotationImage") : #imageLiteral(resourceName: "PoiAnnotationImage")
                 }
             }
@@ -559,7 +559,7 @@ extension MapViewController : UICollectionViewDelegate {
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if let current = currentPoi, let currentPoiIndex = poiAnnotations.index(where: { $0.poi.id == current.poi.id }), indexPath.item == currentPoiIndex {
+        if let current = currentPoi, let currentPoiIndex = poiAnnotations.index(where: { $0.poi.name == current.poi.name }), indexPath.item == currentPoiIndex {
             showDetailForCell(at: indexPath)
         }
     }
@@ -689,7 +689,7 @@ extension MapViewController { // Utility Methods
     }
     
     func scroll(collection: UICollectionView, to: PoiAnnotation) -> Bool {
-        guard let index = poiAnnotations.index(where: { $0.poi.id == to.poi.id }) else { return false }
+        guard let index = poiAnnotations.index(where: { $0.poi.name == to.poi.name }) else { return false }
         
         let path = IndexPath(row: index, section: 0)
         collectionView.selectItem(at: path, animated: true, scrollPosition: .centeredHorizontally)

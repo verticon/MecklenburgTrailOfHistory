@@ -23,7 +23,7 @@ final class PointOfInterest : Equatable, Encoding {
     //                                                  Public
     // **********************************************************************************************************************
 
-    static func == (lhs: PointOfInterest, rhs: PointOfInterest) -> Bool { return lhs.id == rhs.id }
+    static func == (lhs: PointOfInterest, rhs: PointOfInterest) -> Bool { return lhs.name == rhs.name }
 
     typealias ListenerToken = Any
 
@@ -37,7 +37,7 @@ final class PointOfInterest : Equatable, Encoding {
     // Points of Interest are obtained via a listener. Listeners will receive the
     // currently existing POIs and will be informed of additions, updates, or removals.
     // Currently (03/22/18) there are two scenarios:
-    //      1)  The POIs are being obtained from a bundles file. In this case the listener will
+    //      1)  The POIs are being obtained from a bundled file. In this case the listener will
     //          be called for each POI  before the addListener method returns and there will be
     //          no future invocations.
     //      2)  The POIs are being obtained from a database. In this case the listener will
@@ -125,8 +125,6 @@ final class PointOfInterest : Equatable, Encoding {
     //                                              Internal
     // **********************************************************************************************************************
 
-    private static let idKey = "uid"
-    private static let nameKey = "name"
     private static let latitudeKey = "latitude"
     private static let longitudeKey = "longitude"
     private static let descriptionKey = "description"
@@ -134,8 +132,7 @@ final class PointOfInterest : Equatable, Encoding {
     private static let movieUrlKey = "movieUrl"
     private static let meckncGovUrlKey = "meckncGovUrl"
 
-    let id: String
-    let name: String
+    var name: String
     let description: String
     let location: CLLocation
     let movieUrl: URL?
@@ -147,8 +144,6 @@ final class PointOfInterest : Equatable, Encoding {
     public init?(_ properties: Properties?) {
         guard
             let properties = properties,
-            let id = properties[PointOfInterest.idKey] as? String,
-            let name = properties[PointOfInterest.nameKey] as? String,
             let latitude = properties[PointOfInterest.latitudeKey] as? Double,
             let longitude = properties[PointOfInterest.longitudeKey] as? Double,
             let description = properties[PointOfInterest.descriptionKey] as? String,
@@ -156,20 +151,21 @@ final class PointOfInterest : Equatable, Encoding {
             let imageUrl = URL(string: imageUrlString)
         else { return nil }
 
-        self.id = id
-        self.name = name
+        location = CLLocation(latitude: latitude, longitude: longitude)
         self.description = description
         self.imageUrl =  imageUrl
         if let url = properties[PointOfInterest.movieUrlKey] as? String { self.movieUrl = URL(string: url) } else { self.movieUrl = nil }
         if let url = properties[PointOfInterest.meckncGovUrlKey] as? String { self.meckncGovUrl = URL(string: url) } else { self.meckncGovUrl = nil }
 
-        location = CLLocation(latitude: latitude, longitude: longitude)
+        self.name = "<unknown>" // The name is provided by the record's key, see the finish() method.
     }
     
     func finish(event: Firebase.TypeObserver<PointOfInterest>.Event, key: Firebase.TypeObserver<PointOfInterest>.Key, listener: @escaping Firebase.TypeObserver<PointOfInterest>.TypeListener) {
 
-        let imageUrlKey = "url:" + id
-        let imageDataKey = "image:" + id
+        name = key
+
+        let imageUrlKey = "url:" + name
+        let imageDataKey = "image:" + name
         
         enum ImageRetrievalResult {
             case success(Data)
