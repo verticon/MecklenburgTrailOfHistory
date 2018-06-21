@@ -3,7 +3,7 @@
 //  Events
 //
 //  Created by Robert Vaessen on 11/19/17.
-//  Copyright © 2017 Robert Vaessen. All rights reserved.
+//  Copyright © 2018 Robert Vaessen. All rights reserved.
 //
 
 import Foundation

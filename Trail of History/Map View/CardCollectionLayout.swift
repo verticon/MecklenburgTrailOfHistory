@@ -2,8 +2,8 @@
 //  MapViewCardCollectionViewFlowLayout.swift
 //  Trail of History
 //
-//  Created by Mark Flowers on 9/20/16.
-//  Copyright © 2016 CLT Mobile. All rights reserved.
+//  Created by Robert Vaessen on 9/20/16.
+//  Copyright © 2018 Robert Vaessen. All rights reserved.
 //
 
 import UIKit

@@ -3,7 +3,7 @@
 //  Trail of History
 //
 //  Created by Robert Vaessen on 1/6/18.
-//  Copyright © 2018 CLT Mobile. All rights reserved.
+//  Copyright © 2018 Robert Vaessen. All rights reserved.
 //
 
 import UIKit

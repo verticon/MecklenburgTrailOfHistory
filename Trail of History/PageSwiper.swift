@@ -3,7 +3,7 @@
 //  Trail of History
 //
 //  Created by Robert Vaessen on 1/17/18.
-//  Copyright © 2018 rvaessen.com. All rights reserved.
+//  Copyright © 2018 Robert Vaessen. All rights reserved.
 //
 
 import UIKit

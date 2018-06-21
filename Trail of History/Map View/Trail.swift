@@ -3,7 +3,7 @@
 //  Trail of History
 //
 //  Created by Robert Vaessen on 10/10/17.
-//  Copyright © 2017 CLT Mobile. All rights reserved.
+//  Copyright © 2018 Robert Vaessen. All rights reserved.
 //
 
 import CoreLocation

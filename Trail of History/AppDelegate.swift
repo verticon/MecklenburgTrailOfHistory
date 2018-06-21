@@ -2,8 +2,8 @@
 //  AppDelegate.swift
 //  Trail of History
 //
-//  Created by Mark Flowers on 3/14/16.
-//  Copyright © 2016 CLT Mobile. All rights reserved.
+//  Created by Robert Vaessen on 3/14/16.
+//  Copyright © 2018 Robert Vaessen. All rights reserved.
 //
 
 import UIKit
